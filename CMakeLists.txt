@@ -14,13 +14,7 @@ file(GLOB SOURCES
     src/*.cpp
 )
 
-#add_executable(${PROJECT_NAME} "main.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES}) #"rcptest.cpp"
-
-#include_directories ("./model/")     # make sure your .h all inside.
-
-# add exmaple data to output directory
-FILE(COPY ../RCP/example_data DESTINATION "${CMAKE_BINARY_DIR}")
 
 set (CMAKE_STATIC_LINKER_FLAGS "-v")
 set (CMAKE_SHARED_LINKER_FLAGS "-v")

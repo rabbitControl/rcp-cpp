@@ -489,39 +489,34 @@ namespace rcp {
         virtual void update(const ParameterPtr& other);
 
         // update callbacks
-//        const std::function< void() >& addChangedCb(std::function< void() > const& func) {
+        const std::function< void() >& addUpdatedCb(std::function< void() >&& func) {
 
-//            for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )    {
-//                if (&func == &(*it).get()) {
-//                    // allready contained
-//                    return func;
-//                }
-//            }
+            for(auto& f : obj->updatedCallbacks)    {
+                if (&func == &f.get()) {
+                    // already contained
+                    return f.get();
+                }
+            }
 
-//            obj->updatedCallbacks.push_back(const_cast<std::function< void() >& >(func));
-//            return func;
-//        }
+            obj->updatedCallbacks.push_back(func);
+            return obj->updatedCallbacks.back().get();
+        }
 
-//        void removeChangedCb(const std::function< void() >& func) {
-//            for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )    {
-//                if (&func == &(*it).get()) {
-//                    obj->updatedCallbacks.erase(it);
-//                    break;
-//                }
-//            }
-//        }
+        void removeUpdatedCb(const std::function< void() >& func) {
 
-        void setUpdatedCb(std::function< void() >&& func) {
-            obj->updatedCb = std::move(func);
+            for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )    {
+                if (&func == &it->get()) {
+                    obj->updatedCallbacks.erase(it);
+                    break;
+                }
+            }
         }
 
         void clearUpdatedCb() {
             obj->updatedCallbacks.clear();
-            obj->updatedCb = nullptr;
         }
 
         virtual void dispose() {
-            clearUpdatedCb();
         }
 
         friend class ParameterManager;
@@ -779,9 +774,6 @@ namespace rcp {
 
 
             void callUpdatedCb() {
-
-                updatedCb();
-
                 for (auto& function : updatedCallbacks) {
                     function();
                 }
@@ -822,7 +814,6 @@ namespace rcp {
             bool hasUserid;
             bool useridChanged;
 
-            std::function< void() > updatedCb;
             std::vector< std::reference_wrapper< std::function< void() > > > updatedCallbacks;
             std::weak_ptr<IParameterManager> parameterManager;
         };
@@ -1093,48 +1084,40 @@ namespace rcp {
             }
 
             if (updated) {
-                obj->callValueChangedCb();
+                obj->callValueUpdatedCb();
             }
 
             // update base
             Parameter<TD>::update(other);
         }
 
-//        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >&& func) {
+        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >&& func) {
 
-//            for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )    {
-//                if (&func == &(*it).get()) {
-//                    // allready contained
-//                    break;
-//                }
-//            }
+            for(auto& f : obj->valueUpdatedCallbacks)    {
+                if (&func == &f.get()) {
+                    // already contained
+                    return f.get();
+                }
+            }
 
-//            obj->valueUpdatedCallbacks.push_back(const_cast<std::function< void ( T& )>&>(func));
-//            return func;
-//        }
-
-//        void removeValueUpdatedCb(const std::function< void ( T& )> & func) {
-//            for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )    {
-//                if (&func == &(*it).get()) {
-//                    obj->valueUpdatedCallbacks.erase(it);
-//                    break;
-//                }
-//            }
-//        }
-
-        void setValueUpdatedCb(std::function< void(T&) > const&& func) {
-            obj->vcb = std::move(func);
+            obj->valueUpdatedCallbacks.push_back(func);
+            return obj->valueUpdatedCallbacks.back().get();
         }
 
+        void removeValueUpdatedCb(const std::function< void(T&) >& func) {
+            for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )    {
+                if (&func == &it->get()) {
+                    obj->valueUpdatedCallbacks.erase(it);
+                    break;
+                }
+            }
+        }
 
         void clearValueUpdatedCb() {
             obj->valueUpdatedCallbacks.clear();
-            obj->vcb = nullptr;
         }
 
         virtual void dispose() {
-            clearValueUpdatedCb();
-            Parameter<TD>::dispose();
         }
 
         friend class ParameterManager;
@@ -1176,12 +1159,7 @@ namespace rcp {
                 }
             }
 
-            void callValueChangedCb() {
-
-                if (vcb) {
-                    vcb(value);
-                }
-
+            void callValueUpdatedCb() {
                 for (auto& f : valueUpdatedCallbacks) {
                     f(value);
                 }
@@ -1191,7 +1169,6 @@ namespace rcp {
             bool hasValue;
             bool valueChanged;
 
-            std::function< void(T&) > vcb;
             std::vector< std::reference_wrapper< std::function< void(T&) > > > valueUpdatedCallbacks;
         };
         std::shared_ptr<Value> obj;

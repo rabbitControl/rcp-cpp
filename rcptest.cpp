@@ -45,6 +45,8 @@ using namespace rcp;
 
 void testHierarchy() {
 
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
     ParameterServer server;
 
     std::cout << "----------- creating parameter\n";
@@ -93,41 +95,103 @@ void testHierarchy() {
     // check changed labels
     std::cout << "int: " << intParam.getLabel() << "\n";
     std::cout << "bool: " << boolParam.getLabel() << "\n";
+
+    std::cout << "\n\n";
 }
 
 
-void testCb() {
+void testUpdatedCb() {
 
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
+    // create parameter to be updated
     Int32Parameter param(1);
+    param.setLabel("original label");
+
+    // create parameter to update with (use same id as param)
     Int32Parameter param2(1);
+    param2.setLabel("new label from param2");
 
-    param.setValueUpdatedCb([](int& v) {
-        std::cout << "int callback 1: " << v << "\n";
+    // set callbacks on parameter to be updated
+    auto& cb1 = param.addUpdatedCb([&]() {
+        std::cout << "callback 1 - parameter id: " << param.getId() << "\n";
+        std::cout << "\tlabel: " << param.getLabel() << "\n";
+        std::cout << "\tdescription: " << param.getDescription() << "\n";
     });
-    param.setValueUpdatedCb([](int& v) {
-        std::cout << "int callback 2: " << v << "\n";
+    auto& cb2 = param.addUpdatedCb([&]() {
+        std::cout << "callback 2 - parameter id: " << param.getId() << "\n";
+        std::cout << "\tlabel: " << param.getLabel() << "\n";
+        std::cout << "\tdescription: " << param.getDescription() << "\n";
     });
 
-    param2.setValue(10);
+
+    // update param with param2
+    std::cout << "-------\n";
     param.update(param2.newReference());
+
+    // adjust param2 and update
+    std::cout << "-------\n";
+    param2.setDescription("parameter description");
+    param.update(param2.newReference());
+
+    // remove callback 1 and update again
+    std::cout << "-------\n";
+    std::cout << "remove cb1\n";
+    param.removeUpdatedCb(cb1);
+    param.update(param2.newReference());
+
+    std::cout << "\n\n";
 }
 
 
-void testCb2() {
+void testValueUpdateCb1() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     BooleanParameter param(1);
     BooleanParameter param2(1);
 
-    param.setValueUpdatedCb([](bool& v) {
+    param.addValueUpdatedCb([](bool& v) {
         std::cout << "param value updated: " << (v ? "true" : "false") << "\n";
     });
 
     param2.setValue(true);
     param.update(param2.newReference());
+
+    std::cout << "\n\n";
+}
+
+
+void testValueUpdateCb2() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
+    BooleanParameter param(1);
+    BooleanParameter param2(1);
+
+    auto& cb1 = param.addValueUpdatedCb([](bool& v) {
+        std::cout << "param value updated 1: " << (v ? "true" : "false") << "\n";
+    });
+
+    auto& cb2 = param.addValueUpdatedCb([](bool& v) {
+        std::cout << "param value updated 2: " << (v ? "true" : "false") << "\n";
+    });
+
+    param2.setValue(true);
+    param.update(param2.newReference());
+
+    param.removeValueUpdatedCb(cb1);
+
+    param2.setValue(false);
+    param.update(param2.newReference());
+
+    std::cout << "\n\n";
 }
 
 
 void testTransporter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     ParameterServer server;
     DummyServerTransporter serverTransporter;
@@ -159,9 +223,13 @@ void testTransporter() {
 
     server.removeTransporter(serverTransporter);
     std::cout << "connections: " << server.getConnectionCount() << "\n";
+
+    std::cout << "\n\n";
 }
 
 void testUpdate() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     ParameterServer server;
     DummyServerTransporter serverTransporter;
@@ -182,11 +250,15 @@ void testUpdate() {
     server.update();
 
     serverTransporter.testcallall("blubb");
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 
 void testInt8Parameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
     Int8Parameter param(1, 32);
     param.setLabel("param label");
     param.setDescription("param description");
@@ -201,10 +273,14 @@ void testInt8Parameter() {
 
     std::cout << "Int8Parameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 void testEnumParam() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
     EnumParameter param(1);
     param.getDefaultTypeDefinition().addOption("test1");
     param.getDefaultTypeDefinition().addOption("test2");
@@ -216,10 +292,13 @@ void testEnumParam() {
 
     std::cout << "EnumParameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 void testRangeParameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     RangeParameter<int> param(1);
     param.setValue(rcp::Range<int>(2, 3));
@@ -233,10 +312,13 @@ void testRangeParameter() {
 
     std::cout << "RangeParameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 void testStringParameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     StringParameter param(1);
     param.getDefaultTypeDefinition().setDefault("aa");
@@ -247,11 +329,14 @@ void testStringParameter() {
 
     std::cout << "StringParameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 
 void testCustomParameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     char uuid[16];
     for (char i=0; i<16; i++) {
@@ -273,11 +358,14 @@ void testCustomParameter() {
 
     std::cout << "CustomParameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 
 void testUriParameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
     auto e = URIParameter::create(1);
     e->getDefaultTypeDefinition().addSchema("file");
@@ -294,7 +382,8 @@ void testUriParameter() {
 
     std::cout << "UriParameter:\n";
     writer.dump();
-    std::cout << std::endl;
+
+    std::cout << "\n\n";
 }
 
 
@@ -384,12 +473,17 @@ void _parseData(const std::string& filename) {
 }
 
 void parseData(const std::string& filename) {
-    std::cout << "\n\n";
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
     std::cout << "----------------------\n";
     _parseData(filename);
     std::flush(std::cout);
     std::flush(std::cerr);
+
+    std::cout << "\n\n";
 }
+
 
 //-------------------------------
 //-------------------------------
@@ -398,8 +492,9 @@ int main(int argc, char const *argv[]) {
     testHierarchy();
     testTransporter();
 
-    testCb();
-    testCb2();
+    testUpdatedCb();
+    testValueUpdateCb1();
+    testValueUpdateCb2();
     testUpdate();
 
     testInt8Parameter();
@@ -427,38 +522,3 @@ int main(int argc, char const *argv[]) {
     return 0;
 }
 
-
-/* snippets
-
-class cb {
-public:
-    void addValueChangedCb(std::function< void() >&& func) {
-        valueUpdatedCallbacks.push_back(std::move(func));
-
-        for (auto& f : valueUpdatedCallbacks) {
-            std::cout << "func: " << &f << "\n";
-        }
-    }
-
-    void removeValueChangedCb(const std::function< void() >& func) {
-        for(auto it = valueUpdatedCallbacks.begin(); it != valueUpdatedCallbacks.end(); it++ ) {
-
-            std::cout << "func: " << &func << " : " << &(*it) << "\n";
-
-            if (&func == &(*it)) {
-                std::cout << "remove CB\n";
-                valueUpdatedCallbacks.erase(it);
-                break;
-            }
-        }
-    }
-
-    void setcb(std::function< void() >&& func) {
-        cb = std::move(func);
-    }
-
-    std::vector< std::function< void() > > valueUpdatedCallbacks;
-    std::function< void() > cb;
-};
-
-*/

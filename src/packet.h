@@ -83,7 +83,7 @@ namespace rcp {
                 }
 
                 if (packet_prefix < PACKET_OPTIONS_TIMESTAMP || packet_prefix > PACKET_OPTIONS_DATA) {
-                    std::cout << "error: unknown option: " << packet_prefix << "\n";
+                    std::cout << "error: unknown packet option: " << packet_prefix << "\n";
                     break;
                 }
 
@@ -113,10 +113,13 @@ namespace rcp {
                             // ERROR
                             break;
 
-                        case COMMAND_VERSION:
+                        case COMMAND_VERSION: {
                             // TODO
                             // expect version data
                             // tiny-string follows by terminator
+                            std::string v = readTinyString(is);
+                            std::cout << "version: " << v << "\n";
+                        }
                             break;
 
                         case COMMAND_INITIALIZE:

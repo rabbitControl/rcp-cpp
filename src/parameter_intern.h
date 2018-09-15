@@ -41,6 +41,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "stream_tools.h"
 #include "iparameter.h"

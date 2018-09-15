@@ -35,6 +35,9 @@
 #ifndef IPARAMETER_H
 #define IPARAMETER_H
 
+#include <vector>
+#include <string>
+
 #include "types.h"
 #include "writeable.h"
 #include "optionparser.h"

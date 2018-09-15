@@ -922,7 +922,7 @@ namespace rcp {
                 return true;
             }
 
-            // could not parse... error
+            // did not handle option
             return false;
         }
 
@@ -1091,7 +1091,7 @@ namespace rcp {
             Parameter<TD>::update(other);
         }
 
-        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >&& func) {
+        const std::function< void(T&) >& addValueUpdatedCb(const std::function< void(T&) >& func) {
 
             for(auto& f : obj->valueUpdatedCallbacks)    {
                 if (&func == &f.get()) {

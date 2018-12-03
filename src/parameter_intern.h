@@ -526,6 +526,20 @@ namespace rcp {
         virtual void update(const ParameterPtr& other);
 
         // update callbacks
+        const std::function< void() >& addUpdatedCb(std::function< void() >& func) {
+
+            for(auto& f : obj->updatedCallbacks)    {
+                if (&func == &f->Callback) {
+                    // already contained
+                    return f->Callback;
+                }
+            }
+
+            UpdateEventHolderPtr event = std::make_shared<UpdateEventHolder>(func);
+            obj->updatedCallbacks.push_back(std::move(event));
+            return obj->updatedCallbacks.back()->Callback;
+        }
+
         const std::function< void() >& addUpdatedCb(std::function< void() >&& func) {
 
             for(auto& f : obj->updatedCallbacks)    {
@@ -535,9 +549,7 @@ namespace rcp {
                 }
             }
 
-            std::shared_ptr<UpdateEventHolder> event = std::make_shared<UpdateEventHolder>();
-            event->Callback = std::move(func);
-
+            UpdateEventHolderPtr event = std::make_shared<UpdateEventHolder>(func);
             obj->updatedCallbacks.push_back(std::move(event));
             return obj->updatedCallbacks.back()->Callback;
         }
@@ -595,8 +607,11 @@ namespace rcp {
 
         class UpdateEventHolder {
         public:
-            std::function< void() > Callback;
+            UpdateEventHolder(std::function< void() >&& cb) : Callback(std::move(cb)) {}
+            UpdateEventHolder(std::function< void() >& cb) : Callback(cb) {}
+            const std::function< void() >& Callback;
         };
+        typedef std::shared_ptr<UpdateEventHolder> UpdateEventHolderPtr;
 
         class Value {
         public:
@@ -1161,20 +1176,19 @@ namespace rcp {
         }
 
 
-//        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
+        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
 
-//            for(auto& f : obj->valueUpdatedCallbacks) {
-//                if (&func == &f->Callback) {
-//                    // already contained
-//                    return f->Callback;
-//                }
-//            }
+            for(auto& f : obj->valueUpdatedCallbacks) {
+                if (&func == &f->Callback) {
+                    // already contained
+                    return f->Callback;
+                }
+            }
 
-//            std::shared_ptr<ValueUpdateEventHolder> NewEvent = std::make_shared<ValueUpdateEventHolder>();
-//            NewEvent->Callback=std::move(func);
-//            obj->valueUpdatedCallbacks.push_back(std::move(NewEvent));
-//            return obj->valueUpdatedCallbacks.back()->Callback;
-//        }
+            ValueUpdateEventHolderPtr event = std::make_shared<ValueUpdateEventHolder>(func);
+            obj->valueUpdatedCallbacks.push_back(std::move(event));
+            return obj->valueUpdatedCallbacks.back()->Callback;
+        }
 
         const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {
 
@@ -1185,9 +1199,8 @@ namespace rcp {
                 }
             }
 
-            std::shared_ptr<ValueUpdateEventHolder> NewEvent = std::make_shared<ValueUpdateEventHolder>();
-            NewEvent->Callback=std::move(func);
-            obj->valueUpdatedCallbacks.push_back(std::move(NewEvent));
+            ValueUpdateEventHolderPtr event = std::make_shared<ValueUpdateEventHolder>(func);
+            obj->valueUpdatedCallbacks.push_back(std::move(event));
             return obj->valueUpdatedCallbacks.back()->Callback;
         }
 
@@ -1220,8 +1233,11 @@ namespace rcp {
 
         class ValueUpdateEventHolder {
         public:
-            std::function< void(T&) > Callback;
+            ValueUpdateEventHolder(std::function< void(T&) >&& cb) : Callback(std::move(cb)) {}
+            ValueUpdateEventHolder(std::function< void(T&) >& cb) : Callback(cb) {}
+            const std::function< void(T&) >& Callback;
         };
+        typedef std::shared_ptr<ValueUpdateEventHolder> ValueUpdateEventHolderPtr;
 
 
         class Value {

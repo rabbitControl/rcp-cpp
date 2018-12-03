@@ -151,11 +151,22 @@ void testValueUpdateCb1() {
     BooleanParameter param(1);
     BooleanParameter param2(1);
 
+    std::function< void(bool&) > func = [](bool& v) {
+        std::cout << "param value updated (lvalue): " << (v ? "true" : "false") << "\n";
+    };
+
     param.addValueUpdatedCb([](bool& v) {
         std::cout << "param value updated: " << (v ? "true" : "false") << "\n";
     });
+    auto& cbl = param.addValueUpdatedCb(func);
+    std::cout << &func << " : " << &cbl << "\n";
 
     param2.setValue(true);
+    param.update(param2.newReference());
+
+    param.removeValueUpdatedCb(func);
+
+    param2.setValue(false);
     param.update(param2.newReference());
 
     std::cout << "\n\n";

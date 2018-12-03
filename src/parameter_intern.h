@@ -259,6 +259,15 @@ namespace rcp {
                     break;
                 }
 
+                case PARAMETER_OPTIONS_READONLY: {
+
+                    bool ro = readFromStream(is, ro);
+                    CHECK_STREAM
+
+                    setReadonly(ro);
+                    break;
+                }
+
                 // handle all other cases in "handleOption"
 //                case PARAMETER_OPTIONS_VALUE:
                 default:
@@ -452,6 +461,8 @@ namespace rcp {
         virtual bool hasParent() const { return obj->parent.lock() != nullptr; }
 
 
+        //----------------------
+        // userdata
         virtual const std::vector<char> getUserdata() const { return obj->userdata; }
         virtual void setUserdata(const std::vector<char> userdata) {
             obj->userdata = userdata;
@@ -465,6 +476,8 @@ namespace rcp {
             setDirty();
         }
 
+        //----------------------
+        // userid
         virtual const std::string& getUserid() const { return obj->userid; }
         virtual void setUserid(const std::string& userid) {
 
@@ -485,6 +498,29 @@ namespace rcp {
             setDirty();
         }
 
+        //----------------------
+        // readonly
+        virtual const bool& getReadonly() const { return obj->readonly; };
+        virtual void setReadonly(const bool& readonly) {
+
+            obj->hasReadonly = true;
+
+            if (obj->readonly == readonly) {
+                return;
+            }
+
+            obj->readonly = readonly;
+            obj->readonlyChanged = true;
+            setDirty();
+        };
+        virtual bool hasReadonly() const { return obj->hasReadonly; };
+        virtual void clearReadonly() {
+            obj->hasReadonly = false;
+            obj->readonlyChanged = true;
+            setDirty();
+        };
+
+        //----------------------
         //
         virtual void dump();
         virtual void update(const ParameterPtr& other);
@@ -493,20 +529,23 @@ namespace rcp {
         const std::function< void() >& addUpdatedCb(std::function< void() >&& func) {
 
             for(auto& f : obj->updatedCallbacks)    {
-                if (&func == &f.get()) {
+                if (&func == &f->Callback) {
                     // already contained
-                    return f.get();
+                    return f->Callback;
                 }
             }
 
-            obj->updatedCallbacks.push_back(func);
-            return obj->updatedCallbacks.back().get();
+            std::shared_ptr<UpdateEventHolder> event = std::make_shared<UpdateEventHolder>();
+            event->Callback = std::move(func);
+
+            obj->updatedCallbacks.push_back(std::move(event));
+            return obj->updatedCallbacks.back()->Callback;
         }
 
         void removeUpdatedCb(const std::function< void() >& func) {
 
             for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )    {
-                if (&func == &it->get()) {
+                if (&func == &(it->get()->Callback)) {
                     obj->updatedCallbacks.erase(it);
                     break;
                 }
@@ -553,6 +592,11 @@ namespace rcp {
             obj->parameterManager = manager;
             setDirty();
         }
+
+        class UpdateEventHolder {
+        public:
+            std::function< void() > Callback;
+        };
 
         class Value {
         public:
@@ -771,12 +815,31 @@ namespace rcp {
                     out.writeTinyString("");
                     useridChanged = false;
                 }
+
+
+                // readonly
+                if (hasReadonly) {
+
+                    if (all || readonlyChanged) {
+                        out.write(static_cast<char>(PARAMETER_OPTIONS_READONLY));
+                        out.write(readonly);
+
+                        if (!all) {
+                            readonlyChanged = false;
+                        }
+                    }
+                } else if (readonlyChanged) {
+
+                    out.write(static_cast<char>(PARAMETER_OPTIONS_READONLY));
+                    out.write(false);
+                    readonlyChanged = false;
+                }
             }
 
 
             void callUpdatedCb() {
-                for (auto& function : updatedCallbacks) {
-                    function();
+                for (auto& event : updatedCallbacks) {
+                    event->Callback();
                 }
             }
 
@@ -815,7 +878,12 @@ namespace rcp {
             bool hasUserid;
             bool useridChanged;
 
-            std::vector< std::reference_wrapper< std::function< void() > > > updatedCallbacks;
+            bool readonly{};
+            bool hasReadonly;
+            bool readonlyChanged;
+
+            std::vector< std::shared_ptr<UpdateEventHolder> > updatedCallbacks;
+
             std::weak_ptr<IParameterManager> parameterManager;
         };
 
@@ -1092,22 +1160,40 @@ namespace rcp {
             Parameter<TD>::update(other);
         }
 
-        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >&& func) {
 
-            for(auto& f : obj->valueUpdatedCallbacks)    {
-                if (&func == &f.get()) {
+//        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
+
+//            for(auto& f : obj->valueUpdatedCallbacks) {
+//                if (&func == &f.get()) {
+//                    // already contained
+//                    return f.get();
+//                }
+//            }
+
+//            obj->valueUpdatedCallbacks.push_back(func);
+//            return obj->valueUpdatedCallbacks.back().get();
+//        }
+
+        const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {
+
+            for(auto& f : obj->valueUpdatedCallbacks) {
+                if (&func == &f->Callback) {
                     // already contained
-                    return f.get();
+                    return f->Callback;
                 }
             }
 
-            obj->valueUpdatedCallbacks.push_back(func);
-            return obj->valueUpdatedCallbacks.back().get();
+            std::shared_ptr<ValueUpdateEventHolder> NewEvent = std::make_shared<ValueUpdateEventHolder>();
+            NewEvent->Callback=std::move(func);
+            obj->valueUpdatedCallbacks.push_back(std::move(NewEvent));
+            return obj->valueUpdatedCallbacks.back()->Callback;
         }
 
         void removeValueUpdatedCb(const std::function< void(T&) >& func) {
-            for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )    {
-                if (&func == &it->get()) {
+
+            for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ ) {
+
+                if (&func == &(it->get()->Callback)) {
                     obj->valueUpdatedCallbacks.erase(it);
                     break;
                 }
@@ -1129,6 +1215,13 @@ namespace rcp {
         using Parameter<TD>::setDirty;
 
     private:
+
+        class ValueUpdateEventHolder {
+        public:
+            std::function< void(T&) > Callback;
+        };
+
+
         class Value {
         public:
             Value() :
@@ -1162,7 +1255,7 @@ namespace rcp {
 
             void callValueUpdatedCb() {
                 for (auto& f : valueUpdatedCallbacks) {
-                    f(value);
+                    f->Callback(value);
                 }
             }
 
@@ -1170,7 +1263,7 @@ namespace rcp {
             bool hasValue;
             bool valueChanged;
 
-            std::vector< std::reference_wrapper< std::function< void(T&) > > > valueUpdatedCallbacks;
+            std::vector< std::shared_ptr<ValueUpdateEventHolder> > valueUpdatedCallbacks;
         };
         std::shared_ptr<Value> obj;
 
@@ -1179,7 +1272,6 @@ namespace rcp {
             obj(obj)
         {}
     };
-
 
 
 
@@ -1196,6 +1288,8 @@ namespace rcp {
     class GroupParameter : public Parameter<GroupTypeDefinition>, public std::enable_shared_from_this<GroupParameter>
     {
     public:
+//        template<typename> friend class Parameter;
+
         static GroupParameterPtr create(int16_t id) {
             return std::make_shared<GroupParameter>(id);
         }
@@ -1223,20 +1317,21 @@ namespace rcp {
         //
         void dumpChildren(int indent);
 
-        template<typename> friend class Parameter;
+
         friend class ParameterManager;
         friend class ParameterServer;
         friend class ParameterFactory;
 
-    private:
         void addChild(IParameter& child);
         void addChild(ParameterPtr& child);
         void removeChild(IParameter& child);
         void removeChild(ParameterPtr& child);
-
         GroupParameterPtr getShared() {
             return shared_from_this();
         }
+
+    private:
+
 
         std::map<short, ParameterPtr >& children() {
             return obj->children;

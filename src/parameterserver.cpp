@@ -257,7 +257,14 @@ namespace rcp {
     }
 
     void ParameterServer::_version(ServerTransporter& transporter, void *id) {
-        // TODO
+
+        WriteablePtr version = std::make_shared<VersionData>("0.0.99");
+        Packet packet(COMMAND_VERSION, version);
+
+        StringStreamWriter writer;
+        packet.write(writer, false);
+
+        transporter.sendToOne(writer.getBuffer(), id);
     }
 
 }

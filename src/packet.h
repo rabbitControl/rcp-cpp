@@ -182,6 +182,14 @@ namespace rcp {
           , m_hasData(true)
         {}
 
+        Packet(enum command_t cmd, WriteablePtr& data) :
+            command(cmd)
+          , timestamp(0)
+          , m_hasTimestamp(false)
+          , m_data(data)
+          , m_hasData(true)
+        {}
+
         Packet(enum command_t cmd, uint64_t timestamp, ParameterPtr& data) :
             command(cmd)
           , timestamp(timestamp)

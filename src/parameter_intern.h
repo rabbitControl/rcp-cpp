@@ -609,7 +609,7 @@ namespace rcp {
         public:
             UpdateEventHolder(std::function< void() >&& cb) : Callback(std::move(cb)) {}
             UpdateEventHolder(std::function< void() >& cb) : Callback(cb) {}
-            const std::function< void() >& Callback;
+            const std::function< void() > Callback;
         };
         typedef std::shared_ptr<UpdateEventHolder> UpdateEventHolderPtr;
 
@@ -1235,7 +1235,7 @@ namespace rcp {
         public:
             ValueUpdateEventHolder(std::function< void(T&) >&& cb) : Callback(std::move(cb)) {}
             ValueUpdateEventHolder(std::function< void(T&) >& cb) : Callback(cb) {}
-            const std::function< void(T&) >& Callback;
+            const std::function< void(T&) > Callback;
         };
         typedef std::shared_ptr<ValueUpdateEventHolder> ValueUpdateEventHolderPtr;
 

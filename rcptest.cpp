@@ -158,13 +158,13 @@ void testValueUpdateCb1() {
     param.addValueUpdatedCb([](bool& v) {
         std::cout << "param value updated: " << (v ? "true" : "false") << "\n";
     });
+
     auto& cbl = param.addValueUpdatedCb(func);
-    std::cout << &func << " : " << &cbl << "\n";
 
     param2.setValue(true);
     param.update(param2.newReference());
 
-    param.removeValueUpdatedCb(func);
+    param.removeValueUpdatedCb(cbl);
 
     param2.setValue(false);
     param.update(param2.newReference());

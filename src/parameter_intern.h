@@ -1164,14 +1164,16 @@ namespace rcp {
 //        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
 
 //            for(auto& f : obj->valueUpdatedCallbacks) {
-//                if (&func == &f.get()) {
+//                if (&func == &f->Callback) {
 //                    // already contained
-//                    return f.get();
+//                    return f->Callback;
 //                }
 //            }
 
-//            obj->valueUpdatedCallbacks.push_back(func);
-//            return obj->valueUpdatedCallbacks.back().get();
+//            std::shared_ptr<ValueUpdateEventHolder> NewEvent = std::make_shared<ValueUpdateEventHolder>();
+//            NewEvent->Callback=std::move(func);
+//            obj->valueUpdatedCallbacks.push_back(std::move(NewEvent));
+//            return obj->valueUpdatedCallbacks.back()->Callback;
 //        }
 
         const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {

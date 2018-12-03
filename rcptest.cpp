@@ -171,17 +171,18 @@ void testValueUpdateCb2() {
 
     auto& cb1 = param.addValueUpdatedCb([](bool& v) {
         std::cout << "param value updated 1: " << (v ? "true" : "false") << "\n";
-    });
+    });   
 
-    auto& cb2 = param.addValueUpdatedCb([](bool& v) {
+    param.addValueUpdatedCb([](bool& v) {
         std::cout << "param value updated 2: " << (v ? "true" : "false") << "\n";
     });
 
     param2.setValue(true);
     param.update(param2.newReference());
 
+    //
+    std::cout << "---------\n";
     param.removeValueUpdatedCb(cb1);
-
     param2.setValue(false);
     param.update(param2.newReference());
 
@@ -483,7 +484,6 @@ void parseData(const std::string& filename) {
 
     std::cout << "\n\n";
 }
-
 
 //-------------------------------
 //-------------------------------

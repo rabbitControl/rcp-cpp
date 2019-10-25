@@ -39,6 +39,7 @@
 
 #include "dummyserver.h"
 #include "dummyclient.h"
+#include "src/infodata.h"
 
 
 using namespace rcp;
@@ -426,62 +427,97 @@ void _parseData(const std::string& filename) {
         std::cout << "packet timestamp: " << the_packet.getTimestamp() << "\n";
     }
 
-    if (!the_packet.hasData()) {
-        std::cout << "error: packet does not contain data\n";
-        return;
-    }
 
-    // assume this is a parameter!!
-    ParameterPtr param = std::dynamic_pointer_cast<IParameter>(the_packet.getData());
-    if (param) {
+    switch (the_packet.getCommand()) {
 
-        param->dump();
-        std::cout << "---------------------\n";
+    case COMMAND_INVALID:
+    case COMMAND_MAX_:
+    case COMMAND_DISCOVER:
+    case COMMAND_INITIALIZE:
+    case COMMAND_UPDATEVALUE:
+        std::cout << "command not handled: " << the_packet.getCommand();
+        break;
 
-        if (param->getDatatype() == DATATYPE_BOOLEAN) {
+    case COMMAND_INFO:
+    {
+        if (!the_packet.hasData()) {
+            std::cout << "infopacket without data\n";
+            return;
+        }
 
-            auto p = std::dynamic_pointer_cast<BooleanParameter>(param);
-            p->getDefault();
-
-        } else if (param->getDatatype() == DATATYPE_INT32) {
-
-            auto p = std::dynamic_pointer_cast<Int32Parameter>(param);
-            p->getMaximum();
-
-        } else if (param->getDatatype() == DATATYPE_UINT32) {
-
-            auto p = std::dynamic_pointer_cast<UInt32Parameter>(param);
-
-            if (p->hasValue()) {
-                std::cout << "value for uint32: " << p->getValue() << "\n";
-            }
-            if (p->getDefaultTypeDefinition().hasMaximum()) {
-                std::cout << "max for uint32: " << p->getMaximum() << "\n";
-            }
-
-        } else if (param->getDatatype() == DATATYPE_INT8) {
-
-            auto p = std::dynamic_pointer_cast<Int8Parameter>(param);
-            p->getMultipleof();
-
-        } else if (param->getDatatype() == DATATYPE_ENUM) {
-
-            auto p = std::dynamic_pointer_cast<EnumParameter>(param);
-            std::cout << "selected option: " << p->getDefaultTypeDefinition().getOption(p->getValue()) << "\n";
-
-        } else if (param->getDatatype() == DATATYPE_STRING) {
-
-            auto p = std::dynamic_pointer_cast<StringParameter>(param);
-            p->getDefaultTypeDefinition().getRegex();
-
-        } else if (param->getDatatype() == DATATYPE_RANGE) {
-
-            auto p = std::dynamic_pointer_cast<IElementParameter>(param);
-            std::cout << "element type: " << p->getElementType() << "\n";
-
-            // would need to switch on element_type to get real RageParameter<T>
+        InfoDataPtr infodata = std::dynamic_pointer_cast<InfoData>(the_packet.getData());
+        if (infodata) {
+            std::cout << "version: " << infodata->getVersion() << std::endl;
+            std::cout << "appid: " << infodata->getApplicationId() << std::endl;
+        } else {
+            std::cerr << "could not get data as InfoData";
         }
     }
+        break;
+
+    case COMMAND_UPDATE:
+    case COMMAND_REMOVE:
+    {
+        if (!the_packet.hasData()) {
+            std::cout << "error: packet does not contain data\n";
+            return;
+        }
+
+        // assume this is a parameter!!
+        ParameterPtr param = std::dynamic_pointer_cast<IParameter>(the_packet.getData());
+        if (param) {
+
+            param->dump();
+            std::cout << "---------------------\n";
+
+            if (param->getDatatype() == DATATYPE_BOOLEAN) {
+
+                auto p = std::dynamic_pointer_cast<BooleanParameter>(param);
+                p->getDefault();
+
+            } else if (param->getDatatype() == DATATYPE_INT32) {
+
+                auto p = std::dynamic_pointer_cast<Int32Parameter>(param);
+                p->getMaximum();
+
+            } else if (param->getDatatype() == DATATYPE_UINT32) {
+
+                auto p = std::dynamic_pointer_cast<UInt32Parameter>(param);
+
+                if (p->hasValue()) {
+                    std::cout << "value for uint32: " << p->getValue() << "\n";
+                }
+                if (p->getDefaultTypeDefinition().hasMaximum()) {
+                    std::cout << "max for uint32: " << p->getMaximum() << "\n";
+                }
+
+            } else if (param->getDatatype() == DATATYPE_INT8) {
+
+                auto p = std::dynamic_pointer_cast<Int8Parameter>(param);
+                p->getMultipleof();
+
+            } else if (param->getDatatype() == DATATYPE_ENUM) {
+
+                auto p = std::dynamic_pointer_cast<EnumParameter>(param);
+                std::cout << "selected option: " << p->getDefaultTypeDefinition().getOption(p->getValue()) << "\n";
+
+            } else if (param->getDatatype() == DATATYPE_STRING) {
+
+                auto p = std::dynamic_pointer_cast<StringParameter>(param);
+                p->getDefaultTypeDefinition().getRegex();
+
+            } else if (param->getDatatype() == DATATYPE_RANGE) {
+
+                auto p = std::dynamic_pointer_cast<IElementParameter>(param);
+                std::cout << "element type: " << p->getElementType() << "\n";
+
+                // would need to switch on element_type to get real RageParameter<T>
+            }
+        }
+    }
+        break;
+    }
+
 }
 
 void parseData(const std::string& filename) {
@@ -495,6 +531,22 @@ void parseData(const std::string& filename) {
 
     std::cout << "\n\n";
 }
+
+
+void testInfoData() {
+
+    // serialize
+    Packet packet(COMMAND_INFO);
+    InfoDataPtr info_data = std::make_shared<InfoData>("0.0.0", "test");
+    packet.setData(info_data);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    std::cout << "infodata packet:\n";
+    writer.dump();
+}
+
 
 //-------------------------------
 //-------------------------------
@@ -514,6 +566,10 @@ int main(int argc, char const *argv[]) {
     testStringParameter();
     testCustomParameter();
     testUriParameter();
+
+    testInfoData();
+    parseData("../RCP/example_data/packet_info_nodata.rcp");
+    parseData("../RCP/example_data/packet_info.rcp");
 
     parseData("../RCP/example_data/packet_bool_no_user.rcp");
     parseData("../RCP/example_data/packet_bool_remove.rcp");

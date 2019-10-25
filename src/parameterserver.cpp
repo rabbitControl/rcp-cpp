@@ -37,14 +37,14 @@
 #include "packet.h"
 #include "stringstreamwriter.h"
 #include "streamwriter.h"
-#include "versiondata.h"
+#include "infodata.h"
 
 namespace rcp {
 
     ParameterServer::ParameterServer() :
         root(std::make_shared<GroupParameter>(0))
       , parameterManager(std::make_shared<ParameterManager>())
-
+      , m_applicationId("cpp-server")
     {
         root->setLabel("root");
     }
@@ -52,6 +52,7 @@ namespace rcp {
     ParameterServer::ParameterServer(ServerTransporter& transporter) :
         root(std::make_shared<GroupParameter>(0))
       , parameterManager(std::make_shared<ParameterManager>())
+      , m_applicationId("cpp-server")
     {
         addTransporter(transporter);
         root->setLabel("root");
@@ -93,8 +94,9 @@ namespace rcp {
             }
             break;
 
-        case COMMAND_VERSION:
-            _version(transporter, id);
+        case COMMAND_INFO:
+            // handle version-packet
+            _version(the_packet, transporter, id);
             break;
 
         case COMMAND_UPDATEVALUE:
@@ -257,15 +259,32 @@ namespace rcp {
         return false;
     }
 
-    void ParameterServer::_version(ServerTransporter& transporter, void *id) {
+    void ParameterServer::_version(Packet& packet, ServerTransporter& transporter, void *id) {
 
-        WriteablePtr version = std::make_shared<VersionData>("0.0.99");
-        Packet packet(COMMAND_VERSION, version);
+        // got client
+        if (packet.hasData()) {
+            // log info data
+            InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
+            if (info_data) {
+                std::cout << "version: " << info_data->getVersion();
+                std::cout << "applicationid: " << info_data->getApplicationId();
+            }
+        } else {
+            // no data, respond with version
+            WriteablePtr version = std::make_shared<InfoData>("0.0.99", m_applicationId);
+            Packet resp_packet(COMMAND_INFO, version);
+            StringStreamWriter writer;
+            resp_packet.write(writer, false);
+            transporter.sendToOne(writer.getBuffer(), id);
 
-        StringStreamWriter writer;
-        packet.write(writer, false);
+            // ask for version
+            StringStreamWriter writer1;
+            Packet req_info_packet(COMMAND_INFO);
+            req_info_packet.write(writer1, false);
+            transporter.sendToOne(writer1.getBuffer(), id);
 
-        transporter.sendToOne(writer.getBuffer(), id);
+        }
+
     }
 
 }

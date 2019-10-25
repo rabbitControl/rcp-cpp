@@ -61,10 +61,11 @@ namespace rcp {
             long long length = data.tellg();
             data.seekg (0, data.beg);
 
-            char d[length];
+            char* d = new char[length];
             data.read(d, length);
 
             m_transporter.send(d);
+            delete []d;
         }
         m_parameterManager->dirtyParameter.clear();
 

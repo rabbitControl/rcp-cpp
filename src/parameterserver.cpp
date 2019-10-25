@@ -34,8 +34,7 @@
 
 #include "parameterserver.h"
 
-#include "packet.h"
-#include "stringstreamwriter.h"
+#include "rcp.h"
 #include "streamwriter.h"
 #include "infodata.h"
 
@@ -228,7 +227,7 @@ namespace rcp {
     bool ParameterServer::_update(Packet& packet, ServerTransporter& transporter, void *id) {
 
         if (!packet.hasData()) {
-            std::cerr << "_update: packet has no data";
+            std::cerr << "_update: packet has no data\n";
             return false;
         }
 
@@ -266,12 +265,12 @@ namespace rcp {
             // log info data
             InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
             if (info_data) {
-                std::cout << "version: " << info_data->getVersion();
-                std::cout << "applicationid: " << info_data->getApplicationId();
+                std::cout << "version: " << info_data->getVersion() << std::endl;
+                std::cout << "applicationid: " << info_data->getApplicationId() << std::endl;
             }
         } else {
             // no data, respond with version
-            WriteablePtr version = std::make_shared<InfoData>("0.0.99", m_applicationId);
+            WriteablePtr version = std::make_shared<InfoData>(RCP_SPECIFICATION_VERSION, m_applicationId);
             Packet resp_packet(COMMAND_INFO, version);
             StringStreamWriter writer;
             resp_packet.write(writer, false);

@@ -198,20 +198,19 @@ namespace rcp {
             setData(data);
         }
 
-        Packet(const Packet& other) {
-
+        Packet(const Packet& other) :
+            m_hasTimestamp(false)
+          , m_data(nullptr)
+          , m_hasData(false)
+        {
             m_command = other.getCommand();
 
             if (other.hasTimestamp()) {
                 setTimestamp(other.getTimestamp());
-            } else {
-                clearTimestamp();
             }
 
             if (other.hasData()) {
                 setData(other.getData());
-            } else {
-                clearData();
             }
         }
 

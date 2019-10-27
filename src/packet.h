@@ -159,53 +159,59 @@ namespace rcp {
         }
 
         Packet() :
-            command(COMMAND_INVALID)
-          , timestamp(0)
+            m_command(COMMAND_INVALID)
+          , m_timestamp(0)
           , m_hasTimestamp(false)
+          , m_data(nullptr)
           , m_hasData(false)
         {}
 
         Packet(enum command_t cmd) :
-            command(cmd)
-          , timestamp(0)
+            m_command(cmd)
+          , m_timestamp(0)
           , m_hasTimestamp(false)
+          , m_data(nullptr)
           , m_hasData(false)
         {}
 
         Packet(enum command_t cmd, ParameterPtr& data) :
-            command(cmd)
-          , timestamp(0)
+            m_command(cmd)
+          , m_timestamp(0)
           , m_hasTimestamp(false)
-          , m_data(data)
-          , m_hasData(true)
-        {}
+        {
+            setData(data);
+        }
 
         Packet(enum command_t cmd, WriteablePtr& data) :
-            command(cmd)
-          , timestamp(0)
+            m_command(cmd)
+          , m_timestamp(0)
           , m_hasTimestamp(false)
-          , m_data(data)
-          , m_hasData(true)
-        {}
+        {
+            setData(data);
+        }
 
         Packet(enum command_t cmd, uint64_t timestamp, ParameterPtr& data) :
-            command(cmd)
-          , timestamp(timestamp)
+            m_command(cmd)
+          , m_timestamp(timestamp)
           , m_hasTimestamp(true)
-          , m_data(data)
-          , m_hasData(true)
-        {}
+        {
+            setData(data);
+        }
 
         Packet(const Packet& other) {
 
-            command = other.getCommand();
+            m_command = other.getCommand();
 
             if (other.hasTimestamp()) {
                 setTimestamp(other.getTimestamp());
+            } else {
+                clearTimestamp();
             }
 
             if (other.hasData()) {
                 setData(other.getData());
+            } else {
+                clearData();
             }
         }
 
@@ -215,7 +221,7 @@ namespace rcp {
 
         Packet& operator=(const Packet& other) {
 
-            command = other.getCommand();
+            m_command = other.getCommand();
 
             if (other.hasTimestamp()) {
                 setTimestamp(other.getTimestamp());
@@ -236,11 +242,11 @@ namespace rcp {
         // writeable interface
         virtual void write(Writer& out, bool all) {
 
-            out.write(static_cast<char>(command));
+            out.write(static_cast<char>(m_command));
 
             if (m_hasTimestamp) {
                 out.write(static_cast<char>(PACKET_OPTIONS_TIMESTAMP));
-                out.write(timestamp);
+                out.write(m_timestamp);
             }
 
             if (m_hasData) {
@@ -256,11 +262,11 @@ namespace rcp {
         // public methods
 
         void setCommand(enum command_t cmd) {
-            command = cmd;
+            m_command = cmd;
         }
 
         enum command_t getCommand() const {
-            return command;
+            return m_command;
         }
 
 
@@ -270,12 +276,12 @@ namespace rcp {
         }
 
         void setTimestamp(uint64_t timestamp) {
-            timestamp = timestamp;
+            m_timestamp = timestamp;
             m_hasTimestamp = true;
         }
 
         uint64_t getTimestamp() const {
-            return timestamp;
+            return m_timestamp;
         }
 
         void clearTimestamp() {
@@ -294,7 +300,7 @@ namespace rcp {
 
         void setData(const WriteablePtr& data) {
             m_data = data;
-            m_hasData = true;
+            m_hasData = data != nullptr;
         }
 
         WriteablePtr getData() const {
@@ -302,6 +308,7 @@ namespace rcp {
         }
 
         void clearData() {
+            m_data = nullptr;
             m_hasData = false;
         }
 
@@ -309,10 +316,10 @@ namespace rcp {
     private:
 
         // mandatory
-        enum command_t command;
+        enum command_t m_command;
 
         // options
-        uint64_t timestamp;
+        uint64_t m_timestamp;
         bool m_hasTimestamp;
 
         WriteablePtr m_data;

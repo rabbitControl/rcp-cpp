@@ -271,7 +271,7 @@ namespace rcp {
             }
         } else {
             // no data, respond with version
-            WriteablePtr version = std::make_shared<InfoData>(RCP_SPECIFICATION_VERSION, m_applicationId);
+            WriteablePtr version = InfoData::create(RCP_SPECIFICATION_VERSION, m_applicationId);
             Packet resp_packet(COMMAND_INFO, version);
             StringStreamWriter writer;
             resp_packet.write(writer, false);

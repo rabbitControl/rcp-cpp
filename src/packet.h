@@ -40,6 +40,7 @@
 #include "parameter_custom.h"
 #include "parameter_parser.h"
 #include "infodata.h"
+#include "iddata.h"
 
 namespace rcp {
 
@@ -121,10 +122,16 @@ namespace rcp {
                             break;
 
                         case COMMAND_INITIALIZE:
-                            // TODO
+                        {
                             // exect ID-data or null
-                            // parameter-id followed by terminator
+                            const IdDataPtr& id_data = IdData::parse(is);
+
+                            if (id_data) {
+                                packet_option.getValue().setData(id_data);
+                            }
+
                             break;
+                        }
 
                         case COMMAND_DISCOVER:
                             // TODO
@@ -133,13 +140,24 @@ namespace rcp {
                             break;
 
                         case COMMAND_UPDATE:
-                        case COMMAND_REMOVE: {
-
+                        {
                             // we expect a Parameter
                             WriteablePtr param = ParameterParser::parse(is);
 
                             if (param != nullptr) {
                                 packet_option.getValue().setData(param);
+                            }
+
+                            break;
+                        }
+
+                        case COMMAND_REMOVE:
+                        {
+                            // we expect ID Data
+                            const IdDataPtr& id_data = IdData::parse(is);
+
+                            if (id_data) {
+                                packet_option.getValue().setData(id_data);
                             }
 
                             break;

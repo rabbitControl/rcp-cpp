@@ -455,8 +455,7 @@ void _parseData(const std::string& filename) {
     }
         break;
 
-    case COMMAND_UPDATE:
-    case COMMAND_REMOVE:
+    case COMMAND_UPDATE:    
     {
         if (!the_packet.hasData()) {
             std::cout << "error: packet does not contain data\n";
@@ -516,7 +515,24 @@ void _parseData(const std::string& filename) {
         }
     }
         break;
+
+    case COMMAND_REMOVE:
+    {
+        if (!the_packet.hasData()) {
+            std::cout << "remove packet does not contain data\n";
+            return;
+        }
+
+        // assume this is a id-data
+        IdDataPtr data = std::dynamic_pointer_cast<IdData>(the_packet.getData());
+        if (data) {
+            std::cout << "id: " << data->getId();
+        }
+
+        break;
     }
+    }
+
 
 }
 
@@ -548,9 +564,31 @@ void testInfoData() {
 }
 
 
+void testRemovePacket() {
+
+    // serialize
+    Packet packet(COMMAND_REMOVE);
+    IdDataPtr data = IdData::create(576);
+    packet.setData(data);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    std::cout << "infodata packet:\n";
+    writer.dump();
+}
+
 //-------------------------------
 //-------------------------------
 int main(int argc, char const *argv[]) {
+
+    parseData("../RCP/example_data/packet_remove.rcp");
+    testRemovePacket();
+    return 0;
+
+    parseData("../RCP/example_data/packet_bool_no_user.rcp");
+    return  0;
+
 
     testHierarchy();
     testTransporter();

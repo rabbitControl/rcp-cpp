@@ -164,9 +164,10 @@ namespace rcp {
 
 
         // send removes
-        for (auto& p : parameterManager->removedParameter) {
-
-            Packet packet(COMMAND_REMOVE, p.second);
+        for (auto& p : parameterManager->removedParameter)
+        {
+            WriteablePtr id_data = IdData::create(p.second->getId());
+            Packet packet(COMMAND_REMOVE, id_data);
             sendPacket(packet);
         }
         parameterManager->removedParameter.clear();

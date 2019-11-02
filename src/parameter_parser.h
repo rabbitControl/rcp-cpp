@@ -69,7 +69,7 @@ namespace rcp {
             // handle certain datatypes
             if (type_id == DATATYPE_RANGE) {
 
-                // get subtype
+                // get element type
                 datatype_t element_type_id = static_cast<datatype_t>(is.get());
 
                 param = ParameterFactory::createRangeParameter(parameter_id, element_type_id);

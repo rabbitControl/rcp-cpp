@@ -38,10 +38,27 @@
 #include "specializetypes.h"
 #include "parameterfactory.h"
 
+
 namespace rcp {
 
     class ParameterParser {
     public:
+
+        static ParameterPtr parseUpdateValue(std::istream& is) {
+
+            // read id
+            int16_t parameter_id = readFromStream(is, parameter_id);
+
+            // get parameter type_id
+            datatype_t type_id = static_cast<datatype_t>(is.get());
+
+            if (type_id == DATATYPE_BANG || type_id == DATATYPE_GROUP) {
+                return nullptr;
+            }
+
+            return ParameterFactory::createParameterReadValue(parameter_id, type_id, is);
+        }
+
         static ParameterPtr parse(std::istream& is) {
 
             // get id and type

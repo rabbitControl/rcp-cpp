@@ -433,8 +433,7 @@ void _parseData(const std::string& filename) {
     case COMMAND_INVALID:
     case COMMAND_MAX_:
     case COMMAND_DISCOVER:
-    case COMMAND_INITIALIZE:
-    case COMMAND_UPDATEVALUE:
+    case COMMAND_INITIALIZE:    
         std::cout << "command not handled: " << the_packet.getCommand();
         break;
 
@@ -455,6 +454,7 @@ void _parseData(const std::string& filename) {
     }
         break;
 
+    case COMMAND_UPDATEVALUE:
     case COMMAND_UPDATE:    
     {
         if (!the_packet.hasData()) {
@@ -578,9 +578,34 @@ void testRemovePacket() {
     writer.dump();
 }
 
+void testUpdateValuePacket() {
+
+    // serialize
+    Packet packet(COMMAND_UPDATEVALUE);
+
+    ParameterServer server;
+    rcp::BooleanParameter& bool1 = server.createBooleanParameter("bool 1");
+    bool1.setValue(true);
+
+    IdDataPtr data = IdData::create(576);
+    packet.setData(data);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    std::cout << "infodata packet:\n";
+    writer.dump();
+}
+
 //-------------------------------
 //-------------------------------
 int main(int argc, char const *argv[]) {
+
+    parseData("../RCP/example_data/packet_updatevalue_s8.rcp");
+    parseData("../RCP/example_data/packet_updatevalue_s32.rcp");
+    parseData("../RCP/example_data/packet_updatevalue_string.rcp");
+    return 0;
+
 
     parseData("../RCP/example_data/packet_remove.rcp");
     testRemovePacket();

@@ -69,6 +69,26 @@ namespace rcp {
             // create proper packet
             Option<Packet> packet_option = Packet(command);
 
+            //------------------------------------
+            // handle update value
+            if (packet_option.getValue().getCommand() == COMMAND_UPDATEVALUE) {
+
+                WriteablePtr param = ParameterParser::parseUpdateValue(is);
+
+                if (param != nullptr) {
+                    packet_option.getValue().setData(param);
+                }
+
+                if (!is.eof()) {
+                    // should be eof
+                    // throw error?
+                }
+
+                return packet_option;
+            }
+
+
+            //------------------------------------
             // read options
             while(!is.eof()) {
 
@@ -164,8 +184,7 @@ namespace rcp {
                         }
 
                         case COMMAND_UPDATEVALUE:
-                            // TODO
-                            // epxect special update command
+                            // handled above
                             break;
                         } // switch
 

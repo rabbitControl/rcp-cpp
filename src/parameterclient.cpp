@@ -103,15 +103,12 @@ namespace rcp {
                 break;
 
             case COMMAND_UPDATE:
+            case COMMAND_UPDATEVALUE:
                 _update(the_packet);
                 break;
 
             case COMMAND_INFO:
                 std::cerr << "got version command: ???\n";
-                break;
-
-            case COMMAND_UPDATEVALUE:
-                std::cerr << "COMMAND_UPDATEVALUE not implemented!\n";
                 break;
 
             case COMMAND_DISCOVER:

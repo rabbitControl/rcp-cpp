@@ -107,8 +107,19 @@ namespace rcp {
                 break;
 
             case COMMAND_INFO:
-                std::cerr << "got version command: ???\n";
+            {
+                rcp::InfoDataPtr infodata = std::dynamic_pointer_cast<rcp::InfoData>(the_packet.getData());
+                if (infodata) {
+
+                    m_serverVersion = infodata->getVersion();
+                    m_serverApplicationId = infodata->getApplicationId();
+
+                } else {
+                    std::cerr << "got version command: ???\n";
+                }
+
                 break;
+            }
 
             case COMMAND_UPDATEVALUE:
                 std::cerr << "COMMAND_UPDATEVALUE not implemented!\n";

@@ -2,6 +2,7 @@
 
 #include "stringstreamwriter.h"
 #include "streamwriter.h"
+#include "rcp.h"
 
 namespace rcp {
 
@@ -99,7 +100,7 @@ namespace rcp {
 
             case COMMAND_INITIALIZE:
                 // error
-                std::cerr << "got initialize command: ???\n";
+                std::cerr << "invalid command 'initialize' on client\n";
                 break;
 
             case COMMAND_UPDATE:
@@ -108,23 +109,12 @@ namespace rcp {
                 break;
 
             case COMMAND_INFO:
-            {
-                rcp::InfoDataPtr infodata = std::dynamic_pointer_cast<rcp::InfoData>(the_packet.getData());
-                if (infodata) {
-
-                    m_serverVersion = infodata->getVersion();
-                    m_serverApplicationId = infodata->getApplicationId();
-
-                } else {
-                    std::cerr << "got version command: ???\n";
-                }
-
+                _version(the_packet);
                 break;
-            }
 
             case COMMAND_DISCOVER:
                 // not implemented
-                std::cerr << "command not implemented!\n";
+                std::cerr << "invalid command 'discover' on client\n";
                 break;
 
             case COMMAND_REMOVE:
@@ -136,6 +126,25 @@ namespace rcp {
                 std::cerr << "got invalid command!\n";
                 break;
             }
+        }
+    }
+
+    void ParameterClient::_version(Packet& packet) {
+
+        if (packet.hasData()) {
+            // log info data
+            InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
+            if (info_data) {
+                std::cout << "version: " << info_data->getVersion() << std::endl;
+                std::cout << "applicationid: " << info_data->getApplicationId() << std::endl;
+            }
+        } else {
+            // no data, respond with version
+            WriteablePtr version = InfoData::create(RCP_SPECIFICATION_VERSION, m_applicationId);
+            Packet resp_packet(COMMAND_INFO, version);
+            StringStreamWriter writer;
+            resp_packet.write(writer, false);
+            m_transporter.send(writer.getBuffer());
         }
     }
 
@@ -153,21 +162,20 @@ namespace rcp {
         rcp::ParameterPtr param = std::dynamic_pointer_cast<rcp::IParameter>(packet.getData());
         if (param) {
 
-            std::cout << "update for param: " << param->getId() << "\n";
-
             rcp::ParameterPtr chached_param = m_parameterManager->getParameter(param->getId());
+
             if (rcp::ParameterManager::isValid(chached_param)) {
+
                 // got it... update it
                 std::cout << "update exisiting parameter: " << param->getId() << "\n";
                 chached_param->update(param);
+
             } else {
-                std::cout << "todo: add parameter: " << param->getId() << "\n";
-                std::flush(std::cout);
 
                 // parameter not in cache, add it
                 m_parameterManager->_addParameter(param);
 
-                // call disconnected callbacks
+                // call parameter added callbacks
                 for (const auto& kv : parameter_added_cb) {
                     (kv.first->*kv.second)(param);
                 }

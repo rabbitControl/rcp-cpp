@@ -57,7 +57,8 @@ namespace rcp {
         virtual void disconnect() = 0;
         virtual bool isConnected() = 0;
 
-        virtual void send(char* data) = 0;
+        virtual void send(std::istream& data) = 0;
+        virtual void send(char* data, int size) = 0;
 
         void addConnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
             connected_cb[c] = func;

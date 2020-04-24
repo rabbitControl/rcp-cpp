@@ -36,7 +36,7 @@ namespace rcp {
         char data[2];
         data[0] = 0x02;
         data[1] = 0x00;
-        m_transporter.send(data);
+        m_transporter.send(data, 2);
     }
 
     // sending all dirty parameter to server!
@@ -64,7 +64,7 @@ namespace rcp {
             char* d = new char[length];
             data.read(d, length);
 
-            m_transporter.send(d);
+            m_transporter.send(d, length);
             delete []d;
         }
         m_parameterManager->dirtyParameter.clear();
@@ -78,7 +78,7 @@ namespace rcp {
         char data[2];
         data[0] = 0x01;
         data[1] = 0x00;
-        m_transporter.send(data);
+        m_transporter.send(data, 2);
 
         // send initialize command
         initialize();

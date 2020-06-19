@@ -198,7 +198,11 @@ namespace rcp {
 
         //------------------------------------
         // implement INumberDefinition
-        virtual T getMinimum() const { return obj->minimum; }
+        virtual T getMinimum() const {
+            if (obj->hasMinimum)
+                return obj->minimum;
+            return 0;
+        }
         virtual void setMinimum(const T& val) {
 
             obj->hasMinimum = true;
@@ -218,7 +222,11 @@ namespace rcp {
             setDirty();
         }
 
-        virtual T getMaximum() const { return obj->maximum; }
+        virtual T getMaximum() const {
+            if (obj->hasMaximum)
+                return obj->maximum;
+            return 0;
+        }
         virtual void setMaximum(const T& val) {
 
             obj->hasMaximum = true;
@@ -238,7 +246,11 @@ namespace rcp {
             setDirty();
         }
 
-        virtual T getMultipleof() const { return obj->multipleof; }
+        virtual T getMultipleof() const {
+            if (obj->hasMultipleof)
+                return obj->multipleof;
+            return 0;
+        }
         virtual void setMultipleof(const T& val) {
 
             obj->hasMultipleof = true;
@@ -258,7 +270,11 @@ namespace rcp {
             setDirty();
         }
 
-        virtual number_scale_t getScale() const { return obj->scale; }
+        virtual number_scale_t getScale() const {
+            if (obj->hasScale)
+                return obj->scale;
+            return NUMBER_SCALE_LINEAR;
+        }
         virtual void setScale(const number_scale_t& val) {
 
             obj->hasScale = true;

@@ -251,12 +251,12 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            std::string defaultValue{};
+            std::string defaultValue{""};
             bool hasDefaultValue;
             bool defaultValueChanged;
 
             // options - regex
-            std::string regex{};
+            std::string regex{""};
             bool hasRegex;
             bool regexChanged;
 

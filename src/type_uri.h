@@ -310,12 +310,12 @@ namespace rcp {
             datatype_t datatype;
 
             // options - default
-            std::string defaultValue{};
+            std::string defaultValue{""};
             bool hasDefaultValue;
             bool defaultValueChanged;
 
             // options - filter
-            std::string filter{};
+            std::string filter{""};
             bool hasFilter;
             bool filterChanged;
 

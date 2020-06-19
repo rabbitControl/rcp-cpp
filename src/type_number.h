@@ -510,28 +510,28 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            T defaultValue{};
+            T defaultValue{0};
             bool hasDefaultValue;
             bool defaultValueChanged;
 
             // options - number
-            T minimum{};
+            T minimum{0};
             bool hasMinimum;
             bool minimumChanged;
 
-            T maximum{};
+            T maximum{0};
             bool hasMaximum;
             bool maximumChanged;
 
-            T multipleof{};
+            T multipleof{0};
             bool hasMultipleof;
             bool multipleofChanged;
 
-            number_scale_t scale{};
+            number_scale_t scale{NUMBER_SCALE_LINEAR};
             bool hasScale;
             bool scaleChanged;
 
-            std::string unit{};
+            std::string unit{""};
             bool hasUnit;
             bool unitChanged;
 

@@ -324,7 +324,7 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            std::string defaultValue{};
+            std::string defaultValue{""};
             bool hasDefaultValue;
             bool defaultValueChanged;
 
@@ -332,7 +332,7 @@ namespace rcp {
             std::vector<std::string> options;
             bool optionsChanged;
 
-            bool multiselect{};
+            bool multiselect{false};
             bool hasMultiselect;
             bool multiselectChanged;
 

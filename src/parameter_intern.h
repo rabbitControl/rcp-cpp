@@ -264,9 +264,13 @@ namespace rcp {
                     // TODO: handle this
                     break;
                 case PARAMETER_OPTIONS_USERDATA:
-                    // TODO: handle this
+                {
+                    std::uint32_t size = readFromStream(is, size);
+                    std::vector<char> data;
+                    obj->userdata.resize(size);
+                    is.read(obj->userdata.data(), size);
                     break;
-
+                }
                 case PARAMETER_OPTIONS_USERID: {
 
                     std::string st = readTinyString(is);

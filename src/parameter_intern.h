@@ -289,6 +289,8 @@ namespace rcp {
 
         //------------------------------------
         // implement IParameter
+        virtual bool isValueParameter() { return false; }
+
         virtual int16_t getId() const { return obj->parameter_id; }
         virtual ITypeDefinition& getTypeDefinition() const { return obj->typeDefinition; }
 
@@ -1000,6 +1002,9 @@ namespace rcp {
                 std::cout << "value: " << obj->value << "\n";
             }
         }
+
+        // iparameter
+        bool isValueParameter() { return true; }
 
         virtual bool handleOption(const parameter_options_t& opt, std::istream& is) {
 

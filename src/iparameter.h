@@ -126,6 +126,9 @@ namespace rcp {
         virtual void dump() = 0;
         virtual void dispose() = 0;
 
+        //
+        virtual bool isValueParameter() = 0;
+
         template<typename, datatype_t, td_types> friend class TypeDefinition;
         friend class GroupParameter;
         friend class ParameterManager;

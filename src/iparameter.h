@@ -144,6 +144,7 @@ namespace rcp {
 
     protected:
         virtual void setDirty() = 0;
+        virtual bool onlyValueChanged() const { return false; }
 
     private:
         virtual void setParent(GroupParameter& parent) = 0;

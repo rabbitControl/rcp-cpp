@@ -19,7 +19,6 @@ namespace rcp {
         dispose();
     }
 
-
     void ParameterClient::dispose() {
         disconnect();
     }
@@ -50,7 +49,15 @@ namespace rcp {
         // send updates
         for (auto& p : m_parameterManager->dirtyParameter) {
 
-            Packet packet(COMMAND_UPDATE, p.second);
+            // TODO: send COMMAND_UPDATEVALUE
+            command_t cmd = COMMAND_UPDATE;
+
+            if (p.second->onlyValueChanged())
+            {
+                cmd = COMMAND_UPDATEVALUE;
+            }
+
+            Packet packet(cmd, p.second);
 
             // serialize
             StringStreamWriter writer;
@@ -167,7 +174,6 @@ namespace rcp {
             if (rcp::ParameterManager::isValid(chached_param)) {
 
                 // got it... update it
-                std::cout << "update exisiting parameter: " << param->getId() << "\n";
                 chached_param->update(param);
 
             } else {
@@ -224,7 +230,6 @@ namespace rcp {
             std::cerr << "data not a parameter\n";
         }
     }
-
 
 }
 

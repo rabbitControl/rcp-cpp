@@ -175,7 +175,15 @@ namespace rcp {
         // send updates
         for (auto& p : parameterManager->dirtyParameter) {
 
-            Packet packet(COMMAND_UPDATE, p.second);
+            // TODO send COMMAND_UPDATEVALUE
+            command_t cmd = COMMAND_UPDATE;
+
+            if (p.second->onlyValueChanged())
+            {
+                cmd = COMMAND_UPDATEVALUE;
+            }
+
+            Packet packet(cmd, p.second);
             sendPacket(packet);
         }
         parameterManager->dirtyParameter.clear();

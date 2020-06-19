@@ -597,6 +597,17 @@ namespace rcp {
             }
         }
 
+        bool anyOptionChanged() const {
+            return obj->labelChanged
+                    || obj->descriptionChanged
+                    || obj->tagsChanged
+                    || obj->orderChanged
+                    || obj->parentChanged
+                    || obj->userdataChanged
+                    || obj->useridChanged
+                    || obj->readonlyChanged;
+        }
+
     private:
 
         virtual void setParent(GroupParameter& parent);
@@ -984,15 +995,26 @@ namespace rcp {
         // implement writeable
         virtual void write(Writer& out, bool all) {
 
-            out.write(Parameter<TD>::getId());
-            getDefaultTypeDefinition().write(out, all);
+            if (onlyValueChanged())
+            {
+                // write updatevalue data
+                out.write(Parameter<TD>::getId());
+                getTypeDefinition().writeMandatory(out);
+                obj->writeValue(out);
+            }
+            else
+            {
+                out.write(Parameter<TD>::getId());
+                getDefaultTypeDefinition().write(out, all);
 
-            obj->write(out, all);
+                obj->write(out, all);
 
-            Parameter<TD>::writeOptions(out, all);
+                Parameter<TD>::writeOptions(out, all);
 
-            // terminator
-            out.write(static_cast<char>(TERMINATOR));
+                // terminator
+                out.write(static_cast<char>(TERMINATOR));
+            }
+
         }
 
         virtual void dump() {
@@ -1241,6 +1263,12 @@ namespace rcp {
     protected:
         using Parameter<TD>::setDirty;
 
+        virtual bool onlyValueChanged() const {
+            return !Parameter<TD>::anyOptionChanged()
+                    && !getTypeDefinition().anyOptionChanged()
+                    && obj->valueChanged;
+        }
+
     private:
 
         class ValueUpdateEventHolder {
@@ -1276,11 +1304,13 @@ namespace rcp {
                 } else if (valueChanged) {
                     out.write(static_cast<char>(PARAMETER_OPTIONS_VALUE));
 
-                    T v{};
-                    out.write(v);
-
-                    valueChanged = false;
+                    writeValue(out);
                 }
+            }
+
+            void writeValue(Writer& out) {
+                out.write(value);
+                valueChanged = false;
             }
 
             void callValueUpdatedCb() {

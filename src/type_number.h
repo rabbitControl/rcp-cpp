@@ -76,12 +76,16 @@ namespace rcp {
 
         //------------------------------------
         // implement writeable
-        void write(Writer& out, bool all) {
+        virtual void write(Writer& out, bool all) {
 
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
+        }
+
+        virtual void writeMandatory(Writer& out) const {
+            obj->writeMandatory(out);
         }
 
         //------------------------------------
@@ -295,6 +299,16 @@ namespace rcp {
             setDirty();
         }
 
+
+        virtual bool anyOptionChanged() const {
+            return obj->defaultValueChanged
+                    || obj->minimumChanged
+                    || obj->maximumChanged
+                    || obj->multipleofChanged
+                    || obj->scaleChanged
+                    || obj->unitChanged;
+        }
+
         virtual void dump() {
             std::cout << "--- type number ---\n";
 
@@ -389,9 +403,13 @@ namespace rcp {
               , parameter(param)
             {}
 
-            void write(Writer& out, bool all) {
-
+            void writeMandatory(Writer& out) {
                 out.write(static_cast<char>(datatype));
+            }
+
+            virtual void write(Writer& out, bool all) {
+
+                writeMandatory(out);
 
                 // write default value
                 if (hasDefaultValue) {

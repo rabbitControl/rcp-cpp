@@ -152,6 +152,10 @@ namespace rcp {
             out.write(static_cast<char>(TERMINATOR));
         }
 
+        virtual void writeMandatory(Writer& out) const {
+            obj->writeMandatory(out);
+        }
+
         //------------------------------------
         // implement optionparser
         void parseOptions(std::istream& is) {
@@ -206,6 +210,12 @@ namespace rcp {
             }
         }
 
+        virtual bool anyOptionChanged() const {
+            return obj->defaultValueChanged
+                    || obj->optionsChanged
+                    || obj->multiselectChanged;
+        }
+
         virtual std::string readValue(std::istream& is) {
             return readTinyString(is);
         }
@@ -255,9 +265,13 @@ namespace rcp {
               , parameter(param)
             {}
 
+            void writeMandatory(Writer& out) {
+                out.write(static_cast<char>(datatype));
+            }
+
             void write(Writer& out, bool all) {
 
-                out.write(static_cast<char>(datatype));
+                writeMandatory(out);
 
                 // write default value
                 if (hasDefaultValue) {

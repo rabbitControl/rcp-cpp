@@ -113,7 +113,6 @@ namespace rcp {
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
-
         }
 
         void writeOptions(Writer& out, bool all) {
@@ -1010,13 +1009,13 @@ namespace rcp {
             return false;
         }
 
+
         // implement IValueParameter
         const T& getValue() const { return obj->value; }
         void setValue(const T& value) {
 
             obj->hasValue = true;
 
-            // todo: compare??
             if (obj->value == value) {
                 return;
             }
@@ -1157,18 +1156,17 @@ namespace rcp {
             }
 
             // update value
-            bool updated = false;
-
             auto v_other = std::dynamic_pointer_cast<ValueParameter<T, TD, type_id> >(other);
-            if (v_other) {
-                if (v_other->hasValue()) {
+            if (v_other)
+            {
+                if (v_other->hasValue())
+                {
                     setValue(v_other->getValue());
-                    updated = true;
+                    if (obj->valueChanged)
+                    {
+                        obj->callValueUpdatedCb();
+                    }
                 }
-            }
-
-            if (updated) {
-                obj->callValueUpdatedCb();
             }
 
             // update base
@@ -1391,38 +1389,43 @@ namespace rcp {
 
         if (other->hasLabel()) {
             setLabel(other->getLabel());
-            updated = true;
+            updated = obj->labelChanged;
         }
 
         if (other->hasDescription()) {
-            setDescription(other->getDescription());
-            updated = true;
+            setDescription(other->getDescription());            
+            if (!updated) updated = obj->descriptionChanged;
         }
 
         if (other->hasTags()) {
             setTags(other->getTags());
-            updated = true;
+            if (!updated) updated = obj->tagsChanged;
         }
 
         if (other->hasOrder()) {
             setOrder(other->getOrder());
-            updated = true;
+            if (!updated) updated = obj->orderChanged;
         }
 
         if (other->hasParent()) {
             std::shared_ptr<GroupParameter> p = other->getParent().lock();
             p->addChild(*this);
-            updated = true;
+            if (!updated) updated = obj->parentChanged;
         }
 
         if (other->hasUserdata()) {
             setUserdata(other->getUserdata());
-            updated = true;
+            if (!updated) updated = obj->userdataChanged;
         }
 
         if (other->hasUserid()) {
             setUserid(other->getUserid());
-            updated = true;
+            if (!updated) updated = obj->useridChanged;
+        }
+
+        if (other->hasReadonly()) {
+            setReadonly(other->getReadonly());
+            if (!updated) updated = obj->readonlyChanged;
         }
 
         if (updated) {

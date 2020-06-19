@@ -175,7 +175,8 @@ namespace rcp {
                     std::string d = readFromStream(is, d);
                     CHECK_STREAM
 
-                    setDefault(d);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = d;
                     break;
                 }
                 case ENUM_OPTIONS_ENTRIES: {
@@ -185,7 +186,7 @@ namespace rcp {
                     CHECK_STREAM
                     while (option != "") {
 
-                        addOption(option);
+                        obj->options.push_back(option);
 
                         option = readTinyString(is);
                         CHECK_STREAM
@@ -197,7 +198,8 @@ namespace rcp {
                     bool multi = readFromStream(is, multi);
                     CHECK_STREAM
 
-                    setMultiselect(multi);   
+                    obj->hasMultiselect = true;
+                    obj->multiselect = multi;
                     break;
                 }
                 }

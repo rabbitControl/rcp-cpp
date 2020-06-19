@@ -106,7 +106,8 @@ namespace rcp {
                     T def = readFromStream(is, def);
                     CHECK_STREAM
 
-                    setDefault(def);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = def;
                     break;
                 }
                 case NUMBER_OPTIONS_MINIMUM: {
@@ -114,7 +115,8 @@ namespace rcp {
                     T min = readFromStream(is, min);
                     CHECK_STREAM
 
-                    setMinimum(min);
+                    obj->hasMinimum = true;
+                    obj->minimum = min;
                     break;
                 }
                 case NUMBER_OPTIONS_MAXIMUM: {
@@ -122,7 +124,8 @@ namespace rcp {
                     T max = readFromStream(is, max);
                     CHECK_STREAM
 
-                    setMaximum(max);
+                    obj->hasMaximum = true;
+                    obj->maximum = max;
                     break;
                 }
                 case NUMBER_OPTIONS_MULTIPLEOF: {
@@ -130,7 +133,8 @@ namespace rcp {
                     T mult = readFromStream(is, mult);
                     CHECK_STREAM
 
-                    setMultipleof(mult);
+                    obj->hasMultipleof = true;
+                    obj->multipleof = mult;
                     break;
                 }
                 case NUMBER_OPTIONS_SCALE: {
@@ -138,7 +142,8 @@ namespace rcp {
                     number_scale_t scale = static_cast<number_scale_t>(is.get());
                     CHECK_STREAM
 
-                    setScale(scale);
+                    obj->hasScale = true;
+                    obj->scale = scale;
                     break;
                 }
                 case NUMBER_OPTIONS_UNIT: {
@@ -146,7 +151,8 @@ namespace rcp {
                     std::string unit = readTinyString(is);
                     CHECK_STREAM
 
-                    setUnit(unit);
+                    obj->hasUnit = true;
+                    obj->unit = unit;
                     break;
                 }
                 }

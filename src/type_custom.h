@@ -101,7 +101,8 @@ namespace rcp {
                     T def = readFromStream(is, def);
                     CHECK_STREAM
 
-                    setDefault(def);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = def;
                     break;
                 }
                 case CUSTOMTYPE_OPTIONS_UUID: {
@@ -110,7 +111,8 @@ namespace rcp {
                     is.get(uuid, 16);
                     CHECK_STREAM
 
-                    setUuid(uuid, 16);
+                    obj->hasUuid = true;
+                    memcpy(obj->uuid, uuid, 16);
                     break;
                 }
                 case CUSTOMTYPE_OPTIONS_CONFIG: {

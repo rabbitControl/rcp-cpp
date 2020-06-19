@@ -100,7 +100,8 @@ namespace rcp {
                     std::string d = readFromStream(is, d);
                     CHECK_STREAM
 
-                    setDefault(d);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = d;
                     break;
                 }
                 case STRING_OPTIONS_REGULAR_EXPRESSION: {
@@ -108,7 +109,8 @@ namespace rcp {
                     std::string d = readFromStream(is, d);
                     CHECK_STREAM
 
-                    setRegex(d);
+                    obj->hasRegex = true;
+                    obj->regex = d;
                     break;
                 }
                 }

@@ -129,7 +129,8 @@ namespace rcp {
                     T def = readFromStream(is, def);
                     CHECK_STREAM   
 
-                    setDefault(def);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = def;
                     break;
                 }
                 }

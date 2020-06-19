@@ -163,7 +163,8 @@ namespace rcp {
                     std::string def = readLongString(is);
                     CHECK_STREAM
 
-                    setDefault(def);
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = def;
                     break;
                 }
                 case URI_OPTIONS_FILTER: {
@@ -171,7 +172,8 @@ namespace rcp {
                     std::string filter = readTinyString(is);
                     CHECK_STREAM
 
-                    setFilter(filter);
+                    obj->hasFilter = true;
+                    obj->filter = filter;
                     break;
                 }
 

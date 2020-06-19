@@ -110,7 +110,8 @@ namespace rcp {
                     ElementType v2 = readFromStream(is, v2);
                     CHECK_STREAM
 
-                    setDefault(Range<ElementType>(v1, v2));
+                    obj->hasDefaultValue = true;
+                    obj->defaultValue = Range<ElementType>(v1, v2);
                     break;
                 }
 

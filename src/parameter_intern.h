@@ -159,9 +159,10 @@ namespace rcp {
                         CHECK_STREAM
 
                         if (code_str == language_string_any) {
-                            setLabel(label);
+                            obj->hasLabel = true;
+                            obj->label = label;
                         } else {
-                            setLanguageLabel(code_str, label);
+                            obj->languageLabel[code_str] = label;
                         }
 
                         // peek next byte
@@ -194,9 +195,10 @@ namespace rcp {
                         CHECK_STREAM
 
                         if (code_str == language_string_any) {
-                            setDescription(description);
+                            obj->hasDescription = true;
+                            obj->description = description;
                         } else {
-                            setDescriptionLanguage(code_str, description);
+                            obj->languageDescription[code_str] = description;
                         }
 
                         // peek next byte
@@ -212,7 +214,8 @@ namespace rcp {
                     std::string st = readTinyString(is);
                     CHECK_STREAM
 
-                    setTags(st);
+                    obj->hasTags = true;
+                    obj->tags = st;
                     break;
                 }
                 case PARAMETER_OPTIONS_ORDER: {
@@ -220,7 +223,8 @@ namespace rcp {
                     int32_t val = readFromStream(is, obj->order);
                     CHECK_STREAM
 
-                    setOrder(val);
+                    obj->hasOrder = true;
+                    obj->order = val;
                     break;
                 }
                 case PARAMETER_OPTIONS_PARENTID: {
@@ -254,7 +258,8 @@ namespace rcp {
                     std::string st = readTinyString(is);
                     CHECK_STREAM
 
-                    setUserid(st);
+                    obj->hasUserid = true;
+                    obj->userid = st;
                     break;
                 }
 
@@ -263,7 +268,8 @@ namespace rcp {
                     bool ro = readFromStream(is, ro);
                     CHECK_STREAM
 
-                    setReadonly(ro);
+                    obj->hasReadonly = true;
+                    obj->readonly = ro;
                     break;
                 }
 
@@ -511,13 +517,13 @@ namespace rcp {
             obj->readonly = readonly;
             obj->readonlyChanged = true;
             setDirty();
-        };
+        }
         virtual bool hasReadonly() const { return obj->hasReadonly; };
         virtual void clearReadonly() {
             obj->hasReadonly = false;
             obj->readonlyChanged = true;
             setDirty();
-        };
+        }
 
         //----------------------
         //
@@ -952,14 +958,16 @@ namespace rcp {
             Parameter<TD>(id)
           , obj(std::make_shared<Value>())
         {
-            setValue(init);
+            obj->hasValue = true;
+            obj->value = init;
         }
 
         ValueParameter(int16_t id, const T& init) :
             Parameter<TD>(id)
           , obj(std::make_shared<Value>())
         {
-            setValue(init);
+            obj->hasValue = true;
+            obj->value = init;
         }
 
         ~ValueParameter()
@@ -1001,7 +1009,8 @@ namespace rcp {
                 T val = getDefaultTypeDefinition().readValue(is);
                 CHECK_STREAM_RETURN(false)
 
-                setValue(val);
+                obj->hasValue = true;
+                obj->value = val;
                 return true;
             }
 

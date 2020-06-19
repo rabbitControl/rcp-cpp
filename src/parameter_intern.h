@@ -1188,7 +1188,7 @@ namespace rcp {
         }
 
 
-        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
+        virtual const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
 
             for(auto& f : obj->valueUpdatedCallbacks) {
                 if (&func == &f->callback) {
@@ -1202,7 +1202,7 @@ namespace rcp {
             return obj->valueUpdatedCallbacks.back()->callback;
         }
 
-        const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {
+        virtual const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {
 
             for(auto& f : obj->valueUpdatedCallbacks) {
                 if (&func == &f->callback) {
@@ -1216,7 +1216,7 @@ namespace rcp {
             return obj->valueUpdatedCallbacks.back()->callback;
         }
 
-        void removeValueUpdatedCb(const std::function< void(T&) >& func) {
+        virtual void removeValueUpdatedCb(const std::function< void(T&) >& func) {
 
             for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ ) {
 
@@ -1227,7 +1227,7 @@ namespace rcp {
             }
         }
 
-        void clearValueUpdatedCb() {
+        virtual void clearValueUpdatedCb() {
             obj->valueUpdatedCallbacks.clear();
         }
 

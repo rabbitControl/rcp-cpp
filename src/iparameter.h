@@ -122,6 +122,12 @@ namespace rcp {
         virtual void update(const ParameterPtr& other) = 0;
         virtual ParameterPtr newReference() = 0;
 
+        // update callbacks
+        virtual const std::function< void() >& addUpdatedCb(std::function< void() >& func) = 0;
+        virtual const std::function< void() >& addUpdatedCb(std::function< void() >&& func) = 0;
+        virtual void removeUpdatedCb(const std::function< void() >& func) = 0;
+        virtual void clearUpdatedCb() = 0;
+
         //
         virtual void dump() = 0;
         virtual void dispose() = 0;

@@ -238,9 +238,23 @@ namespace rcp {
                             // parsed parameter is is a proxy parameter
                             // _not_ set as child of parent!
                             // proxy-parameter is either updating exisitng parameter in cache
-                            // or is added. if the proxy-parameter is added it gets added to the parent too
-                            setParent(std::dynamic_pointer_cast<GroupParameter>(parent));
+                            // or is added. if the proxy-parameter is added it gets added to the parent too                            
+                            if (auto p = obj->parent.lock()) {
+                                if (parent->getId() == p->getId()) {
+                                    // parent already set
+                                    return;
+                                } else {
+                                    // remove from parent...
+                                    p->removeChild(*this);
+                                }
+                            }
+
+                            obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
                         }
+                    }
+                    else
+                    {
+                        // TODO: parent does not exist - put it into list, look it up later??
                     }
 
                     break;
@@ -619,8 +633,7 @@ namespace rcp {
         }
 
         virtual void setManager(std::shared_ptr<IParameterManager> manager) {
-            obj->parameterManager = manager;
-            setDirty();
+            obj->parameterManager = manager;            
         }
 
         class UpdateEventHolder {

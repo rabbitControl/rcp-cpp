@@ -54,15 +54,9 @@ void testHierarchy() {
     rcp::StringParameter& sp = server.createStringParameter("string uno");
     rcp::BooleanParameter& bool1 = server.createBooleanParameter("bool 1");
 
-    std::cout << "----------- adding parameter\n";
-    server.addParameter(sp);
-
     std::cout << "----------- creating group1\n";
     GroupParameterPtr group = server.createGroupParameter("group1");
     GroupParameterPtr group2 = server.createGroupParameter("group2");
-
-    std::cout << "----------- add parameter to group1\n";
-    server.addParameter(sp, group);
 
     std::cout << "----------- creating boolean\n";
     auto boolParam = server.createBooleanParameter("boolean", group);

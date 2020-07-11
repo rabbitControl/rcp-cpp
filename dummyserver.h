@@ -62,15 +62,19 @@ public:
         int length = data.tellg();
         data.seekg (0, data.beg);
 
-        char d[length];
-        data.read(d, length);
+        char *d = new char[length];
+        if (d)
+        {
+            data.read(d, length);
 
-        std::cout << "send to all: ";
-        for (int i=0; i<length; i++) {
-            std::cout << (int)d[i] << " ";
+            std::cout << "send to all: ";
+            for (int i=0; i<length; i++) {
+                std::cout << (int)d[i] << " ";
+            }
+            std::cout << "\n";
+
+            delete d;
         }
-        std::cout << "\n";
-
     }
 
     virtual int getConnectionCount() {

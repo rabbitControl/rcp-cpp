@@ -119,10 +119,14 @@ public:
         int length = 1+data.tellg();
         data.seekg (0, data.beg);
 
-        char d[length];
-        data.getline(d, length);
+        char *d = new char[length];
+        if (d)
+        {
+            data.getline(d, length);
+            std::cout << "myCallback: " << name << " : " << d << "\n";
 
-        std::cout << "myCallback: " << name << " : " << d << "\n";
+            delete d;
+        }
     }
 
     //

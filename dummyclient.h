@@ -125,7 +125,7 @@ public:
             data.getline(d, length);
             std::cout << "myCallback: " << name << " : " << d << "\n";
 
-            delete d;
+            delete[] d;
         }
     }
 

@@ -73,7 +73,7 @@ public:
             }
             std::cout << "\n";
 
-            delete d;
+            delete[] d;
         }
     }
 
@@ -121,10 +121,15 @@ public:
         int length = 1+data.tellg();
         data.seekg (0, data.beg);
 
-        char d[length];
-        data.read(d, length);
+        char *d = new char[length];
+        if (d)
+        {
+            data.read(d, length);
 
-        std::cout << "myCallback: " << name << " : " << d << "\n";
+            std::cout << "myCallback: " << name << " : " << d << "\n";
+
+            delete[] d;
+        }
     }
 
     void removeCb() {

@@ -132,7 +132,7 @@ namespace rcp {
                         obj->config.resize(data_length);
                         memcpy(&obj->config[0], &data[0], data_length);
 
-                        delete data;
+                        delete[] data;
                     }
 
                     break;

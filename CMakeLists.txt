@@ -11,6 +11,10 @@ if (MSVC)
     add_compile_options(-bigobj)
 endif()
 
+if (WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
+endif()
+
 project(RCP)
 
 file(GLOB SRC_APP

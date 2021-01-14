@@ -232,29 +232,42 @@ namespace rcp {
                     int16_t parent_id = readFromStream(is, parent_id);
                     CHECK_STREAM
 
-                    if (auto p = obj->parameterManager.lock()) {
-                        ParameterPtr parent = p->getParameter(parent_id);
-                        if (parent->getDatatype() == DATATYPE_GROUP) {
-                            // parsed parameter is is a proxy parameter
-                            // _not_ set as child of parent!
-                            // proxy-parameter is either updating exisitng parameter in cache
-                            // or is added. if the proxy-parameter is added it gets added to the parent too                            
-                            if (auto p = obj->parent.lock()) {
-                                if (parent->getId() == p->getId()) {
-                                    // parent already set
-                                    return;
-                                } else {
-                                    // remove from parent...
-                                    p->removeChild(*this);
+                    if (auto p = obj->parameterManager.lock())
+                    {
+                        if (parent_id != 0)
+                        {
+                            ParameterPtr parent = p->getParameter(parent_id);
+                            if (parent->getDatatype() == DATATYPE_GROUP)
+                            {
+                                // parsed parameter is is a proxy parameter
+                                // _not_ set as child of parent!
+                                // proxy-parameter is either updating exisitng parameter in cache
+                                // or is added. if the proxy-parameter is added it gets added to the parent too
+                                if (auto p = obj->parent.lock()) {
+                                    if (parent->getId() == p->getId()) {
+                                        // parent already set
+                                        return;
+                                    } else {
+                                        // remove from parent...
+                                        p->removeChild(*this);
+                                    }
                                 }
-                            }
 
-                            obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
+                                std::cout << "setting parent: " << parent->getId() << "\n";
+                                std::flush(std::cout);
+                                obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
+                            }
+                            else
+                            {
+                                // TODO: parent does not exist - put it into list, look it up later??
+                            }
                         }
                     }
                     else
                     {
-                        // TODO: parent does not exist - put it into list, look it up later??
+                        // TODO: manager not set... look this up later?
+                        std::cout << "no manager set!\n";
+                        std::flush(std::cout);
                     }
 
                     break;
@@ -809,11 +822,13 @@ namespace rcp {
 
 
                 // parent id
-                if (std::shared_ptr<IParameter> p = parent.lock()) {
+                if (std::shared_ptr<GroupParameter> p = parent.lock()) {
 
                     if (all || parentChanged) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_PARENTID));
-                        out.write(p->getId());
+
+                        // cast to IParameter* due to incomplete type
+                        out.write(((IParameter*)p.get())->getId());
 
                         if (!all) {
                             parentChanged = false;

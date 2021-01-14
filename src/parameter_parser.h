@@ -59,7 +59,7 @@ namespace rcp {
             return ParameterFactory::createParameterReadValue(parameter_id, type_id, is);
         }
 
-        static ParameterPtr parse(std::istream& is) {
+        static ParameterPtr parse(std::istream& is, std::shared_ptr<IParameterManager> manager = nullptr) {
 
             // get id and type
             int16_t parameter_id = readFromStream(is, parameter_id);
@@ -113,6 +113,7 @@ namespace rcp {
             }
 
             if (param) {
+                param->setManager(manager);
                 param->parseOptions(is);
             }
 

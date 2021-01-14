@@ -1386,19 +1386,19 @@ namespace rcp {
             return std::make_shared<GroupParameter>(id);
         }
 
-        GroupParameter(const GroupParameter& v) :
-            Parameter<GroupTypeDefinition>(v)
-          , obj(v.obj)
+        GroupParameter(const GroupParameter& v)
+            : Parameter<GroupTypeDefinition>(v)
+            , obj(v.obj)
         {}
 
-        GroupParameter() :
-            Parameter<GroupTypeDefinition>(static_cast<int16_t>(0)),
-            obj(std::make_shared<Value>())
+        GroupParameter()
+            : Parameter<GroupTypeDefinition>(static_cast<int16_t>(0))
+            , obj(std::make_shared<Value>())
         {}
 
-        GroupParameter(int16_t id) :
-            Parameter<GroupTypeDefinition>(id),
-            obj(std::make_shared<Value>())
+        GroupParameter(int16_t id)
+            : Parameter<GroupTypeDefinition>(id)
+            , obj(std::make_shared<Value>())
         {}
 
 

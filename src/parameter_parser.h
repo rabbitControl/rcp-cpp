@@ -47,7 +47,8 @@ namespace rcp {
         static ParameterPtr parseUpdateValue(std::istream& is) {
 
             // read id
-            int16_t parameter_id = readFromStream(is, parameter_id);
+            int16_t parameter_id = 0;
+            parameter_id = readFromStream(is, parameter_id);
 
             // get parameter type_id
             datatype_t type_id = static_cast<datatype_t>(is.get());
@@ -61,8 +62,9 @@ namespace rcp {
 
         static ParameterPtr parse(std::istream& is, std::shared_ptr<IParameterManager> manager = nullptr) {
 
-            // get id and type
-            int16_t parameter_id = readFromStream(is, parameter_id);
+            // get id and type            
+            int16_t parameter_id = 0;
+            parameter_id = readFromStream(is, parameter_id);
 
             if (is.eof()) {
                 return nullptr;

@@ -1593,6 +1593,26 @@ namespace rcp {
     }
 
 
+
+    /*
+    */
+    class BangParameter : public Parameter<BangTypeDefinition>
+    {
+    public:
+        BangParameter(const BangParameter& v) :
+            Parameter<BangTypeDefinition>(v)
+        {}
+
+        BangParameter(int16_t id) :
+            Parameter<BangTypeDefinition>(id)
+        {}
+
+        void bang() {
+            setDirty();
+        }
+
+    };
+
     //---------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------
     /*
@@ -1657,7 +1677,6 @@ namespace rcp {
     typedef std::shared_ptr<IPv4Parameter> IPv4ParameterPtr;
     typedef std::shared_ptr<IPv6Parameter> IPv6ParameterPtr;
 
-    typedef Parameter<BangTypeDefinition> BangParameter;
     typedef std::shared_ptr<BangParameter> BangParameterPtr;
 
     typedef Parameter<InvalidTypeDefinition> InvalidParameter;

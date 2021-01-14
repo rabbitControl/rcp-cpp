@@ -51,8 +51,8 @@ void testHierarchy() {
     ParameterServer server;
 
     std::cout << "----------- creating parameter\n";
-    rcp::StringParameter& sp = server.createStringParameter("string uno");
-    rcp::BooleanParameter& bool1 = server.createBooleanParameter("bool 1");
+    rcp::StringParameterPtr sp = server.createStringParameter("string uno");
+    rcp::BooleanParameterPtr bool1 = server.createBooleanParameter("bool 1");
 
     std::cout << "----------- creating group1\n";
     GroupParameterPtr group = server.createGroupParameter("group1");
@@ -75,21 +75,21 @@ void testHierarchy() {
 
 
     // e.g. store parameters in a list
-    std::vector<std::reference_wrapper<IParameter> > params;
+    std::vector<ParameterPtr> params;
     params.push_back(boolParam);
     params.push_back(intParam);
 
     // iterate list and change labels
     int i=0;
     for (const auto& p : params) {
-        std::cout << "parameter: " << p.get().getId() << ": " << p.get().getLabel() << "\n";
-        p.get().setLabel("bla" + std::to_string(i));
+        std::cout << "parameter: " << p.get()->getId() << ": " << p.get()->getLabel() << "\n";
+        p.get()->setLabel("bla" + std::to_string(i));
         i++;
     }
 
     // check changed labels
-    std::cout << "int: " << intParam.getLabel() << "\n";
-    std::cout << "bool: " << boolParam.getLabel() << "\n";
+    std::cout << "int: " << intParam->getLabel() << "\n";
+    std::cout << "bool: " << boolParam->getLabel() << "\n";
 
     std::cout << "\n\n";
 }
@@ -247,11 +247,11 @@ void testUpdate() {
 
     auto group = server.createGroupParameter("g");
 
-    auto& sp = server.createInt8Parameter("i8", group);
-    sp.setValue(10);
+    auto sp = server.createInt8Parameter("i8", group);
+    sp->setValue(10);
 
-    auto& bang = server.createBangParameter("bang", group);
-    bang.setDescription("desc");
+    auto bang = server.createBangParameter("bang", group);
+    bang->setDescription("desc");
 
 
     server.update();
@@ -578,8 +578,8 @@ void testUpdateValuePacket() {
     Packet packet(COMMAND_UPDATEVALUE);
 
     ParameterServer server;
-    rcp::BooleanParameter& bool1 = server.createBooleanParameter("bool 1");
-    bool1.setValue(true);
+    rcp::BooleanParameterPtr bool1 = server.createBooleanParameter("bool 1");
+    bool1->setValue(true);
 
     IdDataPtr data = IdData::create(576);
     packet.setData(data);

@@ -134,6 +134,13 @@ namespace rcp {
                 break;
             }
         }
+        else
+        {
+            // parsing error??
+            for (const auto& kv : parsing_error_cb) {
+                (kv.first->*kv.second)();
+            }
+        }
     }
 
     void ParameterClient::_version(Packet& packet) {

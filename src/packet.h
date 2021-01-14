@@ -178,7 +178,7 @@ namespace rcp {
                     case COMMAND_UPDATE:
                     {
                         // we expect a Parameter
-                        ParameterPtr param = ParameterParser::parse(is);
+                        ParameterPtr param = ParameterParser::parse(is, manager);
 
                         if (param != nullptr)
                         {

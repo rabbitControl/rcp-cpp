@@ -91,7 +91,10 @@ namespace rcp {
     //---------------------------------------------------
     // read from stream
 
-    template <typename T>
+    template <
+        typename T,
+        typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr
+    >
     T readFromStream(std::istream& is, const T& i) {
 
         T value;
@@ -104,8 +107,9 @@ namespace rcp {
         return value;
     }
 
-    std::string readFromStream(std::istream& is, const std::string& i);    
 
+    bool readFromStream(std::istream& is, bool const& i);
+    std::string readFromStream(std::istream& is, std::string const& i);
 
 
     template <typename T,

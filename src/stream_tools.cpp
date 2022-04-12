@@ -36,8 +36,23 @@
 
 namespace rcp {
 
+    //---------------------------------------------------
+    // swap string
     std::string& swap_endian(std::string &u) {
         return u;
+    }
+
+    //---------------------------------------------------
+    // read from stream
+    bool readFromStream(std::istream& is, bool const& i) {
+        bool value;
+        is.read(reinterpret_cast<char*>(&value), sizeof(bool));
+        return value;
+    }
+
+    std::string readFromStream(std::istream& is, std::string const& i)
+    {
+        return i;
     }
 
     //---------------------------------------------------

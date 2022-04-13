@@ -45,13 +45,11 @@
 
 namespace rcp {
 
-
     template <typename ElementType>
     class TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num> : public IDefaultDefinition<Range<ElementType>>
     {
     public:
         template <
-            typename ElementType,
             typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
         >
         TypeDefinition(TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_default>& v) :
@@ -59,7 +57,6 @@ namespace rcp {
         {}
 
         template <
-            typename ElementType,
             typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
         >
         TypeDefinition(const TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_default>& v) :

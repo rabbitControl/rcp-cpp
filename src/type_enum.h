@@ -293,11 +293,11 @@ namespace rcp {
                 if (options.size() > 0) {
 
                     if (all || optionsChanged) {
-                        out.write(static_cast<char>(ENUM_OPTIONS_ENTRIES));
-                        out.write(static_cast<uint16_t>(options.size()));
+                        out.write(static_cast<char>(ENUM_OPTIONS_ENTRIES));                        
                         for (const std::string& entry : options) {
                             out.writeTinyString(entry);
                         }
+                        out.write(static_cast<uint8_t>(TERMINATOR));
 
                         if (!all) {
                             optionsChanged = false;
@@ -307,7 +307,7 @@ namespace rcp {
                 } else if (optionsChanged) {
 
                     out.write(static_cast<char>(ENUM_OPTIONS_ENTRIES));
-                    out.write(static_cast<uint16_t>(0));
+                    out.write(static_cast<uint8_t>(TERMINATOR));
                     optionsChanged = false;
                 }
 

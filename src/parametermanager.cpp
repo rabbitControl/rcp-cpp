@@ -163,7 +163,7 @@ namespace rcp {
         short id = getNextId();
         if (id != 0)
         {
-            Float32ParameterPtr p = std::make_shared<Float32Parameter>(id, 0);
+            Float32ParameterPtr p = std::make_shared<Float32Parameter>(id, 0.0f);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -178,7 +178,7 @@ namespace rcp {
         short id = getNextId();
         if (id != 0)
         {
-            Float64ParameterPtr p = std::make_shared<Float64Parameter>(id, 0);
+            Float64ParameterPtr p = std::make_shared<Float64Parameter>(id, 0.0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;

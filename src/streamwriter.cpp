@@ -91,7 +91,7 @@ namespace rcp {
     }
 
 
-    void StreamWriter::write(const char* data, uint32_t length) {
+    void StreamWriter::write(const char* data, size_t length) {
         os.write(data, length);
     }
 

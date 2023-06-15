@@ -59,7 +59,7 @@ public:
     virtual void sendToAll(std::istream& data, void* excludeId)  {
 
         data.seekg (0, data.end);
-        int length = data.tellg();
+        size_t length = data.tellg();
         data.seekg (0, data.beg);
 
         char *d = new char[length];
@@ -118,7 +118,7 @@ public:
     void received(std::istream& data, rcp::ServerTransporter& transporter, void* id) {
 
         data.seekg (0, data.end);
-        int length = 1+data.tellg();
+        size_t length = 1+data.tellg();
         data.seekg (0, data.beg);
 
         char *d = new char[length];

@@ -131,7 +131,7 @@ namespace rcp {
         }
     }
 
-    void StringStreamWriter::write(const char* data, uint32_t length) {
+    void StringStreamWriter::write(const char* data, size_t length) {
         buffer.write(data, (std::streamsize)length);
     }
 }

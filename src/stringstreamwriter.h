@@ -48,7 +48,7 @@ namespace rcp {
         virtual void write(const rcp::Color& s);
         virtual void write(const rcp::IPv4& s);
         virtual void write(const rcp::IPv6& s);
-        virtual void write(const char* data, uint32_t length);
+        virtual void write(const char* data, size_t length);
 
 
         size_t getSize() {

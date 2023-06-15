@@ -47,7 +47,7 @@ namespace rcp {
         virtual void write(const rcp::Color& s) = 0;
         virtual void write(const rcp::IPv4& s) = 0;
         virtual void write(const rcp::IPv6& s) = 0;
-        virtual void write(const char* data, uint32_t length) = 0;
+        virtual void write(const char* data, size_t length) = 0;
 
         template<typename T>
         void write(const Range<T>& c) {

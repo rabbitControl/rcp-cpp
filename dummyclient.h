@@ -116,7 +116,7 @@ public:
 
     void received(std::istream& data) {
         data.seekg (0, data.end);
-        int length = 1+data.tellg();
+        size_t length = 1+data.tellg();
         data.seekg (0, data.beg);
 
         char *d = new char[length];

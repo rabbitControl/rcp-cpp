@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -56,6 +39,7 @@
 #include "type_string.h"
 #include "type_custom.h"
 #include "type_array.h"
+#include "tinystring.h"
 
 
 namespace rcp {
@@ -85,27 +69,27 @@ namespace rcp {
     class Parameter : public IParameter
     {
     public:
+        // static
         static std::shared_ptr< Parameter<TD> > create(int16_t id) {
             return std::make_shared< Parameter<TD> >(id);
         }
 
-        Parameter(const Parameter<TD>& v) :
-            obj(v.obj)
+    public:
+        Parameter(const Parameter<TD>& v)
+            : obj(v.obj)
+            , m_waitForParent(v.m_waitForParent)
         {}
 
-        Parameter(int16_t id) :
-            obj(std::make_shared<Value>(id, TD(*this)))
+        Parameter(int16_t id)
+            : obj(std::make_shared<Value>(id, TD(*this)))
+            , m_waitForParent(false)
         {}
-
-        virtual ParameterPtr newReference() {
-            return std::make_shared<Parameter<TD> >(*this);
-        }
 
 
         //------------------------------------
-        // implement writeable
-        virtual void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             out.write(getId());
             getTypeDefinition().write(out, all);
 
@@ -115,16 +99,11 @@ namespace rcp {
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        void writeOptions(Writer& out, bool all) {
-            // writing options
-            obj->write(out, all);
-        }
-
 
         //------------------------------------
-        // implement optionparser
-        virtual void parseOptions(std::istream& is) {
-
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
             while (!is.eof()) {
 
                 // read option prefix
@@ -214,16 +193,14 @@ namespace rcp {
                     std::string st = readTinyString(is);
                     CHECK_STREAM
 
-                    obj->hasTags = true;
                     obj->tags = st;
                     break;
                 }
                 case PARAMETER_OPTIONS_ORDER: {
 
-                    int32_t val = readFromStream(is, obj->order);
+                    int32_t val = readFromStream(is, obj->order.value());
                     CHECK_STREAM
 
-                    obj->hasOrder = true;
                     obj->order = val;
                     break;
                 }
@@ -232,43 +209,52 @@ namespace rcp {
                     int16_t parent_id = readFromStream(is, parent_id);
                     CHECK_STREAM
 
-                    if (auto p = obj->parameterManager.lock())
+                    if (parent_id != 0)
                     {
-                        if (parent_id != 0)
+                        if (auto manager = obj->parameterManager.lock())
                         {
-                            ParameterPtr parent = p->getParameter(parent_id);
-                            if (parent->getDatatype() == DATATYPE_GROUP)
+                            ParameterPtr parent = manager->getParameter(parent_id);
+                            if (parent)
                             {
+                                // NOTE:
                                 // parsed parameter is is a proxy parameter
-                                // _not_ set as child of parent!
-                                // proxy-parameter is either updating exisitng parameter in cache
+                                // _do_not_ set this paremter as a child of the parent!
+                                // a proxy-parameter is either updating an exisitng parameter in cache
                                 // or is added. if the proxy-parameter is added it gets added to the parent too
-                                if (auto p = obj->parent.lock()) {
-                                    if (parent->getId() == p->getId()) {
-                                        // parent already set
-                                        return;
-                                    } else {
-                                        // remove from parent...
-                                        p->removeChild(*this);
+                                if (parent->getDatatype() == DATATYPE_GROUP)
+                                {
+                                    if (auto p = obj->parent.lock())
+                                    {
+                                        if (parent->getId() != p->getId())
+                                        {
+                                            // remove from parent...
+                                            p->removeChild(*this);
+                                        }
                                     }
-                                }
 
-                                std::cout << "setting parent: " << parent->getId() << "\n";
-                                std::flush(std::cout);
-                                obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
+                                    std::cout << "setting parent: " << parent->getId() << "\n";
+                                    std::flush(std::cout);
+                                    obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
+                                }
+                                else
+                                {
+                                    // parent not a group!
+                                }
                             }
                             else
                             {
-                                // TODO: parent does not exist - put it into list, look it up later??
+                                // put it into list, look parent up later
+                                manager->addMissingParent(parent_id, newReference());
                             }
                         }
+                        else
+                        {
+                            // TODO: manager not set... look parent up later?
+                            std::cerr << "no manager set!\n";
+                            std::flush(std::cerr);
+                        }
                     }
-                    else
-                    {
-                        // TODO: manager not set... look this up later?
-                        std::cout << "no manager set!\n";
-                        std::flush(std::cout);
-                    }
+
 
                     break;
                 }
@@ -289,18 +275,16 @@ namespace rcp {
                     std::string st = readTinyString(is);
                     CHECK_STREAM
 
-                    obj->hasUserid = true;
                     obj->userid = st;
                     break;
                 }
 
                 case PARAMETER_OPTIONS_READONLY: {
 
-                    bool ro = readFromStream(is, ro);
+                    bool readonly = readFromStream(is, readonly);
                     CHECK_STREAM
 
-                    obj->hasReadonly = true;
-                    obj->readonly = ro;
+                    obj->readonly = readonly;
                     break;
                 }
 
@@ -320,19 +304,44 @@ namespace rcp {
 
         //------------------------------------
         // implement IParameter
-        virtual bool isValueParameter() { return false; }
 
-        virtual int16_t getId() const { return obj->parameter_id; }
-        virtual ITypeDefinition& getTypeDefinition() const { return obj->typeDefinition; }
+        ParameterPtr newReference() override
+        {
+            return std::make_shared<Parameter<TD> >(*this);
+        }
 
-        virtual datatype_t getDatatype() const {
+        bool waitForParent() const override
+        {
+            return m_waitForParent;
+        }
+
+        bool isValueParameter() const override
+        {
+            return false;
+        }
+
+        int16_t getId() const override
+        {
+            return obj->parameter_id;
+        }
+
+        ITypeDefinition& getTypeDefinition() const override
+        {
+            return obj->typeDefinition;
+        }
+
+        datatype_t getDatatype() const override
+        {
             return getTypeDefinition().getDatatype();
         }
 
         // optional
-        virtual const std::string getLabel() const { return obj->label; }
-        virtual void setLabel(const std::string& label) {
-
+        const std::string getLabel() const override
+        {
+            return obj->label;
+        }
+        void setLabel(const std::string& label) override
+        {
             obj->hasLabel = true;
 
             if (obj->label == label) {
@@ -344,11 +353,19 @@ namespace rcp {
 
             setDirty();
         }
-        virtual bool hasLabel() const { return obj->hasLabel; }
-        virtual void clearLabel() { obj->hasLabel = false; setDirty(); }
+        bool hasLabel() const override
+        {
+            return obj->hasLabel;
+        }
+        void clearLabel() override
+        {
+            obj->hasLabel = false;
+            setDirty();
+        }
 
         // label languages
-        virtual std::vector<std::string> getLabelLanguages() const {
+        std::vector<std::string> getLabelLanguages() const override
+        {
             std::vector<std::string> keys;
             for(auto it = obj->languageLabel.begin(); it != obj->languageLabel.end(); ++it) {
               keys.push_back(it->first);
@@ -357,8 +374,8 @@ namespace rcp {
             return keys;
         }
 
-        virtual std::string getLanguageLabel(const std::string& code) const {
-
+        std::string getLanguageLabel(const std::string& code) const override
+        {
             std::map<std::string, std::string>::iterator it = obj->languageLabel.find(code);
             if (it != obj->languageLabel.end()) {
                 return it->second;
@@ -367,22 +384,22 @@ namespace rcp {
             return empty_string;
         }
 
-        virtual void clearLanguageLabel() {
-
+        void clearLanguageLabel() override
+        {
             obj->languageLabel.clear();
             obj->labelChanged = true;
             setDirty();
         }
 
-        virtual void setLanguageLabel(const std::string& code, const std::string& label) {
-
+        void setLanguageLabel(const std::string& code, const std::string& label) override
+        {
             obj->languageLabel[code] = label;
             obj->labelChanged = true;
             setDirty();
         }
 
-        virtual void removeLanguageLabel(const std::string& code) {
-
+        void removeLanguageLabel(const std::string& code) override
+        {
             auto it = obj->languageLabel.find(code);
             if (it != obj->languageLabel.end()) {
                 obj->languageLabel.erase(it);
@@ -392,9 +409,12 @@ namespace rcp {
             }
         }
 
-        virtual const std::string& getDescription() const { return obj->description; }
-        virtual void setDescription(const std::string& description) {
-
+        const std::string& getDescription() const override
+        {
+            return obj->description;
+        }
+        void setDescription(const std::string& description) override
+        {
             obj->hasDescription = true;
 
             if (obj->description == description) {
@@ -405,11 +425,19 @@ namespace rcp {
             obj->descriptionChanged = true;
             setDirty();
         }
-        virtual bool hasDescription() const { return obj->hasDescription; }
-        virtual void clearDescription() { obj->hasDescription = false; setDirty(); }
+        bool hasDescription() const override
+        {
+            return obj->hasDescription;
+        }
+        void clearDescription() override
+        {
+            obj->hasDescription = false;
+            setDirty();
+        }
 
         // description languages
-        virtual std::vector<std::string> getDescriptionLanguages() const {
+        std::vector<std::string> getDescriptionLanguages() const override
+        {
             std::vector<std::string> keys;
             for(auto it = obj->languageDescription.begin(); it != obj->languageDescription.end(); ++it) {
               keys.push_back(it->first);
@@ -418,8 +446,8 @@ namespace rcp {
             return keys;
         }
 
-        virtual std::string getDescriptionLanguage(const std::string& code) const {
-
+        std::string getDescriptionLanguage(const std::string& code) const override
+        {
             std::map<std::string, std::string>::iterator it = obj->languageDescription.find(code);
             if (it != obj->languageDescription.end()) {
                 return it->second;
@@ -428,22 +456,22 @@ namespace rcp {
             return empty_string;
         }
 
-        virtual void clearDescriptionLanguage() {
-
+        void clearDescriptionLanguage() override
+        {
             obj->languageDescription.clear();
             obj->descriptionChanged = true;
             setDirty();
         }
 
-        virtual void setDescriptionLanguage(const std::string& code, const std::string& description) {
-
+        void setDescriptionLanguage(const std::string& code, const std::string& description) override
+        {
             obj->languageDescription[code] = description;
             obj->descriptionChanged = true;
             setDirty();
         }
 
-        virtual void removeDescriptionLanguage(const std::string& code) {
-
+        void removeDescriptionLanguage(const std::string& code) override
+        {
             auto it = obj->languageDescription.find(code);
             if (it != obj->languageDescription.end()) {
                 obj->languageDescription.erase(it);
@@ -453,62 +481,93 @@ namespace rcp {
             }
         }
 
-        virtual const std::string& getTags() const { return obj->tags; }
-        virtual void setTags(const std::string& tags) {
+        //----------------------
+        // tags
+        const std::string& getTags() const override
+        {
+            return obj->tags.value();
+        }
+        void setTags(const std::string& tags) override
+        {
+            obj->tags= tags;
+            if (obj->tags.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasTags() const override
+        {
+            return obj->tags.hasValue();
+        }
+        void clearTags() override
+        {
+            obj->tags.clearValue();
+            if (obj->tags.changed())
+            {
+                setDirty();
+            }
+        }
 
-            obj->hasTags = true;
 
-            if (obj->tags == tags) {
-                return;
+        //----------------------
+        // order
+        int32_t getOrder() const override
+        {
+            if (obj->order.hasValue())
+            {
+                return obj->order.value();
             }
 
-            obj->tags = tags;
-            obj->tagsChanged = true;
-            setDirty();
+            return 0;
         }
-        virtual bool hasTags() const { return obj->hasTags; }
-        virtual void clearTags() {
-            obj->hasTags = false;
-            obj->tagsChanged = true;
-            setDirty();
-        }
-
-
-        virtual const int32_t& getOrder() const { return obj->order; }
-        virtual void setOrder(const int32_t& order) {
-
-            obj->hasOrder = true;
-
-            if (obj->order == order) {
-                return;
-            }
-
+        void setOrder(const int32_t order) override
+        {
             obj->order = order;
-            obj->orderChanged = true;
-            setDirty();
+            if (obj->order.changed())
+            {
+                setDirty();
+            }
         }
-        virtual bool hasOrder() const { return obj->hasOrder; }
-        virtual void clearOrder() {
-            obj->hasOrder = false;
-            obj->orderChanged = true;
-            setDirty();
+        bool hasOrder() const override
+        {
+            return obj->order.hasValue();
+        }
+        void clearOrder() override
+        {
+            obj->order.clearValue();
+            if (obj->order.changed())
+            {
+                setDirty();
+            }
         }
 
-
-        virtual std::weak_ptr<GroupParameter>& getParent() const;
-        virtual bool hasParent() const { return obj->parent.lock() != nullptr; }
+        //----------------------
+        // parent
+        virtual std::weak_ptr<GroupParameter>& getParent() const override;
+        bool hasParent() const override
+        {
+            return obj->parent.lock() != nullptr;
+        }
 
 
         //----------------------
         // userdata
-        virtual const std::vector<char> getUserdata() const { return obj->userdata; }
-        virtual void setUserdata(const std::vector<char> userdata) {
+        const std::vector<char> getUserdata() const override
+        {
+            return obj->userdata;
+        }
+        void setUserdata(const std::vector<char> userdata) override
+        {
             obj->userdata = userdata;
             obj->userdataChanged = true;
             setDirty();
         }
-        virtual bool hasUserdata() const { return obj->userdata.size() > 0; }
-        virtual void clearUserdata() {
+        bool hasUserdata() const override
+        {
+            return obj->userdata.size() > 0;
+        }
+        void clearUserdata() override
+        {
             obj->userdata.clear();
             obj->userdataChanged = true;
             setDirty();
@@ -516,57 +575,73 @@ namespace rcp {
 
         //----------------------
         // userid
-        virtual const std::string& getUserid() const { return obj->userid; }
-        virtual void setUserid(const std::string& userid) {
-
-            obj->hasUserid = true;
-
-            if (obj->userid == userid) {
-                return;
-            }
-
-            obj->userid = userid;
-            obj->useridChanged = true;
-            setDirty();
+        const std::string& getUserid() const override
+        {
+            return obj->userid.value();
         }
-        virtual bool hasUserid() const { return obj->hasUserid; }
-        virtual void clearUserid() {
-            obj->hasUserid = false;
-            obj->useridChanged = true;
-            setDirty();
+        void setUserid(const std::string& userid) override
+        {
+            obj->userid = userid;
+            if (obj->userid.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasUserid() const override
+        {
+            return obj->userid.hasValue();
+        }
+        void clearUserid() override
+        {
+            obj->userid.clearValue();
+            if (obj->userid.changed())
+            {
+                setDirty();
+            }
         }
 
         //----------------------
         // readonly
-        virtual const bool& getReadonly() const { return obj->readonly; };
-        virtual void setReadonly(const bool& readonly) {
-
-            obj->hasReadonly = true;
-
-            if (obj->readonly == readonly) {
-                return;
+        bool getReadonly() const override
+        {
+            if (obj->readonly.hasValue())
+            {
+                return obj->readonly.value();
             }
 
+            return false;
+        };
+        void setReadonly(const bool readonly) override
+        {
             obj->readonly = readonly;
-            obj->readonlyChanged = true;
-            setDirty();
+            if (obj->readonly.changed())
+            {
+                setDirty();
+            }
         }
-        virtual bool hasReadonly() const { return obj->hasReadonly; };
-        virtual void clearReadonly() {
-            obj->hasReadonly = false;
-            obj->readonlyChanged = true;
-            setDirty();
+        bool hasReadonly() const override
+        {
+            return obj->readonly.hasValue();
+        };
+        void clearReadonly() override
+        {
+            obj->readonly.clearValue();
+            if (obj->readonly.changed())
+            {
+                setDirty();
+            }
         }
 
         //----------------------
         //
-        virtual void dump();
-        virtual void update(const ParameterPtr& other);
+        void dump() override;
+        void update(const ParameterPtr& other) override;
 
         // update callbacks
-        const std::function< void() >& addUpdatedCb(std::function< void() >& func) {
-
-            for(auto& f : obj->updatedCallbacks)    {
+        const std::function< void() >& addUpdatedCb(std::function< void() >& func) override
+        {
+            for(auto& f : obj->updatedCallbacks)
+            {
                 if (&func == &f->callback) {
                     // already contained
                     return f->callback;
@@ -578,9 +653,10 @@ namespace rcp {
             return obj->updatedCallbacks.back()->callback;
         }
 
-        const std::function< void() >& addUpdatedCb(std::function< void() >&& func) {
-
-            for(auto& f : obj->updatedCallbacks)    {
+        const std::function< void() >& addUpdatedCb(std::function< void() >&& func) override
+        {
+            for(auto& f : obj->updatedCallbacks)
+            {
                 if (&func == &f->callback) {
                     // already contained
                     return f->callback;
@@ -592,9 +668,10 @@ namespace rcp {
             return obj->updatedCallbacks.back()->callback;
         }
 
-        void removeUpdatedCb(const std::function< void() >& func) {
-
-            for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )    {
+        void removeUpdatedCb(const std::function< void() >& func) override
+        {
+            for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )
+            {
                 if (&func == &(it->get()->callback)) {
                     obj->updatedCallbacks.erase(it);
                     break;
@@ -602,11 +679,13 @@ namespace rcp {
             }
         }
 
-        void clearUpdatedCb() {
+        void clearUpdatedCb() override
+        {
             obj->updatedCallbacks.clear();
         }
 
-        virtual void dispose() {
+        void dispose() override
+        {
         }
 
         friend class ParameterManager;
@@ -615,41 +694,50 @@ namespace rcp {
         template<typename, typename, datatype_t> friend class ValueParameter;
 
     protected:
-        virtual bool handleOption(const parameter_options_t& opt, std::istream& is) {
+        virtual bool handleOption(const parameter_options_t& /*opt*/, std::istream& /*is*/) {
             return false;
         }
 
         TD& getRealTypeDef() { return obj->typeDefinition; }
         const TD& getRealTypeDef() const { return obj->typeDefinition; }
 
-        void setDirty() {
-            if (auto p = obj->parameterManager.lock()) {
-                p->setParameterDirty(*this);
+        // IParameter
+        void setDirty() override
+        {
+            if (auto manager = obj->parameterManager.lock()) {
+                manager->setParameterDirty(*this);
             }
         }
 
         bool anyOptionChanged() const {
             return obj->labelChanged
                     || obj->descriptionChanged
-                    || obj->tagsChanged
-                    || obj->orderChanged
+                    || obj->tags.changed()
+                    || obj->order.changed()
                     || obj->parentChanged
                     || obj->userdataChanged
-                    || obj->useridChanged
-                    || obj->readonlyChanged;
+                    || obj->userid.changed()
+                    || obj->readonly.changed();
+        }
+
+        void writeOptions(Writer& out, bool all) {
+            // writing options
+            obj->write(out, all);
         }
 
     private:
 
-        virtual void setParent(GroupParameter& parent);
+        virtual void setParent(GroupParameter& parent) override;
         virtual void setParent(GroupParameterPtr parent);
-        virtual void clearParent() {
+        virtual void clearParent() override
+        {
             obj->parent.reset();
             obj->parentChanged = true;
             setDirty();
         }
 
-        virtual void setManager(std::shared_ptr<IParameterManager> manager) {
+        void setManager(std::shared_ptr<IParameterManager> manager) override
+        {
             obj->parameterManager = manager;            
         }
 
@@ -676,22 +764,15 @@ namespace rcp {
                 hasDescription = false;
                 descriptionChanged = false;
 
-                tags = empty_string;
-                hasTags = false;
-                tagsChanged = false;
-
-                order = 0;
-                hasOrder = false;
-                orderChanged = false;
+                tags.clearValue();
+                order.clearValue();
 
                 parentChanged = false;
 
                 userdata.clear();
                 userdataChanged = false;
 
-                userid = empty_string;
-                hasUserid = false;
-                useridChanged = false;
+                userid.clearValue();
             }
 
             // write label and all language labels
@@ -785,39 +866,39 @@ namespace rcp {
 
 
                 // tags
-                if (hasTags) {
+                if (tags.hasValue()) {
 
-                    if (all || tagsChanged) {
+                    if (all || tags.changed()) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_TAGS));
-                        out.writeTinyString(tags);
+                        out.writeTinyString(tags.value());
 
                         if (!all) {
-                            tagsChanged = false;
+                            tags.setUnchanged();
                         }
                     }
-                } else if (tagsChanged) {
+                } else if (tags.changed()) {
 
                     out.write(static_cast<char>(PARAMETER_OPTIONS_TAGS));
                     out.writeTinyString("");
-                    tagsChanged = false;
+                    tags.setUnchanged();
                 }
 
                 // order
-                if (hasOrder) {
+                if (order.hasValue()) {
 
-                    if (all || orderChanged) {
+                    if (all || order.changed()) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_ORDER));
-                        out.write(order);
+                        out.write(order.value());
 
                         if (!all) {
-                            orderChanged = false;
+                            order.setUnchanged();
                         }
                     }
-                } else if (orderChanged) {
+                } else if (order.changed()) {
 
                     out.write(static_cast<char>(PARAMETER_OPTIONS_ORDER));
                     out.write(static_cast<int32_t>(0));
-                    orderChanged = false;
+                    order.setUnchanged();
                 }
 
 
@@ -864,40 +945,40 @@ namespace rcp {
 
 
                 // userid
-                if (hasUserid) {
+                if (userid.hasValue()) {
 
-                    if (all || useridChanged) {
+                    if (all || userid.changed()) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_USERID));
-                        out.writeTinyString(userid);
+                        out.writeTinyString(userid.value());
 
                         if (!all) {
-                            useridChanged = false;
+                            userid.setUnchanged();
                         }
                     }
-                } else if (useridChanged) {
+                } else if (userid.changed()) {
 
                     out.write(static_cast<char>(PARAMETER_OPTIONS_USERID));
                     out.writeTinyString("");
-                    useridChanged = false;
+                    userid.setUnchanged();
                 }
 
 
                 // readonly
-                if (hasReadonly) {
+                if (readonly.hasValue()) {
 
-                    if (all || readonlyChanged) {
+                    if (all || readonly.changed()) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_READONLY));
-                        out.write(readonly);
+                        out.write(readonly.value());
 
                         if (!all) {
-                            readonlyChanged = false;
+                            readonly.setUnchanged();
                         }
                     }
-                } else if (readonlyChanged) {
+                } else if (readonly.changed()) {
 
                     out.write(static_cast<char>(PARAMETER_OPTIONS_READONLY));
                     out.write(false);
-                    readonlyChanged = false;
+                    readonly.setUnchanged();
                 }
             }
 
@@ -923,13 +1004,8 @@ namespace rcp {
             bool hasDescription;
             bool descriptionChanged;
 
-            std::string tags{};
-            bool hasTags;
-            bool tagsChanged;
-
-            int32_t order{};
-            bool hasOrder;
-            bool orderChanged;
+            Option<std::string> tags{};
+            Option<int32_t> order{};
 
             std::weak_ptr<GroupParameter> parent;
             bool parentChanged;
@@ -939,25 +1015,21 @@ namespace rcp {
             std::vector<char> userdata;
             bool userdataChanged;
 
-            std::string userid{};
-            bool hasUserid;
-            bool useridChanged;
-
-            bool readonly{};
-            bool hasReadonly;
-            bool readonlyChanged;
+            Option<std::string> userid{};
+            Option<bool> readonly{};
 
             std::vector< std::shared_ptr<UpdateEventHolder> > updatedCallbacks;
-
             std::weak_ptr<IParameterManager> parameterManager;
         };
 
         std::shared_ptr<Value> obj;
+        bool m_waitForParent;
 
         //
-        Parameter(std::shared_ptr<Value> obj) :
-            obj(obj)
-        {}
+//        Parameter(std::shared_ptr<Value> obj)
+//            : obj(obj)
+//            , waitingForParent(false)
+//        {}
     };
 
 
@@ -987,12 +1059,10 @@ namespace rcp {
         static std::shared_ptr< ValueParameter<T, TD, type_id> > create(int16_t id) {
             return std::make_shared< ValueParameter<T, TD, type_id> >(id);
         }
+        static std::shared_ptr< ValueParameter<T, TD, type_id> > create(int16_t id, const T& init) {
+            return std::make_shared< ValueParameter<T, TD, type_id> >(id, init);
+        }
 
-
-        ValueParameter(const ValueParameter<T, TD, type_id>& v) :
-            Parameter<TD>(v)
-          , obj(v.obj)
-        {}
 
         ValueParameter(int16_t id) :
             Parameter<TD>(id)
@@ -1003,30 +1073,41 @@ namespace rcp {
             Parameter<TD>(id)
           , obj(std::make_shared<Value>())
         {
-            obj->hasValue = true;
+            // NOTE: just set value internally
             obj->value = init;
+            obj->value.clearValue();
+            obj->value.setUnchanged();
         }
 
         ValueParameter(int16_t id, const T& init) :
             Parameter<TD>(id)
           , obj(std::make_shared<Value>())
         {
-            obj->hasValue = true;
+            // NOTE: just set value internally
             obj->value = init;
+            obj->value.clearValue();
+            obj->value.setUnchanged();
         }
+
+        // copy constructor
+        ValueParameter(const ValueParameter<T, TD, type_id>& v) :
+            Parameter<TD>(v)
+          , obj(v.obj)
+        {}
 
         ~ValueParameter()
         {}
 
 
-        virtual ParameterPtr newReference() {
+        virtual ParameterPtr newReference() override
+        {
             return std::make_shared<ValueParameter<T, TD, type_id> >(*this);
         }
 
         //------------------------------------
-        // implement writeable
-        virtual void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             if (onlyValueChanged())
             {
                 // write updatevalue data
@@ -1049,26 +1130,29 @@ namespace rcp {
 
         }
 
-        virtual void dump() {
+        void dump() override
+        {
             Parameter<TD>::dump();
 
             if (hasValue()) {
-                std::cout << "value: " << obj->value << "\n";
+                std::cout << "value: " << obj->value.value() << "\n";
             }
         }
 
         // iparameter
-        bool isValueParameter() { return true; }
+        bool isValueParameter() const override
+        {
+            return true;
+        }
 
-        virtual bool handleOption(const parameter_options_t& opt, std::istream& is) {
-
+        virtual bool handleOption(const parameter_options_t& opt, std::istream& is) override
+        {
             if (opt == PARAMETER_OPTIONS_VALUE) {
 
                 // read options
                 T val = getDefaultTypeDefinition().readValue(is);
                 CHECK_STREAM_RETURN(false)
 
-                obj->hasValue = true;
                 obj->value = val;
                 return true;
             }
@@ -1078,31 +1162,40 @@ namespace rcp {
         }
 
 
-        // implement IValueParameter
-        const T& getValue() const { return obj->value; }
-        void setValue(const T& value) {
-
-            obj->hasValue = true;
-
-            if (obj->value == value) {
-                return;
-            }
-
+        //---------------------------
+        // IValueParameter
+        const T& getValue() const override
+        {
+            return obj->value.value();
+        }
+        bool setValue(const T& value) override
+        {
             obj->value = value;
-            obj->valueChanged = true;
-            setDirty();
+            if (obj->value.changed())
+            {
+                setDirty();
+            }
+            return obj->value.changed();
         }
-        virtual bool hasValue() const { return obj->hasValue; }
-        virtual void clearValue() {
-            obj->hasValue = false;
-            obj->valueChanged = true;
-            setDirty();
+        bool hasValue() const override
+        {
+            return obj->value.hasValue();
+        }
+        void clearValue() override
+        {
+            obj->value.clearValue();
+            if (obj->value.changed())
+            {
+                setDirty();
+            }
         }
 
-        virtual TD& getDefaultTypeDefinition() {
+        TD& getDefaultTypeDefinition() override
+        {
             return Parameter<TD>::getRealTypeDef();
         }
-        virtual const TD& getDefaultTypeDefinition() const {
+        const TD& getDefaultTypeDefinition() const override
+        {
             return Parameter<TD>::getRealTypeDef();
         }
 
@@ -1115,7 +1208,7 @@ namespace rcp {
         void setDefault(const T& value) {
             Parameter<TD>::getRealTypeDef().setDefault(value);
         }
-        const T& getDefault() const {
+        const T getDefault() const {
             return Parameter<TD>::getRealTypeDef().getDefault();
         }
 
@@ -1190,7 +1283,7 @@ namespace rcp {
                  typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
         void setUnit(const std::string& unit)
         {
-            TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
+            auto& d = Parameter<TD>::getRealTypeDef();
             d.setUnit(unit);
         }
 
@@ -1198,7 +1291,7 @@ namespace rcp {
                  typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
         std::string getUnit() const
         {
-            const TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
+            auto& d = Parameter<TD>::getRealTypeDef();
             return d.getUnit();
         }
 
@@ -1211,8 +1304,8 @@ namespace rcp {
         using Parameter<TD>::getId;
         using Parameter<TD>::getTypeDefinition;
 
-        virtual void update(const ParameterPtr& other) {
-
+        virtual void update(const ParameterPtr& other) override
+        {
             if (other.get() == this) {
                 //c'mon, it's me!
                 return;
@@ -1229,8 +1322,8 @@ namespace rcp {
             {
                 if (v_other->hasValue())
                 {
-                    setValue(v_other->getValue());
-                    if (obj->valueChanged)
+                    obj->value = v_other->getValue();
+                    if (obj->value.changed())
                     {
                         obj->callValueUpdatedCb();
                     }
@@ -1242,8 +1335,8 @@ namespace rcp {
         }
 
 
-        virtual const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) {
-
+        const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) override
+        {
             for(auto& f : obj->valueUpdatedCallbacks) {
                 if (&func == &f->callback) {
                     // already contained
@@ -1256,8 +1349,8 @@ namespace rcp {
             return obj->valueUpdatedCallbacks.back()->callback;
         }
 
-        virtual const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func) {
-
+        const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func)
+        {
             for(auto& f : obj->valueUpdatedCallbacks) {
                 if (&func == &f->callback) {
                     // already contained
@@ -1270,8 +1363,8 @@ namespace rcp {
             return obj->valueUpdatedCallbacks.back()->callback;
         }
 
-        virtual void removeValueUpdatedCb(const std::function< void(T&) >& func) {
-
+        void removeValueUpdatedCb(const std::function< void(T&) >& func) override
+        {
             for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ ) {
 
                 if (&func == &(it->get()->callback)) {
@@ -1281,11 +1374,13 @@ namespace rcp {
             }
         }
 
-        virtual void clearValueUpdatedCb() {
+        void clearValueUpdatedCb() override
+        {
             obj->valueUpdatedCallbacks.clear();
         }
 
-        virtual void dispose() {
+        virtual void dispose() override
+        {
         }
 
         friend class ParameterManager;
@@ -1295,10 +1390,11 @@ namespace rcp {
     protected:
         using Parameter<TD>::setDirty;
 
-        virtual bool onlyValueChanged() const {
+        virtual bool onlyValueChanged() const override
+        {
             return !Parameter<TD>::anyOptionChanged()
                     && !getTypeDefinition().anyOptionChanged()
-                    && obj->valueChanged;
+                    && obj->value.changed();
         }
 
     private:
@@ -1314,26 +1410,24 @@ namespace rcp {
 
         class Value {
         public:
-            Value() :
-                hasValue(false)
-              , valueChanged(false)
+            Value()
             {}
 
             // writing options
             void write(Writer& out, bool all) {
 
                 // value
-                if (hasValue) {
+                if (value.hasValue()) {
 
-                    if (all || valueChanged) {
+                    if (all || value.changed()) {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_VALUE));
-                        out.write(value);
+                        out.write(value.value());
 
                         if (!all) {
-                            valueChanged = false;
+                            value.setUnchanged();
                         }
                     }
-                } else if (valueChanged) {
+                } else if (value.changed()) {
                     out.write(static_cast<char>(PARAMETER_OPTIONS_VALUE));
 
                     writeValue(out);
@@ -1341,19 +1435,17 @@ namespace rcp {
             }
 
             void writeValue(Writer& out) {
-                out.write(value);
-                valueChanged = false;
+                out.write(value.value());
+                value.setUnchanged();
             }
 
             void callValueUpdatedCb() {
                 for (auto& f : valueUpdatedCallbacks) {
-                    f->callback(value);
+                    f->callback(value.value());
                 }
             }
 
-            T value{};
-            bool hasValue;
-            bool valueChanged;
+            Option<T> value{};
 
             std::vector< std::shared_ptr<ValueUpdateEventHolder> > valueUpdatedCallbacks;
         };
@@ -1418,16 +1510,16 @@ namespace rcp {
         void addChild(ParameterPtr& child);
         void removeChild(IParameter& child);
         void removeChild(ParameterPtr& child);
+
         GroupParameterPtr getShared() {
             return shared_from_this();
         }
 
-    private:
-
-
         std::map<short, ParameterPtr >& children() {
             return obj->children;
         }
+
+    private:
 
         class Value {
         public:
@@ -1449,8 +1541,8 @@ namespace rcp {
 
 
     template <typename TD>
-    void Parameter<TD>::update(const ParameterPtr& other) {
-
+    void Parameter<TD>::update(const ParameterPtr& other)
+    {
         if (other.get() == this) {
             //c'mon, it's me!
             return;
@@ -1463,45 +1555,90 @@ namespace rcp {
 
         bool updated = false;
 
-        if (other->hasLabel()) {
-            setLabel(other->getLabel());
-            updated = obj->labelChanged;
+        if (other->hasLabel())
+        {
+            auto label = other->getLabel();
+
+            // copy other language labels
+            // NOTE: no check if langauge already exists or language label actually changed
+            auto o_lang = other->getLabelLanguages();
+            if (!o_lang.empty())
+            {
+                for (std::string& l : o_lang)
+                {
+                    setLanguageLabel(l, other->getLanguageLabel(l));
+                }
+                obj->labelChanged = true;
+                updated = true;
+            }
+
+            // default label
+            if (obj->label != label)
+            {
+                obj->hasLabel = true;
+                obj->label = label;
+                obj->labelChanged = true;
+                updated = true;
+            }
         }
 
         if (other->hasDescription()) {
-            setDescription(other->getDescription());            
-            if (!updated) updated = obj->descriptionChanged;
+            auto description = other->getDescription();
+
+            // copy other language descriptions
+            // NOTE: no check if langauge already exists or language descriptions actually changed
+            auto o_lang = other->getDescriptionLanguages();
+            if (!o_lang.empty())
+            {
+                for (std::string& l : o_lang)
+                {
+                    setDescriptionLanguage(l, other->getDescriptionLanguage(l));
+                }
+                obj->descriptionChanged = true;
+                updated = true;
+            }
+
+            // default description
+            if (obj->description != description)
+            {
+                obj->description = description;
+                obj->hasDescription = true;
+                obj->descriptionChanged = true;
+                updated = true;
+            }
         }
 
         if (other->hasTags()) {
-            setTags(other->getTags());
-            if (!updated) updated = obj->tagsChanged;
+            obj->tags = other->getTags();
+            updated = obj->tags.changed();
         }
 
         if (other->hasOrder()) {
-            setOrder(other->getOrder());
-            if (!updated) updated = obj->orderChanged;
+            obj->order = other->getOrder();
+            updated = obj->order.changed();
         }
 
         if (other->hasParent()) {
             std::shared_ptr<GroupParameter> p = other->getParent().lock();
+            // TODO: avoid setting paramter dirty when adding a child
             p->addChild(*this);
-            if (!updated) updated = obj->parentChanged;
+            updated = obj->parentChanged;
         }
 
         if (other->hasUserdata()) {
-            setUserdata(other->getUserdata());
-            if (!updated) updated = obj->userdataChanged;
+            obj->userdata = other->getUserdata();
+            obj->userdataChanged = true;
+            updated = obj->userdataChanged;
         }
 
         if (other->hasUserid()) {
-            setUserid(other->getUserid());
-            if (!updated) updated = obj->useridChanged;
+            obj->userid = other->getUserid();
+            updated = obj->userid.changed();
         }
 
         if (other->hasReadonly()) {
-            setReadonly(other->getReadonly());
-            if (!updated) updated = obj->readonlyChanged;
+            obj->readonly = other->getReadonly();
+            updated = obj->readonly.changed();
         }
 
         if (updated) {
@@ -1513,6 +1650,11 @@ namespace rcp {
     template <typename TD>
     std::weak_ptr<GroupParameter>& Parameter<TD>::getParent() const {
         return obj->parent;
+    }
+
+    template <typename TD>
+    void Parameter<TD>::setParent(GroupParameter& parent) {
+        setParent(parent.getShared());
     }
 
     template <typename TD>
@@ -1532,12 +1674,6 @@ namespace rcp {
         obj->parentChanged = true;
         setDirty();
     }
-
-    template <typename TD>
-    void Parameter<TD>::setParent(GroupParameter& parent) {
-        setParent(parent.getShared());
-    }
-
 
 
 
@@ -1661,7 +1797,7 @@ namespace rcp {
     typedef ValueParameter<std::string, StringTypeDefinition, DATATYPE_STRING > StringParameter;
     typedef std::shared_ptr<StringParameter> StringParameterPtr;
 
-    typedef ValueParameter<std::string, EnumTypeDefinition, DATATYPE_ENUM > EnumParameter;
+    typedef ValueParameter<TinyString, EnumTypeDefinition, DATATYPE_ENUM > EnumParameter;
     typedef std::shared_ptr<EnumParameter> EnumParameterPtr;
 
     typedef ValueParameter<Color, RGBTypeDefinition, DATATYPE_RGB > RGBParameter;

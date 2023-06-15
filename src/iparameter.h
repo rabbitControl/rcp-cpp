@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -94,8 +77,8 @@ namespace rcp {
         virtual bool hasTags() const = 0;
         virtual void clearTags() = 0;
 
-        virtual const int32_t& getOrder() const = 0;
-        virtual void setOrder(const int32_t& order) = 0;
+        virtual int32_t getOrder() const = 0;
+        virtual void setOrder(const int32_t order) = 0;
         virtual bool hasOrder() const = 0;
         virtual void clearOrder() = 0;
 
@@ -114,8 +97,8 @@ namespace rcp {
         virtual void clearUserid() = 0;
 
         // readonly
-        virtual const bool& getReadonly() const = 0;
-        virtual void setReadonly(const bool& userid) = 0;
+        virtual bool getReadonly() const = 0;
+        virtual void setReadonly(const bool userid) = 0;
         virtual bool hasReadonly() const = 0;
         virtual void clearReadonly() = 0;
 
@@ -133,8 +116,10 @@ namespace rcp {
         virtual void dump() = 0;
         virtual void dispose() = 0;
 
+        virtual bool waitForParent() const = 0;
+
         //
-        virtual bool isValueParameter() = 0;
+        virtual bool isValueParameter() const = 0;
 
         template<typename, datatype_t, td_types> friend class TypeDefinition;
         friend class GroupParameter;
@@ -166,7 +151,7 @@ namespace rcp {
 
         // optional
         virtual const T& getValue() const = 0;
-        virtual void setValue(const T& value) = 0;
+        virtual bool setValue(const T& value) = 0;
         virtual bool hasValue() const = 0;
         virtual void clearValue() = 0;
 

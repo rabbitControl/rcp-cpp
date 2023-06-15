@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -40,21 +23,17 @@
 
 namespace rcp {
 
-    ParameterServer::ParameterServer() :
-        root(std::make_shared<GroupParameter>(0))
-      , parameterManager(std::make_shared<ParameterManager>())
-      , m_applicationId("cpp-server")
+    ParameterServer::ParameterServer()
+        : parameterManager(std::make_shared<ParameterManager>())
+        , m_applicationId("cpp-server")
     {
-        root->setLabel("root");
     }
 
-    ParameterServer::ParameterServer(ServerTransporter& transporter) :
-        root(std::make_shared<GroupParameter>(0))
-      , parameterManager(std::make_shared<ParameterManager>())
-      , m_applicationId("cpp-server")
+    ParameterServer::ParameterServer(ServerTransporter& transporter)
+        : parameterManager(std::make_shared<ParameterManager>())
+        , m_applicationId("cpp-server")
     {
         addTransporter(transporter);
-        root->setLabel("root");
     }
 
     ParameterServer::~ParameterServer() {
@@ -79,7 +58,7 @@ namespace rcp {
         if (packet_option.hasValue())
         {
             // got a packet
-            Packet& the_packet = packet_option.getValue();
+            Packet& the_packet = packet_option.value();
 
             switch (the_packet.getCommand())
             {
@@ -243,7 +222,7 @@ namespace rcp {
 
     void ParameterServer::_init(ServerTransporter& transporter, void *id) {
 
-        for (auto& child : root->children()) {
+        for (auto& child : parameterManager->rootGroup()->children()) {
             _sendParameterFull(child.second, transporter, id);
         }
     }
@@ -261,7 +240,7 @@ namespace rcp {
         {
             ParameterPtr chached_param = parameterManager->getParameter(param->getId());
 
-            if (ParameterManager::isValid(chached_param))
+            if (chached_param)
             {
                 // got it... update it
                 chached_param->update(param);
@@ -271,11 +250,6 @@ namespace rcp {
             else
             {
                 // nope - we don't add parameter on a server
-
-                // parameter not in cache, add it
-//                parameterManager->_addParameter(param);
-
-                // call addParameter callbacks
             }
 
             return true;

@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -66,7 +49,7 @@ public:
     void received(std::istream& data, ServerTransporter& transporter, void* id);
 
 public:
-    GroupParameterPtr& getRoot() { return root; }
+    GroupParameterPtr getRoot() const { return parameterManager->rootGroup(); }
 
     ParameterPtr getParameter(const short& id) {
         return parameterManager->getParameter(id);
@@ -82,49 +65,49 @@ public:
 
     // parameter creater
     BooleanParameterPtr createBooleanParameter(const std::string& label) {
-        return parameterManager->createBooleanParameter(label, root);
+        return parameterManager->createBooleanParameter(label);
     }
     BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createBooleanParameter(label, group);
     }
 
     Int8ParameterPtr createInt8Parameter(const std::string& label) {
-        return parameterManager->createInt8Parameter(label, root);
+        return parameterManager->createInt8Parameter(label, nullptr);
     }
     Int8ParameterPtr createInt8Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createInt8Parameter(label, group);
     }
 
     Int16ParameterPtr createInt16Parameter(const std::string& label) {
-        return parameterManager->createInt16Parameter(label, root);
+        return parameterManager->createInt16Parameter(label, nullptr);
     }
     Int16ParameterPtr createInt16Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createInt16Parameter(label, group);
     }
 
     Int32ParameterPtr createInt32Parameter(const std::string& label) {
-        return parameterManager->createInt32Parameter(label, root);
+        return parameterManager->createInt32Parameter(label, nullptr);
     }
     Int32ParameterPtr createInt32Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createInt32Parameter(label, group);
     }
 
     Int64ParameterPtr createInt64Parameter(const std::string& label) {
-        return parameterManager->createInt64Parameter(label, root);
+        return parameterManager->createInt64Parameter(label, nullptr);
     }
     Int64ParameterPtr createInt64Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createInt64Parameter(label, group);
     }
 
     Float32ParameterPtr createFloat32Parameter(const std::string& label) {
-        return parameterManager->createFloat32Parameter(label, root);
+        return parameterManager->createFloat32Parameter(label, nullptr);
     }
     Float32ParameterPtr createFloat32Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createFloat32Parameter(label, group);
     }
 
     Float64ParameterPtr createFloat64Parameter(const std::string& label) {
-        return parameterManager->createFloat64Parameter(label, root);
+        return parameterManager->createFloat64Parameter(label, nullptr);
     }
     Float64ParameterPtr createFloat64Parameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createFloat64Parameter(label, group);
@@ -132,7 +115,7 @@ public:
 
 
     StringParameterPtr createStringParameter(const std::string& label) {
-        return parameterManager->createStringParameter(label, root);
+        return parameterManager->createStringParameter(label, nullptr);
     }
     StringParameterPtr createStringParameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createStringParameter(label, group);
@@ -140,7 +123,7 @@ public:
 
 
     RGBAParameterPtr createRGBAParameter(const std::string& label) {
-        return parameterManager->createRGBAParameter(label, root);
+        return parameterManager->createRGBAParameter(label, nullptr);
     }
     RGBAParameterPtr createRGBAParameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createRGBAParameter(label, group);
@@ -149,14 +132,14 @@ public:
 
 
     BangParameterPtr createBangParameter(const std::string& label) {
-        return parameterManager->createBangParameter(label, root);
+        return parameterManager->createBangParameter(label, nullptr);
     }
     BangParameterPtr createBangParameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createBangParameter(label, group);
     }
 
     GroupParameterPtr createGroupParameter(const std::string& label) {
-        return parameterManager->createGroupParameter(label, root);
+        return parameterManager->createGroupParameter(label, nullptr);
     }
     GroupParameterPtr createGroupParameter(const std::string& label, GroupParameterPtr& group) {
         return parameterManager->createGroupParameter(label, group);
@@ -170,20 +153,19 @@ public:
     }
 
 
-    void dumpHierarchy() {
-        root->dumpChildren(0);
-        std::flush(std::cout);
+    void dumpHierarchy() const {
+        parameterManager->dumpHierarchy();
     }
 
     void setApplicationId(const std::string& appid) {
         m_applicationId = appid;
     }
+
     std::string getApplicationId() {
         return m_applicationId;
     }
 
 protected:
-	std::shared_ptr<GroupParameter> root;
 	std::shared_ptr<ParameterManager> parameterManager;
 	std::vector<std::reference_wrapper<ServerTransporter> > transporterList;
 	

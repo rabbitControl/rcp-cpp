@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -65,24 +48,22 @@ namespace rcp {
             obj(std::make_shared<Value>(d, param))
         {}
 
-        //------------------------------------
-        // implement writeable
-        virtual void write(Writer& out, bool all) {
 
+        //------------------------------------
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        virtual void writeMandatory(Writer& out) const {
-            obj->writeMandatory(out);
-        }
 
         //------------------------------------
-        // implement optionparser
-        void parseOptions(std::istream& is) {
-
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
             while (!is.eof()) {
 
                 // read option prefix
@@ -102,7 +83,6 @@ namespace rcp {
                     T def = readFromStream(is, def);
                     CHECK_STREAM
 
-                    obj->hasDefaultValue = true;
                     obj->defaultValue = def;
                     break;
                 }
@@ -141,43 +121,83 @@ namespace rcp {
             }
         }
 
-        virtual bool anyOptionChanged() const {
-            return obj->defaultValueChanged
+
+        //------------------------------------
+        // ITypeDefinition
+
+        datatype_t getDatatype() const override
+        {
+            return obj->datatype;
+        }
+
+        bool anyOptionChanged() const override
+        {
+            return obj->defaultValue.changed()
                     || obj->uuidChanged
                     || obj->configChanged;
         }
 
+        void writeMandatory(Writer& out) const override
+        {
+            obj->writeMandatory(out);
+        }
 
-        virtual T readValue(std::istream& is) {
+        void dump() override
+        {
+            std::cout << "--- type custom ---\n";
+
+            if (hasDefault()) {
+                std::cout << "\tdefault: " << getDefault() << "\n";
+            }
+
+            if (hasUuid()) {
+                std::cout << "\tuuid: " << getUuid() << "\n";
+            }
+
+            if (hasConfig()) {
+                std::cout << "\tconfig bytes: " << getConfig().size() << "\n";
+            }
+        }
+
+
+        //------------------------------------
+        // IDefaultDefinition<T>
+
+        T readValue(std::istream& is) override
+        {
             T value = readFromStream(is, value);
             return value;
         }
 
-        //------------------------------------
-        // implement IDefaultDefinition<T>
-        virtual datatype_t getDatatype() const { return obj->datatype; }
-
-        virtual const T& getDefault() const { return obj->defaultValue; }
-        virtual void setDefault(const T& defaultValue) {
-
-            obj->hasDefaultValue = true;
-
-            if (obj->defaultValue == defaultValue) {
-                return;
-            }
-
+        //--------
+        // default
+        const T getDefault() const override
+        {
+            return obj->defaultValue.value();
+        }
+        void setDefault(const T& defaultValue) override
+        {
             obj->defaultValue = defaultValue;
-            obj->defaultValueChanged = true;
-
-            setDirty();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
         }
-        virtual bool hasDefault() const { return obj->hasDefaultValue; }
-        virtual void clearDefault() {
-            obj->hasDefaultValue = false;
-            obj->defaultValueChanged = true;
-
-            setDirty();
+        bool hasDefault() const override
+        {
+            return obj->defaultValue.hasValue();
         }
+        void clearDefault() override
+        {
+            obj->defaultValue.clearValue();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //------------------------------------
+        //
 
         // uuid
         bool hasUuid() const { return obj->hasUuid; }
@@ -207,11 +227,16 @@ namespace rcp {
 
 
         // config
-        bool hasConfig() const { return obj->config.size() > 0; }
-        std::vector<int8_t>& getConfig() const {
+        bool hasConfig() const
+        {
+            return obj->config.size() > 0;
+        }
+        std::vector<int8_t>& getConfig() const
+        {
             return obj->config;
         }
-        void setConfig(const std::vector<int8_t>& config) {
+        void setConfig(const std::vector<int8_t>& config)
+        {
             obj->config = config;
             obj->configChanged = true;
             setDirty();
@@ -223,22 +248,6 @@ namespace rcp {
         }
 
 
-        virtual void dump() {
-            std::cout << "--- type custom ---\n";
-
-            if (hasDefault()) {
-                std::cout << "\tdefault: " << getDefault() << "\n";
-            }
-
-            if (hasUuid()) {
-                std::cout << "\tuuid: " << getUuid() << "\n";
-            }
-
-            if (hasConfig()) {
-                std::cout << "\tconfig bytes: " << getConfig().size() << "\n";
-            }
-        }
-
     private:
         void setDirty() {
             obj->parameter.setDirty();
@@ -247,8 +256,6 @@ namespace rcp {
         class Value {
         public:
             Value(IParameter& param) : datatype(DATATYPE_CUSTOMTYPE)
-              , hasDefaultValue(false)
-              , defaultValueChanged(false)
               , hasUuid(false)
               , uuidChanged(false)
               , configChanged(false)
@@ -259,8 +266,6 @@ namespace rcp {
 
             Value(const std::string& defaultValue, IParameter& param) : datatype(DATATYPE_CUSTOMTYPE)
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
               , hasUuid(false)
               , uuidChanged(false)
               , configChanged(false)
@@ -279,17 +284,17 @@ namespace rcp {
                 writeMandatory(out);
 
                 // write default value
-                if (hasDefaultValue) {
+                if (defaultValue.hasValue()) {
 
-                    if (all || defaultValueChanged) {
+                    if (all || defaultValue.changed()) {
                         out.write(static_cast<char>(CUSTOMTYPE_OPTIONS_DEFAULT));
                         out.write((char*)(&defaultValue), sizeof(T));
 
                         if (!all) {
-                            defaultValueChanged = false;
+                            defaultValue.setUnchanged();
                         }
                     }
-                } else if (defaultValueChanged) {
+                } else if (defaultValue.changed()) {
 
                     out.write(static_cast<char>(CUSTOMTYPE_OPTIONS_DEFAULT));
 
@@ -297,7 +302,7 @@ namespace rcp {
                     memset(&v, 0, sizeof(T));
                     out.write((char*)(&v), sizeof(T));
 
-                    defaultValueChanged = false;
+                    defaultValue.setUnchanged();
                 }
 
                 // uuid
@@ -351,9 +356,7 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            T defaultValue{};
-            bool hasDefaultValue;
-            bool defaultValueChanged;
+            Option<T> defaultValue;
 
             char uuid[16];
             bool hasUuid;

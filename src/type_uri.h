@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -69,48 +52,110 @@ namespace rcp {
         {}
 
         //------------------------------------
-        // implement ITypeDefinition
-        virtual datatype_t getDatatype() const { return obj->datatype; }
-
-        virtual const std::string& getDefault() const { return obj->defaultValue; }
-        virtual void setDefault(const std::string& defaultValue) {
-
-            obj->hasDefaultValue = true;
-
-            if (obj->defaultValue == defaultValue) {
-                return;
-            }
-
-            obj->defaultValue = defaultValue;
-            obj->defaultValueChanged = true;
+        // ITypeDefinition
+        datatype_t getDatatype() const override
+        {
+            return obj->datatype;
         }
-        virtual bool hasDefault() const { return obj->hasDefaultValue; }
-        virtual void clearDefault() { obj->hasDefaultValue = false; }
 
-        // options - filter
-        std::string getFilter() const { return obj->filter; }
-        bool hasFilter() const { return obj->hasFilter; }
-        void setFilter(const std::string& filter) {
+        void writeMandatory(Writer& out) const override
+        {
+            obj->writeMandatory(out);
+        }
 
-            obj->hasFilter = true;
+        bool anyOptionChanged() const override
+        {
+            return obj->defaultValue.changed()
+                    || obj->filter.changed()
+                    || obj->schemaChanged;
+        }
 
-            if (obj->filter == filter) {
-                return;
+        void dump() override
+        {
+            std::cout << "--- type uri ---\n";
+
+            if (hasDefault()) {
+                std::cout << "\tdefault: " << getDefault() << "\n";
             }
 
+            if (hasFilter()) {
+                std::cout << "\tdefault: " << getFilter() << "\n";
+            }
+
+            if (obj->schemas.size() > 0) {
+                for (auto& s : obj->schemas) {
+                    std::cout << "\tschema: " << s << "\n";
+                }
+            }
+        }
+
+        //------------------------------------
+        // IDefaultDefinition
+        std::string readValue(std::istream& is) override
+        {
+            return readLongString(is);
+        }
+
+        const std::string getDefault() const override
+        {
+            return obj->defaultValue.value();
+        }
+        void setDefault(const std::string& defaultValue) override
+        {
+            obj->defaultValue = defaultValue;
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasDefault() const override
+        {
+            return obj->defaultValue.hasValue();
+        }
+        void clearDefault() override
+        {
+            obj->defaultValue.clearValue();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //----------------------
+        // options - filter
+        std::string getFilter() const {
+            return obj->filter.value();
+        }
+        bool hasFilter() const {
+            return obj->filter.hasValue();
+        }
+        void setFilter(const std::string& filter) {
             obj->filter = filter;
-            obj->filterChanged = true;
-            setDirty();
+            if (obj->filter.changed())
+            {
+                setDirty();
+            }
         }
         void clearFilter() {
-            obj->hasFilter = false;
-            obj->filterChanged = true;
-            setDirty();
+            obj->filter.clearValue();
+            if (obj->filter.changed())
+            {
+                setDirty();
+            }
         }
 
+        //----------------------
         // options - schemas
-        std::vector<std::string> getSchemas() const { return obj->schemas; }
+        std::vector<std::string> getSchemas() const {
+            return obj->schemas;
+        }
         void addSchema(const std::string& schema) {
+
+            if (std::find(obj->schemas.begin(), obj->schemas.end(), schema) != obj->schemas.end())
+            {
+                return;
+            }
+
             obj->schemas.push_back(schema);
             obj->schemaChanged = true;
             setDirty();
@@ -121,31 +166,30 @@ namespace rcp {
             setDirty();
         }
         void clearSchemas() {
+            obj->schemaChanged = !obj->schemas.empty();
             obj->schemas.clear();
-            obj->schemaChanged = true;
-            setDirty();
+            if (obj->schemaChanged)
+            {
+                setDirty();
+            }
         }
 
 
 
         //------------------------------------
-        // implement writeable
-        void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        virtual void writeMandatory(Writer& out) const {
-            obj->writeMandatory(out);
-        }
-
         //------------------------------------
-        // implement optionparser
-        void parseOptions(std::istream& is) {
-
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
             while (!is.eof()) {
 
                 // read option prefix
@@ -165,7 +209,6 @@ namespace rcp {
                     std::string def = readLongString(is);
                     CHECK_STREAM
 
-                    obj->hasDefaultValue = true;
                     obj->defaultValue = def;
                     break;
                 }
@@ -174,7 +217,6 @@ namespace rcp {
                     std::string filter = readTinyString(is);
                     CHECK_STREAM
 
-                    obj->hasFilter = true;
                     obj->filter = filter;
                     break;
                 }
@@ -195,35 +237,6 @@ namespace rcp {
             }
         }
 
-        virtual bool anyOptionChanged() const {
-            return obj->defaultValueChanged
-                    || obj->filterChanged
-                    || obj->schemaChanged;
-        }
-
-        virtual std::string readValue(std::istream& is) {
-            return readLongString(is);
-        }
-
-
-        virtual void dump() {
-            std::cout << "--- type uri ---\n";
-
-            if (hasDefault()) {
-                std::cout << "\tdefault: " << getDefault() << "\n";
-            }
-
-            if (hasFilter()) {
-                std::cout << "\tdefault: " << getFilter() << "\n";
-            }
-
-            if (obj->schemas.size() > 0) {
-                for (auto& s : obj->schemas) {
-                    std::cout << "\tschema: " << s << "\n";
-                }
-            }
-        }
-
     private:
         void setDirty() {
             obj->parameter.setDirty();
@@ -232,20 +245,12 @@ namespace rcp {
         class Value {
         public:
             Value(IParameter& param) : datatype(DATATYPE_URI)
-              , hasDefaultValue(false)
-              , defaultValueChanged(false)
-              , hasFilter(false)
-              , filterChanged(false)
               , schemaChanged(false)
               , parameter(param)
             {}
 
             Value(const std::string& defaultValue, IParameter& param) : datatype(DATATYPE_URI)
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
-              , hasFilter(false)
-              , filterChanged(false)
               , schemaChanged(false)
               , parameter(param)
             {}
@@ -260,39 +265,39 @@ namespace rcp {
                 writeMandatory(out);
 
                 // write default value
-                if (hasDefaultValue) {
+                if (defaultValue.hasValue()) {
 
-                    if (all || defaultValueChanged) {
+                    if (all || defaultValue.changed()) {
                         out.write(static_cast<char>(URI_OPTIONS_DEFAULT));
-                        out.writeString(defaultValue);
+                        out.writeString(defaultValue.value());
 
                         if (!all) {
-                            defaultValueChanged = false;
+                            defaultValue.setUnchanged();
                         }
                     }
-                } else if (defaultValueChanged) {
+                } else if (defaultValue.changed()) {
 
                     out.write(static_cast<char>(URI_OPTIONS_DEFAULT));
                     out.writeString("");
-                    defaultValueChanged = false;
+                    defaultValue.setUnchanged();
                 }
 
                 // filter
-                if (hasFilter) {
+                if (filter.hasValue()) {
 
-                    if (all || filterChanged) {
+                    if (all || filter.changed()) {
                         out.write(static_cast<char>(URI_OPTIONS_FILTER));
-                        out.writeTinyString(filter);
+                        out.writeTinyString(filter.value());
 
                         if (!all) {
-                            filterChanged = false;
+                            filter.setUnchanged();
                         }
                     }
-                } else if (filterChanged) {
+                } else if (filter.changed()) {
 
                     out.write(static_cast<char>(URI_OPTIONS_FILTER));
                     out.writeTinyString("");
-                    filterChanged = false;
+                    filter.setUnchanged();
                 }
 
                 // schemas
@@ -323,14 +328,9 @@ namespace rcp {
             datatype_t datatype;
 
             // options - default
-            std::string defaultValue{""};
-            bool hasDefaultValue;
-            bool defaultValueChanged;
-
+            Option<std::string> defaultValue;
             // options - filter
-            std::string filter{""};
-            bool hasFilter;
-            bool filterChanged;
+            Option<std::string> filter;
 
             // options - schema
             std::vector<std::string> schemas;

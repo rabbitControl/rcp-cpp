@@ -95,7 +95,7 @@ namespace rcp {
         typename T,
         typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr
     >
-    T readFromStream(std::istream& is, const T& i) {
+    T readFromStream(std::istream& is, const T& /*i*/) {
 
         T value;
         is.read(reinterpret_cast<char *>(&value), sizeof(T));
@@ -114,7 +114,7 @@ namespace rcp {
 
     template <typename T,
               typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, T>>
-    std::string readStringFromStream(std::istream& is, T s) {
+    std::string readStringFromStream(std::istream& is, T /*s*/) {
         T size;
         is.read(reinterpret_cast<char *>(&size), sizeof(size));
 

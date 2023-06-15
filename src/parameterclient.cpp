@@ -1,3 +1,19 @@
+/*
+********************************************************************
+* rabbitcontrol - a protocol and data-format for remote control.
+*
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
+*
+* This file is part of rabbitcontrol for c++.
+*
+* Written by Ingo Randolf, 2018-2023
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*********************************************************************
+*/
 #include "parameterclient.h"
 
 #include "stringstreamwriter.h"
@@ -106,7 +122,7 @@ namespace rcp {
         auto packet = rcp::Packet::parse(data, m_parameterManager);
         if (packet.hasValue()) {
 
-            rcp::Packet& the_packet = packet.getValue();
+            rcp::Packet& the_packet = packet.value();
             switch (the_packet.getCommand()) {
 
             case COMMAND_INITIALIZE:
@@ -176,14 +192,14 @@ namespace rcp {
             return;
         }
 
-        // assume this is a parameter!!
+        // assume this is a parameter
         rcp::ParameterPtr param = std::dynamic_pointer_cast<rcp::IParameter>(packet.getData());
-        if (param) {
-
+        if (param)
+        {
             rcp::ParameterPtr chached_param = m_parameterManager->getParameter(param->getId());
 
-            if (rcp::ParameterManager::isValid(chached_param)) {
-
+            if (chached_param)
+            {
                 // got it... update it
                 chached_param->update(param);
 
@@ -219,8 +235,8 @@ namespace rcp {
             std::cout << "remove param: " << id_data->getId() << "\n";
 
             rcp::ParameterPtr chached_param = m_parameterManager->getParameter(id_data->getId());
-            if (rcp::ParameterManager::isValid(chached_param)) {
-
+            if (chached_param)
+            {
                 // parameter is in list, remove it
                 std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
 

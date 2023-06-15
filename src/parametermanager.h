@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -63,8 +46,7 @@ public:
     }
 
     static bool isValid(const ParameterPtr& parameter) {
-        return parameter->getTypeDefinition().getDatatype() != DATATYPE_MAX_ &&
-                parameter->getId() != 0;
+        return parameter != nullptr && parameter->getTypeDefinition().getDatatype() != DATATYPE_MAX_ && parameter->getId() != 0;
     }
 
     static bool isGroup(const ParameterPtr& parameter) {
@@ -80,19 +62,28 @@ public:
     void removeParameter(IParameter& parameter);
     void removeParameter(short id);
 
-    BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr& group);
-    Int8ParameterPtr createInt8Parameter(const std::string& label, GroupParameterPtr& group);
-    Int16ParameterPtr createInt16Parameter(const std::string& label, GroupParameterPtr& group);
-    Int32ParameterPtr createInt32Parameter(const std::string& label, GroupParameterPtr& group);
-    Int64ParameterPtr createInt64Parameter(const std::string& label, GroupParameterPtr& group);
-    Float32ParameterPtr createFloat32Parameter(const std::string& label, GroupParameterPtr& group);
-    Float64ParameterPtr createFloat64Parameter(const std::string& label, GroupParameterPtr& group);
-    StringParameterPtr createStringParameter(const std::string& label, GroupParameterPtr& group);
-    RGBAParameterPtr createRGBAParameter(const std::string& label, GroupParameterPtr& group);
-    BangParameterPtr createBangParameter(const std::string& label, GroupParameterPtr& group);
+    BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Int8ParameterPtr createInt8Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Int16ParameterPtr createInt16Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Int32ParameterPtr createInt32Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Int64ParameterPtr createInt64Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Float32ParameterPtr createFloat32Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    Float64ParameterPtr createFloat64Parameter(const std::string& label, GroupParameterPtr group = nullptr);
+    StringParameterPtr createStringParameter(const std::string& label, GroupParameterPtr group = nullptr);
+    RGBAParameterPtr createRGBAParameter(const std::string& label, GroupParameterPtr group = nullptr);
+    BangParameterPtr createBangParameter(const std::string& label, GroupParameterPtr group = nullptr);
 
-    GroupParameterPtr createGroupParameter(const std::string& label, GroupParameterPtr& group);
+    GroupParameterPtr createGroupParameter(const std::string& label, GroupParameterPtr group = nullptr);
 
+
+    GroupParameterPtr rootGroup() const {
+        return m_rootGroup;
+    }
+
+    void dumpHierarchy() const {
+        m_rootGroup->dumpChildren(0);
+        std::flush(std::cout);
+    }
 
     template<typename> friend class Parameter;
     friend class ParameterServer;
@@ -107,21 +98,25 @@ private:
 	virtual void setParameterDirty(IParameter& parameter) override;
 	virtual void setParameterRemoved(ParameterPtr& parameter) override;
 	
+    void addMissingParent(int16_t parentId, ParameterPtr child) override;
 	
 private:
     std::shared_ptr<ParameterManager> getShared() { return shared_from_this(); }
     short getNextId();
     void _addParameter(ParameterPtr& parameter);
-    void _addParameter(ParameterPtr& parameter, GroupParameterPtr& group);
     void _addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group);
-	void removeParameterDirect(ParameterPtr& parameter);
+	void removeParameterDirect(ParameterPtr& parameter);    
     void clear();
 
     //--------
-    std::unordered_set<short> ids;
-    std::map<short, ParameterPtr > params;
-    std::map<short, ParameterPtr > dirtyParameter;
-    std::map<short, ParameterPtr > removedParameter;
+    std::unordered_set<int16_t> ids;
+    std::map<int16_t, ParameterPtr > params;
+    std::map<int16_t, ParameterPtr > dirtyParameter;
+    std::map<int16_t, ParameterPtr > removedParameter;
+    GroupParameterPtr m_rootGroup;
+
+    //
+    std::map<int16_t, std::vector<ParameterPtr> > missingParents;
 	
 private:
 	void lock();

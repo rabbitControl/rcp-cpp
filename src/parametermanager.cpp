@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -37,7 +20,10 @@
 
 namespace rcp {
 
-    ParameterManager::ParameterManager() {
+    ParameterManager::ParameterManager()
+        : m_rootGroup(std::make_shared<GroupParameter>(0))
+    {
+        m_rootGroup->setLabel("root");
     }
 
     ParameterManager::~ParameterManager() {
@@ -97,12 +83,12 @@ namespace rcp {
     // parameter creation
     //--------------------------------------------
     //--------------------------------------------
-    BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& label, GroupParameterPtr& group)
+    BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            BooleanParameterPtr p = std::make_shared<BooleanParameter>(id);
+            BooleanParameterPtr p = std::make_shared<BooleanParameter>(id, false);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -112,12 +98,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label, GroupParameterPtr& group)
+    Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Int8ParameterPtr p = std::make_shared<Int8Parameter>(id);
+            Int8ParameterPtr p = std::make_shared<Int8Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -127,12 +113,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& label, GroupParameterPtr& group)
+    Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Int16ParameterPtr p = std::make_shared<Int16Parameter>(id);
+            Int16ParameterPtr p = std::make_shared<Int16Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -142,12 +128,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& label, GroupParameterPtr& group)
+    Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Int32ParameterPtr p = std::make_shared<Int32Parameter>(id);
+            Int32ParameterPtr p = std::make_shared<Int32Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -157,12 +143,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& label, GroupParameterPtr& group)
+    Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Int64ParameterPtr p = std::make_shared<Int64Parameter>(id);
+            Int64ParameterPtr p = std::make_shared<Int64Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -172,12 +158,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& label, GroupParameterPtr& group)
+    Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Float32ParameterPtr p = std::make_shared<Float32Parameter>(id);
+            Float32ParameterPtr p = std::make_shared<Float32Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -187,12 +173,12 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& label, GroupParameterPtr& group)
+    Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
         {
-            Float64ParameterPtr p = std::make_shared<Float64Parameter>(id);
+            Float64ParameterPtr p = std::make_shared<Float64Parameter>(id, 0);
             _addParameterDirect(label, (ParameterPtr&)p, group);
 
             return p;
@@ -203,7 +189,7 @@ namespace rcp {
     }
 
 
-    StringParameterPtr ParameterManager::createStringParameter(const std::string& label, GroupParameterPtr& group)
+    StringParameterPtr ParameterManager::createStringParameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
@@ -218,7 +204,7 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label, GroupParameterPtr& group)
+    RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
@@ -233,7 +219,7 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    BangParameterPtr ParameterManager::createBangParameter(const std::string& label, GroupParameterPtr& group)
+    BangParameterPtr ParameterManager::createBangParameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
@@ -248,7 +234,7 @@ namespace rcp {
         throw std::runtime_error("no valid id...");
     }
 
-    GroupParameterPtr ParameterManager::createGroupParameter(const std::string& label, GroupParameterPtr& group)
+    GroupParameterPtr ParameterManager::createGroupParameter(const std::string& label, GroupParameterPtr group)
     {
         short id = getNextId();
         if (id != 0)
@@ -274,7 +260,7 @@ namespace rcp {
             return it->second;
         }
 
-        return std::make_shared<InvalidParameter>(0);
+        return nullptr;
     }
 
 
@@ -305,63 +291,83 @@ namespace rcp {
      *      called by client
      * @param parameter
      */
-    void ParameterManager::_addParameter(ParameterPtr& parameter) {
+    void ParameterManager::_addParameter(ParameterPtr& parameter)
+    {
+        // NOTE: this is called from a client
+        // make sure parameters are clean by default
 
         // check if already in map
-        auto it = params.find(parameter->getId());
-        if (it != params.end()) {
-            // already in map... ignore
+        if (params.find(parameter->getId()) != params.end())
+        {
+            // parameter is already registered in map... ignore
             return;
         }
 
         // need to reserve id
-        if (std::find(ids.begin(), ids.end(), parameter->getId()) != ids.end()) {
+        if (std::find(ids.begin(), ids.end(), parameter->getId()) != ids.end())
+        {
             // huh - parameter is not in parameter cache, but id already taken!?
-            std::cerr << "inconsistency in id/parameter list\n";
+            std::cerr << "inconsistency in id,parameter list\n";
         }
 
         // in any case: reserve that id
         ids.insert(parameter->getId());
 
-        // add it
-        parameter->setManager(getShared());
-        // called from client - parameter are clean by default
+        // avoid parameter getting dirty when setting parent
+        parameter->setManager(nullptr);
 
         // parsed parameters are proxy parameter until they are in params-map
         // proxy parameter are not set as children...
         // so: add parameter to its parent
-        if (auto parent = parameter->getParent().lock()) {
+        if (auto parent = parameter->getParent().lock())
+        {
             parent->addChild(parameter);
         }
-
-        params[parameter->getId()] = parameter;
-    }
-
-    /**
-     * @brief ParameterManager::_addParameter
-     *      called by client
-     * @param parameter
-     * @param group
-     */
-    void ParameterManager::_addParameter(ParameterPtr& parameter, GroupParameterPtr& group) {
-
-        auto it = params.find(parameter->getId());
-        if (it == params.end()) {
-
-            params[parameter->getId()] = parameter;
-
-            // check?
-            if (std::find(ids.begin(), ids.end(), parameter->getId()) != ids.end()) {
-                std::cout << "consistency in id/parameter list\n";
-            }
-            ids.insert(parameter->getId());
-        } else {
-            // already in there!!
-            std::cout << "param already in map: " << parameter->getId() << "\n";
+        else if (!parameter->waitForParent())
+        {
+            m_rootGroup->addChild(parameter);
         }
 
-        // adding to group...
-        group->addChild(parameter);
+        // add parameter to map
+        params[parameter->getId()] = parameter;
+
+        // set manager again
+        parameter->setManager(getShared());
+
+        if (isGroup(parameter))
+        {
+            // resolve missing parents
+            GroupParameterPtr group_parameter = std::dynamic_pointer_cast<GroupParameter>(parameter);
+
+            auto missing_it = missingParents.find(parameter->getId());
+            if (missing_it != missingParents.end())
+            {
+                for (auto child : missing_it->second)
+                {
+                    // NOTE: this makes child dirty!
+                    // TOOO: don't make child dirty?
+                    group_parameter->addChild(child);
+                }
+
+                missingParents.erase(missing_it);
+            }
+        }
+    }
+
+    void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
+    {
+        if (missingParents.find(parentId) != missingParents.end())
+        {
+            // add to list
+            missingParents[parentId].push_back(child);
+        }
+        else
+        {
+            // add new
+            std::vector<ParameterPtr> list;
+            list.push_back(child);
+            missingParents[parentId] = list;
+        }
     }
 
     /**
@@ -382,7 +388,14 @@ namespace rcp {
         parameter->setDirty();
 
         // add to group
-        group->addChild(parameter);
+        if (group != nullptr)
+        {
+            group->addChild(parameter);
+        }
+        else
+        {
+            m_rootGroup->addChild(parameter);
+        }
 
         params[parameter->getId()] = parameter;
     }

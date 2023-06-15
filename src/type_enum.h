@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -45,10 +28,10 @@
 
 namespace rcp {
 
-    typedef TypeDefinition<std::string, DATATYPE_ENUM, td_enum > EnumTypeDefinition;
+    typedef TypeDefinition<TinyString, DATATYPE_ENUM, td_enum > EnumTypeDefinition;
 
     template<>
-    class TypeDefinition<std::string, DATATYPE_ENUM, td_enum> : public IDefaultDefinition<std::string>
+    class TypeDefinition<TinyString, DATATYPE_ENUM, td_enum> : public IDefaultDefinition<TinyString>
     {
     public:
         TypeDefinition(EnumTypeDefinition& v)  :
@@ -65,30 +48,83 @@ namespace rcp {
             obj(std::make_shared<Value>(d, param))
         {}
 
+
         //------------------------------------
-        // implement ITypeDefinition
-        virtual datatype_t getDatatype() const { return obj->datatype; }
+        // ITypeDefinition
+        datatype_t getDatatype() const override
+        {
+            return obj->datatype;
+        }
 
-        virtual const std::string& getDefault() const { return obj->defaultValue; }
-        virtual void setDefault(const std::string& defaultValue) {
+        bool anyOptionChanged() const override
+        {
+            return obj->defaultValue.changed()
+                    || obj->optionsChanged
+                    || obj->multiselect.changed();
+        }
 
-            obj->hasDefaultValue = true;
 
-            if (obj->defaultValue == defaultValue) {
-                return;
+        void writeMandatory(Writer& out) const override
+        {
+            obj->writeMandatory(out);
+        }
+
+        void dump() override
+        {
+            std::cout << "--- type enum ---\n";
+
+            if (hasDefault()) {
+                std::cout << "\tdefault: " << getDefault() << "\n";
             }
 
-            obj->defaultValue = defaultValue;
-            obj->defaultValueChanged = true;
-            setDirty();
-        }
-        virtual bool hasDefault() const { return obj->hasDefaultValue; }
-        virtual void clearDefault() {
-            obj->hasDefaultValue = false;
-            obj->defaultValueChanged = true;
-            setDirty();
+            if (hasMultiselect()) {
+                std::cout << "\tmultiselect: " << getMultiselect() << "\n";
+            }
+
+            if (hasOptions()) {
+                for (auto& o : obj->options) {
+                    std::cout << "\toption: " << o << "\n";
+                }
+            }
         }
 
+
+        //------------------------------------
+        // IDefaultDefinition
+
+        TinyString readValue(std::istream& is) override
+        {
+            return readTinyString(is);
+        }
+
+        //--------
+        // default
+        const TinyString getDefault() const override
+        {
+            return obj->defaultValue.value();
+        }
+        void setDefault(const TinyString& defaultValue) override
+        {
+            obj->defaultValue = defaultValue;
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasDefault() const override
+        {
+            return obj->defaultValue.hasValue();
+        }
+        void clearDefault() override
+        {
+            obj->defaultValue.clearValue();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //--------
         // options
         std::vector<std::string>& getOptions() const { return obj->options; }
         const std::string& getOption(const std::string& selection) const {
@@ -117,47 +153,49 @@ namespace rcp {
             setDirty();
         }
 
-
+        //------------
         // multiselect
-        bool getMultiselect() const { return obj->multiselect; }
-        bool hasMultiselect() const { return obj->hasMultiselect; }
-        void setMultiselect(bool value) {
-
-            obj->hasMultiselect = true;
-
-            if (obj->multiselect == value) {
-                return;
+        bool getMultiselect() const {
+            if (obj->multiselect.hasValue())
+            {
+                return obj->multiselect.value();
             }
-
+            return false;
+        }
+        bool hasMultiselect() const {
+            return obj->multiselect.hasValue();
+        }
+        void setMultiselect(bool value) {
             obj->multiselect = value;
-            obj->multiselectChanged = true;
-            setDirty();
+            if (obj->multiselect.changed())
+            {
+                setDirty();
+            }
         }
         void clearMultiselect() {
-            obj->hasMultiselect = false;
-            obj->multiselectChanged = true;
-            setDirty();
+            obj->multiselect.clearValue();
+            if (obj->multiselect.changed())
+            {
+                setDirty();
+            }
         }
 
 
         //------------------------------------
-        // implement writeable
-        void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        virtual void writeMandatory(Writer& out) const {
-            obj->writeMandatory(out);
-        }
 
         //------------------------------------
-        // implement optionparser
-        void parseOptions(std::istream& is) {
-
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
             while (!is.eof()) {
 
                 // read option prefix
@@ -177,7 +215,6 @@ namespace rcp {
                     std::string d = readTinyString(is);
                     CHECK_STREAM
 
-                    obj->hasDefaultValue = true;
                     obj->defaultValue = d;
                     break;
                 }
@@ -200,38 +237,9 @@ namespace rcp {
                     bool multi = readFromStream(is, multi);
                     CHECK_STREAM
 
-                    obj->hasMultiselect = true;
                     obj->multiselect = multi;
                     break;
                 }
-                }
-            }
-        }
-
-        virtual bool anyOptionChanged() const {
-            return obj->defaultValueChanged
-                    || obj->optionsChanged
-                    || obj->multiselectChanged;
-        }
-
-        virtual std::string readValue(std::istream& is) {
-            return readTinyString(is);
-        }
-
-        virtual void dump() {
-            std::cout << "--- type enum ---\n";
-
-            if (hasDefault()) {
-                std::cout << "\tdefault: " << getDefault() << "\n";
-            }
-
-            if (hasMultiselect()) {
-                std::cout << "\tmultiselect: " << getMultiselect() << "\n";
-            }
-
-            if (hasOptions()) {
-                for (auto& o : obj->options) {
-                    std::cout << "\toption: " << o << "\n";
                 }
             }
         }
@@ -245,21 +253,13 @@ namespace rcp {
         public:
             Value(IParameter& param) : datatype(DATATYPE_ENUM)
               , defaultValue(empty_string)
-              , hasDefaultValue(false)
-              , defaultValueChanged(false)
               , optionsChanged(false)
-              , hasMultiselect(false)
-              , multiselectChanged(false)
               , parameter(param)
             {}
 
             Value(const std::string& defaultValue, IParameter& param) : datatype(DATATYPE_ENUM)
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
               , optionsChanged(false)
-              , hasMultiselect(false)
-              , multiselectChanged(false)
               , parameter(param)
             {}
 
@@ -272,21 +272,21 @@ namespace rcp {
                 writeMandatory(out);
 
                 // write default value
-                if (hasDefaultValue) {
+                if (defaultValue.hasValue()) {
 
-                    if (all || defaultValueChanged) {
+                    if (all || defaultValue.changed()) {
                         out.write(static_cast<char>(ENUM_OPTIONS_DEFAULT));
-                        out.writeTinyString(defaultValue);
+                        out.writeTinyString(defaultValue.value());
 
                         if (!all) {
-                            defaultValueChanged = false;
+                            defaultValue.setUnchanged();
                         }
                     }
-                } else if (defaultValueChanged) {
+                } else if (defaultValue.changed()) {
 
                     out.write(static_cast<char>(ENUM_OPTIONS_DEFAULT));
                     out.writeTinyString("");
-                    defaultValueChanged = false;
+                    defaultValue.setUnchanged();
                 }
 
                 // options
@@ -313,22 +313,22 @@ namespace rcp {
 
 
                 // multiselect
-                if (hasMultiselect) {
+                if (multiselect.hasValue()) {
 
-                    if (all || multiselectChanged) {
+                    if (all || multiselect.changed()) {
                         out.write(static_cast<char>(ENUM_OPTIONS_MULTISELECT));
-                        out.write(multiselect);
+                        out.write(multiselect.value());
 
                         if (!all) {
-                            multiselectChanged = false;
+                            multiselect.setUnchanged();
                         }
                     }
 
-                } else if (multiselectChanged) {
+                } else if (multiselect.changed()) {
 
                     out.write(static_cast<char>(ENUM_OPTIONS_MULTISELECT));
                     out.write(false);
-                    multiselectChanged = false;
+                    multiselect.setUnchanged();
                 }
             }
 
@@ -336,17 +336,13 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            std::string defaultValue{""};
-            bool hasDefaultValue;
-            bool defaultValueChanged;
+            Option<TinyString> defaultValue;
 
             // options - enum
             std::vector<std::string> options;
             bool optionsChanged;
 
-            bool multiselect{false};
-            bool hasMultiselect;
-            bool multiselectChanged;
+            Option<bool> multiselect;
 
             IParameter& parameter;
         };

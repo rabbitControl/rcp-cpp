@@ -1,34 +1,17 @@
 /*
 ********************************************************************
-* rabbitcontrol cpp
+* rabbitcontrol - a protocol and data-format for remote control.
 *
-* written by: Ingo Randolf - 2018
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of rabbitcontrol for c++.
 *
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
+* Written by Ingo Randolf, 2018-2023
 *
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
 
@@ -72,257 +55,39 @@ namespace rcp {
         {}
 
         //------------------------------------
-        // implement writeable
-        virtual void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        virtual void writeMandatory(Writer& out) const {
+        //------------------------------------
+        // ITypeDefinition
+        void writeMandatory(Writer& out) const override
+        {
             obj->writeMandatory(out);
         }
 
-        //------------------------------------
-        // implement optionparser
-        void parseOptions(std::istream& is) {
-
-            while (!is.eof()) {
-
-                // read option prefix
-                number_options_t opt = static_cast<number_options_t>(is.get());
-
-                CHECK_STREAM_MSG("typedefinition - could not read from stream")
-
-                if (opt == TERMINATOR) {   
-                    break;
-                }
-
-                switch (opt) {
-                case NUMBER_OPTIONS_DEFAULT: {
-
-                    // read options
-                    T def = readFromStream(is, def);
-                    CHECK_STREAM
-
-                    obj->hasDefaultValue = true;
-                    obj->defaultValue = def;
-                    break;
-                }
-                case NUMBER_OPTIONS_MINIMUM: {
-
-                    T min = readFromStream(is, min);
-                    CHECK_STREAM
-
-                    obj->hasMinimum = true;
-                    obj->minimum = min;
-                    break;
-                }
-                case NUMBER_OPTIONS_MAXIMUM: {
-
-                    T max = readFromStream(is, max);
-                    CHECK_STREAM
-
-                    obj->hasMaximum = true;
-                    obj->maximum = max;
-                    break;
-                }
-                case NUMBER_OPTIONS_MULTIPLEOF: {
-
-                    T mult = readFromStream(is, mult);
-                    CHECK_STREAM
-
-                    obj->hasMultipleof = true;
-                    obj->multipleof = mult;
-                    break;
-                }
-                case NUMBER_OPTIONS_SCALE: {
-
-                    number_scale_t scale = static_cast<number_scale_t>(is.get());
-                    CHECK_STREAM
-
-                    obj->hasScale = true;
-                    obj->scale = scale;
-                    break;
-                }
-                case NUMBER_OPTIONS_UNIT: {
-
-                    std::string unit = readTinyString(is);
-                    CHECK_STREAM
-
-                    obj->hasUnit = true;
-                    obj->unit = unit;
-                    break;
-                }
-                }
-
-            }
-        } // parseOptions
-
-
-        virtual T readValue(std::istream& is) {
-            T val = readFromStream(is, val);
-            return val;
+        datatype_t getDatatype() const override
+        {
+            return obj->datatype;
         }
 
-        //------------------------------------
-        // implement IDefaultDefinition
-        virtual datatype_t getDatatype() const { return obj->datatype; }
-
-        virtual const T& getDefault() const {
-            return obj->defaultValue;
-        }
-        virtual void setDefault(const T& defaultValue) {
-
-            obj->hasDefaultValue = true;
-
-            if (obj->defaultValue == defaultValue) {
-                return;
-            }
-
-            obj->defaultValue = defaultValue;
-            obj->defaultValueChanged = true;
-            setDirty();
-        }
-        virtual bool hasDefault() const { return obj->hasDefaultValue; }
-        virtual void clearDefault() {
-            obj->hasDefaultValue = false;
-            obj->defaultValueChanged = true;
-            setDirty();
+        bool anyOptionChanged() const override
+        {
+            return obj->defaultValue.changed()
+                    || obj->minimum.changed()
+                    || obj->maximum.changed()
+                    || obj->multipleof.changed()
+                    || obj->scale.changed()
+                    || obj->unit.changed();
         }
 
-        //------------------------------------
-        // implement INumberDefinition
-        virtual T getMinimum() const {
-            if (obj->hasMinimum)
-                return obj->minimum;
-            return 0;
-        }
-        virtual void setMinimum(const T& val) {
-
-            obj->hasMinimum = true;
-
-            if (obj->minimum == val) {
-                return;
-            }
-
-            obj->minimum = val;
-            obj->minimumChanged = true;
-            setDirty();
-        }
-        virtual bool hasMinimum() const { return obj->hasMinimum; }
-        virtual void clearMinimum() {
-            obj->hasMinimum = false;
-            obj->minimumChanged = true;
-            setDirty();
-        }
-
-        virtual T getMaximum() const {
-            if (obj->hasMaximum)
-                return obj->maximum;
-            return 0;
-        }
-        virtual void setMaximum(const T& val) {
-
-            obj->hasMaximum = true;
-
-            if (obj->maximum == val) {
-                return;
-            }
-
-            obj->maximum = val;
-            obj->maximumChanged = true;
-            setDirty();
-        }
-        virtual bool hasMaximum() const { return obj->hasMaximum; }
-        virtual void clearMaximum() {
-            obj->hasMaximum = false;
-            obj->maximumChanged = true;
-            setDirty();
-        }
-
-        virtual T getMultipleof() const {
-            if (obj->hasMultipleof)
-                return obj->multipleof;
-            return 0;
-        }
-        virtual void setMultipleof(const T& val) {
-
-            obj->hasMultipleof = true;
-
-            if (obj->multipleof == val) {
-                return;
-            }
-
-            obj->multipleof = val;
-            obj->multipleofChanged = true;
-            setDirty();
-        }
-        virtual bool hasMultipleof() const { return obj->hasMultipleof; }
-        virtual void clearMultipleof() {
-            obj->hasMultipleof = false;
-            obj->multipleofChanged = true;
-            setDirty();
-        }
-
-        virtual number_scale_t getScale() const {
-            if (obj->hasScale)
-                return obj->scale;
-            return NUMBER_SCALE_LINEAR;
-        }
-        virtual void setScale(const number_scale_t& val) {
-
-            obj->hasScale = true;
-
-            if (obj->scale == val) {
-                return;
-            }
-
-            obj->scale = val;
-            obj->scaleChanged = true;
-            setDirty();
-        }
-        virtual bool hasScale() const { return obj->hasScale; }
-        virtual void clearScale() {
-            obj->hasScale = false;
-            obj->scaleChanged = true;
-            setDirty();
-        }
-
-        virtual std::string getUnit() const { return obj->unit; }
-        virtual void setUnit(const std::string& val) {
-
-            obj->hasUnit = true;
-
-            if (obj->unit == val) {
-                return;
-            }
-
-            obj->unit = val;
-            obj->unitChanged = true;
-            setDirty();
-        }
-        virtual bool hasUnit() const { return obj->hasUnit; }
-        virtual void clearUnit() {
-            obj->hasUnit = false;
-            obj->unitChanged = true;
-
-            setDirty();
-        }
-
-
-        virtual bool anyOptionChanged() const {
-            return obj->defaultValueChanged
-                    || obj->minimumChanged
-                    || obj->maximumChanged
-                    || obj->multipleofChanged
-                    || obj->scaleChanged
-                    || obj->unitChanged;
-        }
-
-        virtual void dump() {
+        void dump() override
+        {
             std::cout << "--- type number ---\n";
 
             if (hasDefault()) {
@@ -350,6 +115,269 @@ namespace rcp {
             }
         }
 
+        //------------------------------------
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
+            while (!is.eof()) {
+
+                // read option prefix
+                number_options_t opt = static_cast<number_options_t>(is.get());
+
+                CHECK_STREAM_MSG("typedefinition - could not read from stream")
+
+                if (opt == TERMINATOR) {   
+                    break;
+                }
+
+                switch (opt) {
+                case NUMBER_OPTIONS_DEFAULT: {
+
+                    // read options
+                    T def = readFromStream(is, def);
+                    CHECK_STREAM
+
+                    obj->defaultValue = def;
+                    break;
+                }
+                case NUMBER_OPTIONS_MINIMUM: {
+
+                    T min = readFromStream(is, min);
+                    CHECK_STREAM
+
+                    obj->minimum = min;
+                    break;
+                }
+                case NUMBER_OPTIONS_MAXIMUM: {
+
+                    T max = readFromStream(is, max);
+                    CHECK_STREAM
+
+                    obj->maximum = max;
+                    break;
+                }
+                case NUMBER_OPTIONS_MULTIPLEOF: {
+
+                    T mult = readFromStream(is, mult);
+                    CHECK_STREAM
+
+                    obj->multipleof = mult;
+                    break;
+                }
+                case NUMBER_OPTIONS_SCALE: {
+
+                    number_scale_t scale = static_cast<number_scale_t>(is.get());
+                    CHECK_STREAM
+
+                    obj->scale = scale;
+                    break;
+                }
+                case NUMBER_OPTIONS_UNIT: {
+
+                    std::string unit = readTinyString(is);
+                    CHECK_STREAM
+
+                    obj->unit = unit;
+                    break;
+                }
+                }
+
+            }
+        } // parseOptions
+
+
+        //------------------------------------
+        // IDefaultDefinition
+        T readValue(std::istream& is) override
+        {
+            T val = readFromStream(is, val);
+            return val;
+        }
+
+        // default value
+        const T getDefault() const override
+        {
+            if (obj->defaultValue.hasValue())
+            {
+                return obj->defaultValue.value();
+            }
+            return 0;
+        }
+        void setDefault(const T& defaultValue) override
+        {
+            obj->defaultValue = defaultValue;
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasDefault() const override
+        {
+            return obj->defaultValue.hasValue();
+        }
+        void clearDefault() override
+        {
+            obj->defaultValue.clearValue();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //------------------------------------
+        // implement INumberDefinition
+
+        //--------
+        // minimum
+        T getMinimum() const override
+        {
+            if (obj->minimum.hasValue())
+            {
+                return obj->minimum.value();
+            }
+            return 0;
+        }
+        void setMinimum(const T& val) override
+        {
+            obj->minimum = val;
+            if (obj->minimum.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasMinimum() const override
+        {
+            return obj->minimum.hasValue();
+        }
+        void clearMinimum() override
+        {
+            obj->minimum.clearValue();
+            if (obj->minimum.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //--------
+        // maximum
+        T getMaximum() const override
+        {
+            if (obj->maximum.hasValue())
+            {
+                return obj->maximum.value();
+            }
+            return 0;
+        }
+        void setMaximum(const T& val) override
+        {
+            obj->maximum = val;
+            if (obj->maximum.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasMaximum() const override
+        {
+            return obj->maximum.hasValue();
+        }
+        void clearMaximum() override
+        {
+            obj->maximum.clearValue();
+            if (obj->maximum.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //------------
+        // multiple of
+        T getMultipleof() const override
+        {
+            if (obj->multipleof.hasValue())
+            {
+                return obj->multipleof.value();
+            }
+            return 0;
+        }
+        void setMultipleof(const T& val) override
+        {
+            obj->multipleof = val;
+            if (obj->multipleof.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasMultipleof() const override
+        {
+            return obj->multipleof.hasValue();
+        }
+        void clearMultipleof() override
+        {
+            obj->multipleof.clearValue();
+            if (obj->multipleof.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //------
+        // scale
+        number_scale_t getScale() const override
+        {
+            if (obj->scale.hasValue())
+            {
+                return obj->scale.value();
+            }
+            return NUMBER_SCALE_LINEAR;
+        }
+        void setScale(const number_scale_t& val) override
+        {
+            obj->scale = val;
+            if (obj->scale.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasScale() const override
+        {
+            return obj->scale.hasValue();
+        }
+        void clearScale() override
+        {
+            obj->scale.clearValue();
+            if (obj->scale.changed())
+            {
+                setDirty();
+            }
+        }
+
+        //-----
+        // unit
+        std::string getUnit() const override
+        {
+            return obj->unit.value();
+        }
+        void setUnit(const std::string& val) override
+        {
+            obj->unit = val;
+            if (obj->unit.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasUnit() const override
+        {
+            return obj->unit.hasValue();
+        }
+        void clearUnit() override
+        {
+            obj->unit.clearValue();
+            if (obj->unit.changed())
+            {
+                setDirty();
+            }
+        }
+
     private:
         void setDirty() {
             obj->parameter.setDirty();
@@ -359,60 +387,20 @@ namespace rcp {
         public:
             Value(IParameter& param) :
                 datatype(type_id)
-              , hasDefaultValue(false)
-              , defaultValueChanged(false)
-              , minimum(std::numeric_limits<T>::min())
-              , hasMinimum(false)
-              , minimumChanged(false)
-              , maximum(std::numeric_limits<T>::max())
-              , hasMaximum(false)
-              , maximumChanged(false)
-              , hasMultipleof(false)
-              , multipleofChanged(false)
-              , hasScale(false)
-              , scaleChanged(false)
-              , hasUnit(false)
-              , unitChanged(false)
               , parameter(param)
             {}
 
             Value(const T& defaultValue, IParameter& param) :
                 datatype(type_id)
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
-              , minimum(std::numeric_limits<T>::min())
-              , hasMinimum(false)
-              , minimumChanged(false)
-              , maximum(std::numeric_limits<T>::max())
-              , hasMaximum(false)
-              , maximumChanged(false)
-              , hasMultipleof(false)
-              , multipleofChanged(false)
-              , hasScale(false)
-              , scaleChanged(false)
-              , hasUnit(false)
-              , unitChanged(false)
               , parameter(param)
             {}
 
             Value(const T& defaultValue, const T& min, const T& max, IParameter& param) :
                 datatype(type_id)
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
               , minimum(min)
-              , hasMinimum(true)
-              , minimumChanged(true)
               , maximum(max)
-              , hasMaximum(true)
-              , maximumChanged(true)
-              , hasMultipleof(false)
-              , multipleofChanged(false)
-              , hasScale(false)
-              , scaleChanged(false)
-              , hasUnit(false)
-              , unitChanged(false)
               , parameter(param)
             {}
 
@@ -425,115 +413,115 @@ namespace rcp {
                 writeMandatory(out);
 
                 // write default value
-                if (hasDefaultValue) {
+                if (defaultValue.hasValue()) {
 
-                    if (all || defaultValueChanged) {
+                    if (all || defaultValue.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_DEFAULT));
-                        out.write(defaultValue);
+                        out.write(defaultValue.value());
 
                         if (!all) {
-                            defaultValueChanged = false;
+                            defaultValue.setUnchanged();
                         }
                     }
-                } else if (defaultValueChanged) {
+                } else if (defaultValue.changed()) {
                     out.write(static_cast<char>(NUMBER_OPTIONS_DEFAULT));
                     out.write(static_cast<T>(0));
-                    defaultValueChanged = false;
+                    defaultValue.setUnchanged();
                 }
 
 
                 // minimum
-                if (hasMinimum) {
+                if (minimum.hasValue()) {
 
-                    if (all || minimumChanged) {
+                    if (all || minimum.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_MINIMUM));
-                        out.write(minimum);
+                        out.write(minimum.value());
 
                         if (!all) {
-                            minimumChanged = false;
+                            minimum.setUnchanged();
                         }
                     }
-                } else if (minimumChanged) {
+                } else if (minimum.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MINIMUM));
                     out.write(std::numeric_limits<T>::min());
-                    minimumChanged = false;
+                    minimum.setUnchanged();
                 }
 
 
                 // maximum
-                if (hasMaximum) {
+                if (maximum.hasValue()) {
 
-                    if (all || maximumChanged) {
+                    if (all || maximum.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_MAXIMUM));
-                        out.write(maximum);
+                        out.write(maximum.value());
 
                         if (!all) {
-                            maximumChanged = false;
+                            maximum.setUnchanged();
                         }
                     }
-                } else if (maximumChanged) {
+                } else if (maximum.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MAXIMUM));
                     out.write(std::numeric_limits<T>::max());
-                    maximumChanged = false;
+                    maximum.setUnchanged();
                 }
 
 
                 // multipleof
-                if (hasMultipleof) {
+                if (multipleof.hasValue()) {
 
-                    if (all || multipleofChanged) {
+                    if (all || multipleof.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_MULTIPLEOF));
-                        out.write(multipleof);
+                        out.write(multipleof.value());
 
                         if (!all) {
-                            multipleofChanged = false;
+                            multipleof.setUnchanged();
                         }
                     }
-                } else if (multipleofChanged) {
+                } else if (multipleof.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MULTIPLEOF));
                     out.write(static_cast<T>(0));
-                    multipleofChanged = false;
+                    multipleof.setUnchanged();
                 }
 
 
                 // scale
-                if (hasScale) {
+                if (scale.hasValue()) {
 
-                    if (all || scaleChanged) {
+                    if (all || scale.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_SCALE));
-                        out.write(static_cast<char>(scale));
+                        out.write(static_cast<char>(scale.value()));
 
                         if (!all) {
-                            scaleChanged = false;
+                            scale.setUnchanged();
                         }
                     }
-                } else if (scaleChanged) {
+                } else if (scale.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_SCALE));
                     out.write(static_cast<char>(NUMBER_SCALE_LINEAR));
-                    scaleChanged = false;
+                    scale.setUnchanged();
                 }
 
 
                 // unit
-                if (hasUnit) {
+                if (unit.hasValue()) {
 
-                    if (all || unitChanged) {
+                    if (all || unit.changed()) {
                         out.write(static_cast<char>(NUMBER_OPTIONS_UNIT));
-                        out.writeTinyString(unit);
+                        out.writeTinyString(unit.value());
 
                         if (!all) {
-                            unitChanged = false;
+                            unit.setUnchanged();
                         }
                     }
-                } else if (unitChanged) {
+                } else if (unit.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_UNIT));
                     out.writeTinyString("");
-                    unitChanged = false;
+                    unit.setUnchanged();
                 }
             }
 
@@ -541,30 +529,15 @@ namespace rcp {
             datatype_t datatype;
 
             // options - base
-            T defaultValue{0};
-            bool hasDefaultValue;
-            bool defaultValueChanged;
+            Option<T> defaultValue;
 
             // options - number
-            T minimum{0};
-            bool hasMinimum;
-            bool minimumChanged;
+            Option<T> minimum;
+            Option<T> maximum;
+            Option<T> multipleof;
 
-            T maximum{0};
-            bool hasMaximum;
-            bool maximumChanged;
-
-            T multipleof{0};
-            bool hasMultipleof;
-            bool multipleofChanged;
-
-            number_scale_t scale{NUMBER_SCALE_LINEAR};
-            bool hasScale;
-            bool scaleChanged;
-
-            std::string unit{""};
-            bool hasUnit;
-            bool unitChanged;
+            Option<number_scale_t> scale;
+            Option<std::string> unit;
 
             IParameter& parameter;
         };

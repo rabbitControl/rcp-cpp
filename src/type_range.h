@@ -72,25 +72,52 @@ namespace rcp {
         {}
 
         //------------------------------------
-        // implement writeable
-        void write(Writer& out, bool all) {
-
+        // Writeable
+        void write(Writer& out, bool all) override
+        {
             obj->write(out, all);
 
             // terminator
             out.write(static_cast<char>(TERMINATOR));
         }
 
-        virtual void writeMandatory(Writer& out) const {
+        //------------------------------------
+        // ITypeDefinition
+        datatype_t getDatatype() const override
+        {
+            return obj->datatype;
+        }
+
+        void writeMandatory(Writer& out) const override
+        {
             out.write(static_cast<char>(obj->datatype));
             obj->element_type.writeMandatory(out);
         }
 
+        bool anyOptionChanged() const override
+        {
+            return obj->element_type.anyOptionChanged()
+                    || obj->defaultValue.changed();
+        }
+
+        void dump() override
+        {
+            std::cout << "--- type range ---\n";
+
+            if (hasDefault()) {
+                std::cout << "\tdefault: " << getDefault().value1() << ":" << getDefault().value2() << "\n";
+            }
+
+            obj->element_type.dump();
+        }
+
+
+
 
         //------------------------------------
-        // implement optionparser
-        void parseOptions(std::istream& is) {
-
+        // IOptionparser
+        void parseOptions(std::istream& is) override
+        {
             // parse element type options first
             obj->element_type.parseOptions(is);
 
@@ -117,7 +144,6 @@ namespace rcp {
                     ElementType v2 = readFromStream(is, v2);
                     CHECK_STREAM
 
-                    obj->hasDefaultValue = true;
                     obj->defaultValue = Range<ElementType>(v1, v2);
                     break;
                 }
@@ -125,22 +151,46 @@ namespace rcp {
             }
         } // parseOptions
 
-        virtual bool anyOptionChanged() const {
-            return obj->element_type.anyOptionChanged()
-                    || obj->defaultValueChanged;
-        }
 
 
-        virtual Range<ElementType> readValue(std::istream& is) {
+        //------------------------------------
+        // IDefaultDefinition<T>
+        Range<ElementType> readValue(std::istream& is) override
+        {
             ElementType v1 = readFromStream(is, v1);
             ElementType v2 = readFromStream(is, v2);
             return Range<ElementType>(v1, v2);
         }
 
-        //------------------------------------
-        // implement IDefaultDefinition<T>
-        virtual datatype_t getDatatype() const { return obj->datatype; }
+        //----------------------
+        // default
+        const Range<ElementType> getDefault() const override
+        {
+            return obj->defaultValue.value();
+        }
+        void setDefault(const Range<ElementType>& defaultValue) override
+        {
+            obj->defaultValue = defaultValue;            
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
+        bool hasDefault() const override
+        {
+            return obj->defaultValue.hasValue();
+        }
+        void clearDefault() override
+        {
+            obj->defaultValue.clearValue();
+            if (obj->defaultValue.changed())
+            {
+                setDirty();
+            }
+        }
 
+        //------------------------------------
+        //
         TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>& getElementType() {
             return obj->element_type;
         }
@@ -161,38 +211,6 @@ namespace rcp {
             obj->element_type.setUnit(v);
         }
 
-        virtual const Range<ElementType>& getDefault() const { return obj->defaultValue; }
-        virtual void setDefault(const Range<ElementType>& defaultValue) {
-
-            obj->hasDefaultValue = true;
-
-            if (obj->defaultValue == defaultValue) {
-                return;
-            }
-
-            obj->defaultValue = defaultValue;
-            obj->defaultValueChanged = true;
-
-            setDirty();
-        }
-        virtual bool hasDefault() const { return obj->hasDefaultValue; }
-        virtual void clearDefault() {
-            obj->hasDefaultValue = false;
-            obj->defaultValueChanged = true;
-
-            setDirty();
-        }
-
-        virtual void dump() {
-            std::cout << "--- type range ---\n";
-
-            if (hasDefault()) {
-                std::cout << "\tdefault: " << getDefault().value1() << ":" << getDefault().value2() << "\n";
-            }
-
-            obj->element_type.dump();
-        }
-
 
     private:
         void setDirty() {
@@ -204,8 +222,6 @@ namespace rcp {
             Value(IParameter& param) :
                 datatype(DATATYPE_RANGE)
               , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
-              , hasDefaultValue(false)
-              , defaultValueChanged(false)
               , parameter(param)
             {}
 
@@ -213,8 +229,6 @@ namespace rcp {
                 datatype(DATATYPE_URI)
               , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
               , defaultValue(defaultValue)
-              , hasDefaultValue(true)
-              , defaultValueChanged(true)
               , parameter(param)
             {}
 
@@ -224,19 +238,19 @@ namespace rcp {
                 element_type.write(out, all);
 
                 // write default value
-                if (hasDefaultValue) {
+                if (defaultValue.hasValue()) {
 
-                    if (all || defaultValueChanged) {
+                    if (all || defaultValue.changed()) {
                         out.write(static_cast<char>(RANGE_OPTIONS_DEFAULT));
 
-                        out.write(defaultValue.value1());
-                        out.write(defaultValue.value2());
+                        out.write(defaultValue.value().value1());
+                        out.write(defaultValue.value().value2());
 
                         if (!all) {
-                            defaultValueChanged = false;
+                            defaultValue.setUnchanged();
                         }
                     }
-                } else if (defaultValueChanged) {
+                } else if (defaultValue.changed()) {
 
                     out.write(static_cast<char>(RANGE_OPTIONS_DEFAULT));
 
@@ -247,7 +261,7 @@ namespace rcp {
                     out.write(v);
                     out.write(v);
 
-                    defaultValueChanged = false;
+                    defaultValue.setUnchanged();
                 }
             }
 
@@ -257,9 +271,7 @@ namespace rcp {
 
 
             // options - default
-            Range<ElementType> defaultValue{};
-            bool hasDefaultValue;
-            bool defaultValueChanged;
+            Option<Range<ElementType>> defaultValue;
 
             IParameter& parameter;
         };

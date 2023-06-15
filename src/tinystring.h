@@ -14,20 +14,21 @@
 * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 *********************************************************************
 */
+#ifndef TINYSTRING_H
+#define TINYSTRING_H
 
-#ifndef TYPE_ARRAY_H
-#define TYPE_ARRAY_H
-
-#include <iostream>
-
-#include "typedefinition.h"
-#include "iparameter.h"
-#include "stream_tools.h"
+#include <string>
 
 namespace rcp {
 
-// TODO
+class TinyString : public std::string
+{
+public:
+    TinyString() : std::string() {}
+    TinyString(const char* str) : std::string(str) {}
+    TinyString(const std::string value) : std::string(value) {}
+};
 
 }
 
-#endif // TYPE_ARRAY_H
+#endif // TINYSTRING_H

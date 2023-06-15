@@ -1,3 +1,20 @@
+/*
+********************************************************************
+* rabbitcontrol - a protocol and data-format for remote control.
+*
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
+*
+* This file is part of rabbitcontrol for c++.
+*
+* Written by Ingo Randolf, 2018-2023
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*********************************************************************
+*/
+
 #ifndef PARAMETERCLIENT_H
 #define PARAMETERCLIENT_H
 
@@ -52,11 +69,6 @@ namespace rcp {
         }
 
 
-        // interface ClientTransporterListener
-        virtual void connected();
-        virtual void disconnected();
-        virtual void received(std::istream& data);
-
         void setApplicationId(const std::string& appid) {
             m_applicationId = appid;
         }
@@ -64,13 +76,24 @@ namespace rcp {
             return m_applicationId;
         }
 
+        GroupParameterPtr rootGroup() const {
+            return m_parameterManager->rootGroup();
+        }
+
+    public:
+        // interface ClientTransporterListener
+        virtual void connected();
+        virtual void disconnected();
+        virtual void received(std::istream& data);
+
+    protected:
+        std::shared_ptr<ParameterManager> m_parameterManager;
+        ClientTransporter& m_transporter;
+
     private:
         void _update(Packet& packet);
         void _remove(Packet& packet);
         void _version(Packet& packet);
-
-        std::shared_ptr<ParameterManager> m_parameterManager;
-        ClientTransporter& m_transporter;
 
         // Events:
         std::map<ParameterClientListener*, void(ParameterClientListener::*)(ParameterPtr parameter)> parameter_added_cb;

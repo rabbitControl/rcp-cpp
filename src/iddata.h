@@ -1,3 +1,20 @@
+/*
+********************************************************************
+* rabbitcontrol - a protocol and data-format for remote control.
+*
+* https://rabbitcontrol.cc
+* https://github.com/rabbitControl/rcp-cpp
+*
+* This file is part of rabbitcontrol for c++.
+*
+* Written by Ingo Randolf, 2018-2023
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*********************************************************************
+*/
+
 #ifndef IDDATA_H
 #define IDDATA_H
 
@@ -16,7 +33,7 @@ namespace rcp {
         static IdDataPtr parse(std::istream& is) {
 
             // read mandatory
-            int16_t parameter_id = readFromStream(is, parameter_id);
+            const int16_t parameter_id = readFromStream(is, parameter_id);
             return std::make_shared<IdData>(parameter_id);
         }
 

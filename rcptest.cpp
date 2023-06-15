@@ -34,6 +34,8 @@
 
 #include <string>
 #include <fstream>
+#include <istream>
+#include <strstream>
 
 #include "src/rcp.h"
 
@@ -394,26 +396,21 @@ void testUriParameter() {
 }
 
 
-void _parseData(const std::string& filename) {
-
-    std::cout << "reading from: " << filename << "\n";
-
-    std::ifstream fileis(filename);
-
-    if (!fileis.good()) {
-        std::cout << "error: file does not exist: " << filename << "\n";
+void _parseStream(std::istream& stream)
+{
+    if (!stream.good())
+    {
         return;
     }
 
-
-    Option<Packet> packet_option = Packet::parse(fileis);
+    Option<Packet> packet_option = Packet::parse(stream);
 
     if (!packet_option.hasValue()) {
         std::cout << "error: no packet!\n";
         return;
     }
 
-    Packet& the_packet = packet_option.getValue();
+    Packet& the_packet = packet_option.value();
 
     std::cout << "packet command: " << the_packet.getCommand() << "\n";
 
@@ -427,7 +424,7 @@ void _parseData(const std::string& filename) {
     case COMMAND_INVALID:
     case COMMAND_MAX_:
     case COMMAND_DISCOVER:
-    case COMMAND_INITIALIZE:    
+    case COMMAND_INITIALIZE:
         std::cout << "command not handled: " << the_packet.getCommand();
         break;
 
@@ -449,7 +446,7 @@ void _parseData(const std::string& filename) {
         break;
 
     case COMMAND_UPDATEVALUE:
-    case COMMAND_UPDATE:    
+    case COMMAND_UPDATE:
     {
         if (!the_packet.hasData()) {
             std::cout << "error: packet does not contain data\n";
@@ -466,7 +463,8 @@ void _parseData(const std::string& filename) {
             if (param->getDatatype() == DATATYPE_BOOLEAN) {
 
                 auto p = std::dynamic_pointer_cast<BooleanParameter>(param);
-                p->getDefault();
+//                std::cout << "boolean default: " << p->getDefault() << "\n";
+//                std::cout << "boolean value: " << p->getValue() << "\n";
 
             } else if (param->getDatatype() == DATATYPE_INT32) {
 
@@ -526,20 +524,36 @@ void _parseData(const std::string& filename) {
         break;
     }
     }
-
-
 }
 
-void parseData(const std::string& filename) {
+void parseData(std::vector<char> data)
+{
+    std::istrstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+    _parseStream(stream);
+}
 
+void parseData(const std::string& filename)
+{
     std::cout << "**** " << __FUNCTION__ << " ****\n\n";
 
-    std::cout << "----------------------\n";
-    _parseData(filename);
-    std::flush(std::cout);
-    std::flush(std::cerr);
+    std::cout << "----------------------\n";   
+    std::cout << "reading from: " << filename << "\n";
+
+
+    std::ifstream fileis(filename);
+    if (fileis.good())
+    {
+        _parseStream(fileis);
+    }
+    else
+    {
+        std::cerr << "error: file does not exist: " << filename << "\n";
+    }
 
     std::cout << "\n\n";
+
+    std::flush(std::cout);
+    std::flush(std::cerr);
 }
 
 
@@ -591,9 +605,48 @@ void testUpdateValuePacket() {
     writer.dump();
 }
 
+
+void testBoolParam()
+{
+    ParameterServer server;
+//    ParameterManager manager;
+
+    auto boolParam = server.createBooleanParameter("bool");
+
+    std::cout << "bool value:" << boolParam->getValue() << "\n";
+}
+
+void testFloatParam()
+{
+//    ParameterServer server;
+//    auto boolParam = server.createBooleanParameter("bool");
+    Float32ParameterPtr param = Float32Parameter::create(1);
+
+    std::cout << "has min: " << param->getDefaultTypeDefinition().hasMinimum() << "\n";
+    std::cout << "has max: " << param->getDefaultTypeDefinition().hasMaximum() << "\n";
+    std::cout << "has default: " << param->getDefaultTypeDefinition().hasDefault() << "\n";
+}
+
+
+
 //-------------------------------
 //-------------------------------
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
+    std::vector<char> data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x21, 0x61, 0x6e, 0x79, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x00, 0x25, 0x00, 0x07, 0x00, 0x00};
+    parseData(data);
+    return 0;
+
+//    testFloatParam();
+    parseData("../RCP/example_data/packet_update_float32.rcp");
+    return 0;
+
+    parseData("../RCP/example_data/packet_update_bool.rcp");
+//    testBoolParam();
+    return 0;
+
+    testEnumParam();
+    return 0;
 
     parseData("../RCP/example_data/packet_updatevalue_s8.rcp");
     parseData("../RCP/example_data/packet_updatevalue_s32.rcp");
@@ -629,17 +682,19 @@ int main(int argc, char const *argv[]) {
     parseData("../RCP/example_data/packet_info.rcp");
 
     parseData("../RCP/example_data/packet_bool_no_user.rcp");
-    parseData("../RCP/example_data/packet_bool_remove.rcp");
-    parseData("../RCP/example_data/packet_bool_update.rcp");
-    parseData("../RCP/example_data/packet_boolarray_no_user_update.rcp");
+    parseData("../RCP/example_data/packet_bool_userdata.rcp");
+    parseData("../RCP/example_data/packet_update_bool.rcp");
+    parseData("../RCP/example_data/packet_update_boolarray_no_user.rcp");
     parseData("../RCP/example_data/packet_enum.rcp");
     parseData("../RCP/example_data/packet_initialize.rcp");
+    parseData("../RCP/example_data/packet_initialize_id_data.rcp");
+
     parseData("../RCP/example_data/packet_lstr_no_user.rcp");
     parseData("../RCP/example_data/packet_range.rcp");
     parseData("../RCP/example_data/packet_s8_no_user.rcp");
     parseData("../RCP/example_data/packet_string_default.rcp");
     parseData("../RCP/example_data/packet_u32_no_user.rcp");
-    parseData("../RCP/example_data/packet_u32_update.rcp");
+    parseData("../RCP/example_data/packet_update_u32.rcp");
     parseData("../RCP/example_data/packet_uri.rcp");
 
 

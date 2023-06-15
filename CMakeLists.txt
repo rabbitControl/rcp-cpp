@@ -55,17 +55,23 @@ SET(CMAKE_DEBUG_POSTFIX "-d")
 
 
 set_target_properties(${RABBIT_NAME} PROPERTIES
-#  FRAMEWORK TRUE
-#  FRAMEWORK_VERSION A
-#  MACOSX_FRAMEWORK_IDENTIFIER io.rcp.rcpcpp
-  #MACOSX_FRAMEWORK_INFO_PLIST Info.plist
-  # "current version" in semantic format in Mach-O binary file
-  VERSION 0.1.1
-  # "compatibility version" in semantic format in Mach-O binary file
-  SOVERSION 0.1.0
-  PUBLIC_HEADER "${HEADERS}"
-  DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    # "current version" in semantic format in Mach-O binary file
+    VERSION 0.1.1
+    # "compatibility version" in semantic format in Mach-O binary file
+    SOVERSION 0.1.1
+    PUBLIC_HEADER "${HEADERS}"
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
 )
+
+if(APPLE)
+    set_target_properties(${RABBIT_NAME} PROPERTIES
+        FRAMEWORK TRUE
+        FRAMEWORK_VERSION A
+        MACOSX_FRAMEWORK_IDENTIFIER cc.rabbitcontrol.libcpp
+        # in case we want to ship our own Info.plist
+        #MACOSX_FRAMEWORK_INFO_PLIST Info.plist
+    )
+endif()
 
 install (TARGETS ${RABBIT_NAME}
     LIBRARY DESTINATION lib

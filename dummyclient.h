@@ -116,13 +116,15 @@ public:
 
     void received(std::istream& data) {
         data.seekg (0, data.end);
-        size_t length = 1+data.tellg();
+        size_t length = size_t(data.tellg()); // std::streampos vs size_t
         data.seekg (0, data.beg);
 
-        char *d = new char[length];
+        char *d = new char[length + 1];
         if (d)
         {
             data.getline(d, length);
+            d[length] = 0;
+
             std::cout << "myCallback: " << name << " : " << d << "\n";
 
             delete[] d;

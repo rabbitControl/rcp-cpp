@@ -59,7 +59,7 @@ public:
     virtual void sendToAll(std::istream& data, void* excludeId)  {
 
         data.seekg (0, data.end);
-        size_t length = data.tellg();
+        size_t length = size_t(data.tellg()); // std::streampos vs. size_t
         data.seekg (0, data.beg);
 
         char *d = new char[length];
@@ -68,8 +68,8 @@ public:
             data.read(d, length);
 
             std::cout << "send to all: ";
-            for (int i=0; i<length; i++) {
-                std::cout << (int)d[i] << " ";
+            for (size_t i=0; i<length; i++) {
+                std::cout << int(d[i]) << " ";
             }
             std::cout << "\n";
 
@@ -118,13 +118,14 @@ public:
     void received(std::istream& data, rcp::ServerTransporter& transporter, void* id) {
 
         data.seekg (0, data.end);
-        size_t length = 1+data.tellg();
+        size_t length = size_t(data.tellg()); // std::streampos vs size_t
         data.seekg (0, data.beg);
 
-        char *d = new char[length];
+        char *d = new char[length + 1];
         if (d)
         {
             data.read(d, length);
+            d[length] = 0;
 
             std::cout << "myCallback: " << name << " : " << d << "\n";
 

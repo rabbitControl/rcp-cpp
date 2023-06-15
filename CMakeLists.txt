@@ -60,7 +60,7 @@ set_target_properties(${RABBIT_NAME} PROPERTIES
 #  MACOSX_FRAMEWORK_IDENTIFIER io.rcp.rcpcpp
   #MACOSX_FRAMEWORK_INFO_PLIST Info.plist
   # "current version" in semantic format in Mach-O binary file
-  VERSION 0.1.0
+  VERSION 0.1.1
   # "compatibility version" in semantic format in Mach-O binary file
   SOVERSION 0.1.0
   PUBLIC_HEADER "${HEADERS}"

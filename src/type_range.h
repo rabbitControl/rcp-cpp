@@ -52,14 +52,14 @@ namespace rcp {
         template <
             typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
         >
-        TypeDefinition(TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_default>& v) :
+        TypeDefinition(TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
             obj(v.obj)
         {}
 
         template <
             typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
         >
-        TypeDefinition(const TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_default>& v) :
+        TypeDefinition(const TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
             obj(v.obj)
         {}
 

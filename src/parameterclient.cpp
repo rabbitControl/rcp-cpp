@@ -68,7 +68,6 @@ namespace rcp {
         // send updates
         for (auto& p : m_parameterManager->dirtyParameter) {
 
-            // TODO: send COMMAND_UPDATEVALUE
             command_t cmd = COMMAND_UPDATE;
 
             if (p.second->onlyValueChanged())
@@ -82,17 +81,7 @@ namespace rcp {
             StringStreamWriter writer;
             packet.write(writer, false);
 
-            std::istream& data = writer.getBuffer();
-
-            data.seekg (0, data.end);
-            long long length = data.tellg();
-            data.seekg (0, data.beg);
-
-            char* d = new char[length];
-            data.read(d, length);
-
-            m_transporter.send(d, length);
-            delete []d;
+            m_transporter.send(writer.getBuffer());
         }
         m_parameterManager->dirtyParameter.clear();
 

@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
+#set(COMPILE_AS_FRAMEWORK ON)
 
 project(RCP++)
 
@@ -63,7 +64,7 @@ set_target_properties(${RABBIT_NAME} PROPERTIES
     DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
 )
 
-if(APPLE)
+if(APPLE AND COMPILE_AS_FRAMEWORK)
     set_target_properties(${RABBIT_NAME} PROPERTIES
         FRAMEWORK TRUE
         FRAMEWORK_VERSION A

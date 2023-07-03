@@ -260,7 +260,6 @@ enum customwidget_options_t {
 
 #ifdef QT_CORE_LIB
 }
-Q_DECLARE_METATYPE(rcp::datatype_t);
 #endif
 
 

@@ -80,6 +80,15 @@ namespace rcp {
             return m_parameterManager->rootGroup();
         }
 
+        std::string getServerVersion() const
+        {
+            return m_serverVersion;
+        }
+        std::string getServerApplicationId() const
+        {
+            return m_serverApplicationId;
+        }
+
     public:
         // interface ClientTransporterListener
         virtual void connected();
@@ -103,6 +112,9 @@ namespace rcp {
 //        statusChanged(Status status, String message);
 
         std::string m_applicationId;
+
+        std::string m_serverApplicationId;
+        std::string m_serverVersion;
     };
 
 }

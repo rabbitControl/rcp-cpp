@@ -157,9 +157,13 @@ namespace rcp {
         if (packet.hasData()) {
             // log info data
             InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
-            if (info_data) {
-                std::cout << "version: " << info_data->getVersion() << std::endl;
-                std::cout << "applicationid: " << info_data->getApplicationId() << std::endl;
+            if (info_data)
+            {
+                m_serverVersion = info_data->getVersion();
+                m_serverApplicationId = info_data->getApplicationId();
+
+                std::cout << "version: " << m_serverVersion << std::endl;
+                std::cout << "applicationid: " << m_serverApplicationId << std::endl;
             }
         } else {
             // no data, respond with version

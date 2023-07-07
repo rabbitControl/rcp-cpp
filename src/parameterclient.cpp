@@ -89,8 +89,8 @@ namespace rcp {
     }
 
     // interface ClientTransporterListener
-    void ParameterClient::connected() {
-
+    void ParameterClient::connected()
+    {
         // request version
         char data[2];
         data[0] = 0x01;

@@ -27,8 +27,8 @@ namespace rcp {
     class ParameterParser {
     public:
 
-        static ParameterPtr parseUpdateValue(std::istream& is) {
-
+        static ParameterPtr parseUpdateValue(std::istream& is)
+        {
             // read id
             int16_t parameter_id = 0;
             parameter_id = readFromStream(is, parameter_id);
@@ -36,7 +36,9 @@ namespace rcp {
             // get parameter type_id
             datatype_t type_id = static_cast<datatype_t>(is.get());
 
-            if (type_id == DATATYPE_BANG || type_id == DATATYPE_GROUP) {
+            if (type_id == DATATYPE_BANG ||
+                    type_id == DATATYPE_GROUP)
+            {
                 return nullptr;
             }
 
@@ -69,8 +71,8 @@ namespace rcp {
             ParameterPtr param;
 
             // handle certain datatypes
-            if (type_id == DATATYPE_RANGE) {
-
+            if (type_id == DATATYPE_RANGE)
+            {
                 // get element type
                 datatype_t element_type_id = static_cast<datatype_t>(is.get());
 
@@ -81,13 +83,17 @@ namespace rcp {
                 }
 
                 param->getTypeDefinition().parseOptions(is);
-
-            } else if (type_id == DATATYPE_ARRAY) {
+            }
+            else if (type_id == DATATYPE_ARRAY)
+            {
                 // TODO
-            } else if (type_id == DATATYPE_LIST) {
+            }
+            else if (type_id == DATATYPE_LIST)
+            {
                 // TODO
-            } else {
-
+            }
+            else
+            {
                 param = ParameterFactory::createParameter(parameter_id, type_id);
 
                 if (!param) {

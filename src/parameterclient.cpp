@@ -96,9 +96,6 @@ namespace rcp {
         data[0] = 0x01;
         data[1] = 0x00;
         m_transporter.send(data, 2);
-
-        // send initialize command
-        initialize();
     }
 
     void ParameterClient::disconnected()
@@ -159,11 +156,30 @@ namespace rcp {
             InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
             if (info_data)
             {
-                m_serverVersion = info_data->getVersion();
                 m_serverApplicationId = info_data->getApplicationId();
+                m_serverVersion = info_data->getVersion();
 
-                std::cout << "version: " << m_serverVersion << std::endl;
-                std::cout << "applicationid: " << m_serverApplicationId << std::endl;
+                for (auto listener : m_listener)
+                {
+                    listener->serverInfoReceived(m_serverApplicationId, m_serverVersion);
+                }
+
+                // TODO: compare RCP version
+                // only send initialize after compatibility-check
+                bool version_ok = true;
+
+                if (!version_ok)
+                {
+                    // TODO: disconnect from server
+                }
+
+                if (!initializeSent &&
+                        version_ok)
+                {
+                    // send initialize command
+                    initialize();
+                    initializeSent = true;
+                }
             }
         } else {
             // no data, respond with version
@@ -202,8 +218,9 @@ namespace rcp {
                 m_parameterManager->_addParameter(param);
 
                 // call parameter added callbacks
-                for (const auto& kv : parameter_added_cb) {
-                    (kv.first->*kv.second)(param);
+                for (auto listener : m_listener)
+                {
+                    listener->parameterAdded(param);
                 }
             }
             return;
@@ -221,25 +238,26 @@ namespace rcp {
             return;
         }
 
-        // assume this is id-data
+        // assume this is id-data (rcp > 0.0.0)
         IdDataPtr id_data = std::dynamic_pointer_cast<IdData>(packet.getData());
         if (id_data) {
 
             std::cout << "remove param: " << id_data->getId() << "\n";
 
-            rcp::ParameterPtr chached_param = m_parameterManager->getParameter(id_data->getId());
-            if (chached_param)
+            rcp::ParameterPtr cached_param = m_parameterManager->getParameter(id_data->getId());
+            if (cached_param)
             {
                 // parameter is in list, remove it
                 std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
 
-                // call disconnected callbacks
-                for (const auto& kv : parameter_removed_cb) {
-                    (kv.first->*kv.second)(chached_param);
+                // call parameter removed callbacks
+                for (auto listener : m_listener)
+                {
+                    listener->parameterRemoved(cached_param);
                 }
 
                 // remove it (direct)
-                m_parameterManager->removeParameterDirect(chached_param);
+                m_parameterManager->removeParameterDirect(cached_param);
 
             } else {
                 std::cout << "parameter not in list!: " << id_data->getId() << "\n";
@@ -251,5 +269,24 @@ namespace rcp {
         }
     }
 
-}
+    void ParameterClient::addListener(ParameterClientListener* listener)
+    {
+        if (std::find(m_listener.begin(), m_listener.end(), listener) == m_listener.end())
+        {
+            // not found - add it to list
+            m_listener.push_back(listener);
+        }
+    }
+
+    void ParameterClient::removeListener(ParameterClientListener* listener)
+    {
+        auto it = std::find(m_listener.begin(), m_listener.end(), listener);
+        if (it != m_listener.end())
+        {
+            // rmove listener
+            m_listener.erase(it);
+        }
+    }
+
+} // namespace rcp
 

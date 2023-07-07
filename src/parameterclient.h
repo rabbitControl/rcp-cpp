@@ -28,6 +28,7 @@ namespace rcp {
     class ParameterClientListener
     {
     public:
+        virtual void serverInfoReceived(const std::string& applicationId, const std::string& version) = 0;
         virtual void parameterAdded(ParameterPtr parameter) = 0;
         virtual void parameterRemoved(ParameterPtr parameter) = 0;
     };
@@ -46,21 +47,11 @@ namespace rcp {
         void initialize(); // tries to send an init-command
         void update(); // update all changes
 
-        // connect to events
-        void addParameterAddedCb(ParameterClientListener* c, void(ParameterClientListener::* func)(ParameterPtr parameter)) {
-            parameter_added_cb[c] = func;
-        }
-        void removeParameterAddedCb(ParameterClientListener* c) {
-            parameter_added_cb.erase(c);
-        }
+        // listener
+        void addListener(ParameterClientListener* listener);
+        void removeListener(ParameterClientListener* listener);
 
-        void addParameterRemovedCb(ParameterClientListener* c, void(ParameterClientListener::* func)(ParameterPtr parameter)) {
-            parameter_removed_cb[c] = func;
-        }
-        void removeParameterRemovedCb(ParameterClientListener* c) {
-            parameter_removed_cb.erase(c);
-        }
-
+        // error events
         void addParsingErrorCb(ParsingErrorListener* c, void(ParsingErrorListener::* func)()) {
             parsing_error_cb[c] = func;
         }
@@ -104,15 +95,13 @@ namespace rcp {
         void _remove(Packet& packet);
         void _version(Packet& packet);
 
-        // Events:
-        std::map<ParameterClientListener*, void(ParameterClientListener::*)(ParameterPtr parameter)> parameter_added_cb;
-        std::map<ParameterClientListener*, void(ParameterClientListener::*)(ParameterPtr parameter)> parameter_removed_cb;
         std::map<ParsingErrorListener*, void(ParsingErrorListener::*)()> parsing_error_cb;
-//        onError(Exception ex);
-//        statusChanged(Status status, String message);
+        std::vector<ParameterClientListener*> m_listener;
 
         std::string m_applicationId;
+        bool initializeSent{false};
 
+        // server
         std::string m_serverApplicationId;
         std::string m_serverVersion;
     };

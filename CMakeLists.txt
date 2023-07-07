@@ -4,25 +4,30 @@
 # cmake -DCMAKE_BUILD_TYPE=Release ..
 ##
 
-cmake_minimum_required(VERSION 3.1)
-
-#add_compile_options(-std=c++11) # CMake 2.8.12 or newer
-set(CMAKE_CXX_STANDARD 11) # C++11...
-set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
-set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
-
-#set(COMPILE_AS_FRAMEWORK ON)
-
-project(RCP++)
-
-set(RABBIT_NAME RabbitControl)
-
 ##
 # cmake -DCMAKE_GENERATOR_PLATFORM=x64 ..
 # cmake -DCMAKE_GENERATOR_PLATFORM=x86 ..
-## 
+##
 #SET(CMAKE_GENERATOR_PLATFORM x86)
 #SET(CMAKE_GENERATOR_PLATFORM x64)
+
+cmake_minimum_required(VERSION 3.1)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) # no compiler extensions like gnu++11
+
+# name
+project(RCP++)
+set(RABBIT_NAME RabbitControl)
+
+# options
+
+#set(COMPILE_AS_FRAMEWORK ON)
+
+# to compile universal binary on macos
+#set(CMAKE_OSX_ARCHITECTURES x86_64;arm64)
+
 
 if (MSVC)
     add_compile_options(-bigobj)

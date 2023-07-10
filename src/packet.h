@@ -284,7 +284,7 @@ namespace rcp {
                 ParameterPtr param = std::dynamic_pointer_cast<IParameter>(m_data.value());
                 if (param)
                 {
-                    param->write(out, all);
+                    param->writeUpdateValue(out);
                 }
             }
             else

@@ -46,6 +46,8 @@ namespace rcp {
         virtual ITypeDefinition& getTypeDefinition() const = 0;
         virtual datatype_t getDatatype() const = 0;
 
+        virtual void writeUpdateValue(Writer& out) const = 0;
+
         //--------------------------------
         // optional
         virtual std::string getLabel() const = 0;

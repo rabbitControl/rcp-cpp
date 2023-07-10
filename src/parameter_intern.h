@@ -99,6 +99,12 @@ namespace rcp {
             out.write(static_cast<char>(TERMINATOR));
         }
 
+        void writeUpdateValue(Writer& out) const override
+        {
+            out.write(getId());
+            getTypeDefinition().writeMandatory(out);
+        }
+
 
         //------------------------------------
         // IOptionparser
@@ -1091,26 +1097,23 @@ namespace rcp {
         // Writeable
         void write(Writer& out, bool all) override
         {
-            if (onlyValueChanged())
-            {
-                // write updatevalue data
-                out.write(Parameter<TD>::getId());
-                getTypeDefinition().writeMandatory(out);
-                obj->writeValue(out);
-            }
-            else
-            {
-                out.write(Parameter<TD>::getId());
-                getDefaultTypeDefinition().write(out, all);
+            out.write(Parameter<TD>::getId());
+            getDefaultTypeDefinition().write(out, all);
 
-                obj->write(out, all);
+            obj->write(out, all);
 
-                Parameter<TD>::writeOptions(out, all);
+            Parameter<TD>::writeOptions(out, all);
 
-                // terminator
-                out.write(static_cast<char>(TERMINATOR));
-            }
+            // terminator
+            out.write(static_cast<char>(TERMINATOR));
+        }
 
+        //------------------------------------
+        // iParameter
+        void writeUpdateValue(Writer& out) const override
+        {
+            Parameter<TD>::writeUpdateValue(out);
+            obj->writeValue(out);
         }
 
         void dump() override
@@ -1122,7 +1125,6 @@ namespace rcp {
             }
         }
 
-        // iparameter
         bool isValueParameter() const override
         {
             return true;

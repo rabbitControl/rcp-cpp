@@ -218,7 +218,7 @@ namespace rcp {
                 m_parameterManager->_addParameter(param);
 
                 // call parameter added callbacks
-                for (auto listener : m_listener)
+                for (ParameterClientListener* listener : m_listener)
                 {
                     listener->parameterAdded(param);
                 }
@@ -251,7 +251,7 @@ namespace rcp {
                 std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
 
                 // call parameter removed callbacks
-                for (auto listener : m_listener)
+                for (ParameterClientListener* listener : m_listener)
                 {
                     listener->parameterRemoved(cached_param);
                 }

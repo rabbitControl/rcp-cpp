@@ -128,7 +128,7 @@ namespace rcp {
 
     protected:
         virtual void setDirty() = 0;
-        virtual bool onlyValueChanged() const { return false; }
+        virtual bool onlyValueChanged() const = 0;
 
     private:
         virtual void setParent(std::shared_ptr<GroupParameter> parent) = 0;

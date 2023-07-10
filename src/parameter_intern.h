@@ -699,6 +699,11 @@ namespace rcp {
             }
         }
 
+        bool onlyValueChanged() const override
+        {
+            return !anyOptionChanged() && !getTypeDefinition().anyOptionChanged();
+        }
+
         bool anyOptionChanged() const {
             return obj->labelChanged
                     || obj->descriptionChanged
@@ -1366,8 +1371,7 @@ namespace rcp {
 
         virtual bool onlyValueChanged() const override
         {
-            return !Parameter<TD>::anyOptionChanged()
-                    && !getTypeDefinition().anyOptionChanged()
+            return Parameter<TD>::onlyValueChanged()
                     && obj->value.changed();
         }
 

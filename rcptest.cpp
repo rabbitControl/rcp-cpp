@@ -124,18 +124,18 @@ void testUpdatedCb() {
 
     // update param with param2
     std::cout << "-------\n";
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     // adjust param2 and update
     std::cout << "-------\n";
     param2.setDescription("parameter description");
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     // remove callback 1 and update again
     std::cout << "-------\n";
     std::cout << "remove cb1\n";
     param.removeUpdatedCb(cb1);
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     std::cout << "\n\n";
 }
@@ -159,12 +159,12 @@ void testValueUpdateCb1() {
     auto& cbl = param.addValueUpdatedCb(func);
 
     param2.setValue(true);
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     param.removeValueUpdatedCb(cbl);
 
     param2.setValue(false);
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     std::cout << "\n\n";
 }
@@ -186,13 +186,13 @@ void testValueUpdateCb2() {
     });
 
     param2.setValue(true);
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     //
     std::cout << "---------\n";
     param.removeValueUpdatedCb(cb1);
     param2.setValue(false);
-    param.update(param2.newReference());
+    param.update(param2.getShared());
 
     std::cout << "\n\n";
 }

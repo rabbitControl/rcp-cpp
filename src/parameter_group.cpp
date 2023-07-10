@@ -19,35 +19,25 @@
 
 namespace rcp {
 
-    void GroupParameter::addChild(IParameter& child) {
-
-        ParameterPtr p = child.newReference();
-        addChild(p);
-    }
-
-    void GroupParameter::addChild(ParameterPtr& child) {
-
+    void GroupParameter::addChild(ParameterPtr child)
+    {
         std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
         if (it == obj->children.end()) {
             obj->children[child->getId()] = child;
         }
 
         // set parent in child
-        child->setParent(*this);
+        child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
     }
 
-    void GroupParameter::removeChild(IParameter& child) {
-
-        auto it = obj->children.find(child.getId());
+    void GroupParameter::removeChild(ParameterPtr child)
+    {
+        auto it = obj->children.find(child->getId());
         if (it != obj->children.end()) {
             // found! - remove
-            child.clearParent();
-            obj->children.erase(child.getId());
+            child->clearParent();
+            obj->children.erase(child->getId());
         }
-    }
-
-    void GroupParameter::removeChild(ParameterPtr& child) {
-        removeChild(*child.get());
     }
 
     void GroupParameter::dumpChildren(int indent) {

@@ -31,8 +31,8 @@ namespace rcp {
         ids.clear();
     }
 
-    void ParameterManager::removeParameter(IParameter& parameter) {
-        removeParameter(parameter.getId());
+    void ParameterManager::removeParameter(ParameterPtr parameter) {
+        removeParameter(parameter->getId());
     }
 
     void ParameterManager::removeParameter(short id) {
@@ -65,7 +65,6 @@ namespace rcp {
         if (auto p = parameter->getParent().lock()) {
             p->removeChild(parameter);
         }
-        parameter->dispose();
         params.erase(parameter->getId());
 
         // check if this is a group... if so, remove all children without!! adding them to the removed-list
@@ -251,7 +250,7 @@ namespace rcp {
 
 
 
-    ParameterPtr ParameterManager::getParameter(const short& id)
+    ParameterPtr ParameterManager::getParameter(int16_t id)
     {
         auto it = params.find(id);
 
@@ -332,7 +331,7 @@ namespace rcp {
         params[parameter->getId()] = parameter;
 
         // set manager again
-        parameter->setManager(getShared());
+        parameter->setManager(shared_from_this());
 
         if (isGroup(parameter))
         {
@@ -356,18 +355,13 @@ namespace rcp {
 
     void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
     {
-        if (missingParents.find(parentId) != missingParents.end())
+        if (missingParents.find(parentId) == missingParents.end())
         {
-            // add to list
-            missingParents[parentId].push_back(child);
+            // add new list
+            missingParents[parentId] = std::vector<ParameterPtr>();
         }
-        else
-        {
-            // add new
-            std::vector<ParameterPtr> list;
-            list.push_back(child);
-            missingParents[parentId] = list;
-        }
+
+        missingParents[parentId].push_back(child);
     }
 
     /**
@@ -379,7 +373,7 @@ namespace rcp {
      */
     void ParameterManager::_addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group) {
 
-        parameter->setManager(getShared());        
+        parameter->setManager(shared_from_this());
         parameter->setLabel(label);
 
         // called on server - parameters are dirty by default
@@ -401,7 +395,7 @@ namespace rcp {
     }
 
 
-    void ParameterManager::setParameterDirty(IParameter& parameter)
+    void ParameterManager::setParameterDirty(ParameterPtr parameter)
 	{
 #ifndef RCP_MANAGER_NO_LOCKING
 		// protect lists to be used from multiple threads
@@ -409,16 +403,16 @@ namespace rcp {
 #endif
 		
         // only add if not already removed
-        if (removedParameter.find(parameter.getId()) != removedParameter.end()) {
+        if (removedParameter.find(parameter->getId()) != removedParameter.end()) {
             // parameter is removed, don't add
-            std::cout << "parameter going to be removed: " << parameter.getId() << "\n";
+            std::cout << "parameter going to be removed: " << parameter->getId() << "\n";
             return;
         }
 
-        dirtyParameter[parameter.getId()] = parameter.newReference();
+        dirtyParameter[parameter->getId()] = parameter;
     }
 
-    void ParameterManager::setParameterRemoved(ParameterPtr& parameter)
+    void ParameterManager::setParameterRemoved(ParameterPtr parameter)
 	{
 #ifndef RCP_MANAGER_NO_LOCKING
 		// protect lists to be used from multiple threads

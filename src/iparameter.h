@@ -48,7 +48,7 @@ namespace rcp {
 
         //--------------------------------
         // optional
-        virtual const std::string getLabel() const = 0;
+        virtual std::string getLabel() const = 0;
         virtual void setLabel(const std::string& label) = 0;
         virtual bool hasLabel() const = 0;
         virtual void clearLabel() = 0;
@@ -60,7 +60,7 @@ namespace rcp {
         virtual void removeLanguageLabel(const std::string& code) = 0;
 
 
-        virtual const std::string& getDescription() const = 0;
+        virtual std::string getDescription() const = 0;
         virtual void setDescription(const std::string& description) = 0;
         virtual bool hasDescription() const = 0;
         virtual void clearDescription() = 0;
@@ -72,7 +72,7 @@ namespace rcp {
         virtual void removeDescriptionLanguage(const std::string& code) = 0;
 
 
-        virtual const std::string& getTags() const = 0;
+        virtual std::string getTags() const = 0;
         virtual void setTags(const std::string& tags) = 0;
         virtual bool hasTags() const = 0;
         virtual void clearTags() = 0;
@@ -85,13 +85,13 @@ namespace rcp {
         virtual std::weak_ptr<GroupParameter>& getParent() const = 0;
         virtual bool hasParent() const = 0;
 
-        virtual const std::vector<char> getUserdata() const = 0;
+        virtual std::vector<char> getUserdata() const = 0;
         virtual void setUserdata(const std::vector<char> userdata) = 0;
         virtual bool hasUserdata() const = 0;
         virtual void clearUserdata() = 0;
 
         // user id
-        virtual const std::string& getUserid() const = 0;
+        virtual std::string getUserid() const = 0;
         virtual void setUserid(const std::string& userid) = 0;
         virtual bool hasUserid() const = 0;
         virtual void clearUserid() = 0;
@@ -102,9 +102,9 @@ namespace rcp {
         virtual bool hasReadonly() const = 0;
         virtual void clearReadonly() = 0;
 
-        //
+        // update parameter from other parameter
         virtual void update(const ParameterPtr& other) = 0;
-        virtual ParameterPtr newReference() = 0;
+        virtual ParameterPtr getShared() = 0;
 
         // update callbacks
         virtual const std::function< void() >& addUpdatedCb(std::function< void() >& func) = 0;
@@ -114,12 +114,10 @@ namespace rcp {
 
         //
         virtual void dump() = 0;
-        virtual void dispose() = 0;
-
         virtual bool waitForParent() const = 0;
 
         //
-        virtual bool isValueParameter() const = 0;
+        virtual bool isValueParameter() const { return false; }
 
         template<typename, datatype_t, td_types> friend class TypeDefinition;
         friend class GroupParameter;
@@ -133,7 +131,7 @@ namespace rcp {
         virtual bool onlyValueChanged() const { return false; }
 
     private:
-        virtual void setParent(GroupParameter& parent) = 0;
+        virtual void setParent(std::shared_ptr<GroupParameter> parent) = 0;
         virtual void clearParent() = 0;
         virtual void setManager(std::shared_ptr<IParameterManager> manager) = 0;
 
@@ -150,7 +148,7 @@ namespace rcp {
         virtual const TD& getDefaultTypeDefinition() const = 0;
 
         // optional
-        virtual const T& getValue() const = 0;
+        virtual T getValue() const = 0;
         virtual bool setValue(const T& value) = 0;
         virtual bool hasValue() const = 0;
         virtual void clearValue() = 0;

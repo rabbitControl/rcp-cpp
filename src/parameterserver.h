@@ -56,14 +56,14 @@ public:
     }
 
     //
-    void removeParameter(IParameter& parameter) {
+    void removeParameter(ParameterPtr parameter) {
         parameterManager->removeParameter(parameter);
     }
     void removeParameter(short id) {
         parameterManager->removeParameter(id);
     }
 
-    // parameter creater
+    // parameter creation
     BooleanParameterPtr createBooleanParameter(const std::string& label) {
         return parameterManager->createBooleanParameter(label);
     }

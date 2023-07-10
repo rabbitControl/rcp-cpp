@@ -59,7 +59,7 @@ public:
 	
 public:
     //
-    void removeParameter(IParameter& parameter);
+    void removeParameter(ParameterPtr parameter);
     void removeParameter(short id);
 
     BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr group = nullptr);
@@ -85,23 +85,19 @@ public:
         std::flush(std::cout);
     }
 
-    template<typename> friend class Parameter;
     friend class ParameterServer;
     friend class ParameterClient;
 	
-	
 public:
 	// IParameterManager
-	virtual ParameterPtr getParameter(const short& id) override;
+	ParameterPtr getParameter(int16_t id) override;
 private:
 	// IParameterManager
-	virtual void setParameterDirty(IParameter& parameter) override;
-	virtual void setParameterRemoved(ParameterPtr& parameter) override;
-	
+	void setParameterDirty(ParameterPtr parameter) override;
+	void setParameterRemoved(ParameterPtr parameter) override;
     void addMissingParent(int16_t parentId, ParameterPtr child) override;
 	
 private:
-    std::shared_ptr<ParameterManager> getShared() { return shared_from_this(); }
     short getNextId();
     void _addParameter(ParameterPtr& parameter);
     void _addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group);

@@ -25,10 +25,17 @@
 namespace rcp {
 
     class IParameterManager {
+
+        template<typename> friend class Parameter;
+        friend class ParameterServer;
+        friend class ParameterClient;
+
     public:
-        virtual ParameterPtr getParameter(const short& id) = 0;
-        virtual void setParameterDirty(IParameter& parameter) = 0;
-        virtual void setParameterRemoved(ParameterPtr& parameter) = 0;
+        virtual ParameterPtr getParameter(int16_t id) = 0;
+
+    private:
+        virtual void setParameterDirty(ParameterPtr parameter) = 0;
+        virtual void setParameterRemoved(ParameterPtr parameter) = 0;
         virtual void addMissingParent(int16_t parentId, ParameterPtr child) = 0;
     };
 

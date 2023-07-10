@@ -66,7 +66,7 @@ namespace rcp {
     //----------------------------------------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------------------------------------
     template <typename TD>
-    class Parameter : public IParameter
+    class Parameter : public IParameter, public std::enable_shared_from_this<IParameter>
     {
     public:
         // static
@@ -228,12 +228,10 @@ namespace rcp {
                                         if (parent->getId() != p->getId())
                                         {
                                             // remove from parent...
-                                            p->removeChild(*this);
+                                            p->removeChild(shared_from_this());
                                         }
                                     }
 
-                                    std::cout << "setting parent: " << parent->getId() << "\n";
-                                    std::flush(std::cout);
                                     obj->parent = std::dynamic_pointer_cast<GroupParameter>(parent);
                                 }
                                 else
@@ -244,7 +242,8 @@ namespace rcp {
                             else
                             {
                                 // put it into list, look parent up later
-                                manager->addMissingParent(parent_id, newReference());
+                                m_waitForParent = true;
+                                manager->addMissingParent(parent_id, shared_from_this());
                             }
                         }
                         else
@@ -305,19 +304,14 @@ namespace rcp {
         //------------------------------------
         // implement IParameter
 
-        ParameterPtr newReference() override
+        ParameterPtr getShared() override
         {
-            return std::make_shared<Parameter<TD> >(*this);
+            return shared_from_this();
         }
 
         bool waitForParent() const override
         {
             return m_waitForParent;
-        }
-
-        bool isValueParameter() const override
-        {
-            return false;
         }
 
         int16_t getId() const override
@@ -336,7 +330,7 @@ namespace rcp {
         }
 
         // optional
-        const std::string getLabel() const override
+        std::string getLabel() const override
         {
             return obj->label;
         }
@@ -409,7 +403,7 @@ namespace rcp {
             }
         }
 
-        const std::string& getDescription() const override
+        std::string getDescription() const override
         {
             return obj->description;
         }
@@ -483,7 +477,7 @@ namespace rcp {
 
         //----------------------
         // tags
-        const std::string& getTags() const override
+        std::string getTags() const override
         {
             return obj->tags.value();
         }
@@ -552,7 +546,7 @@ namespace rcp {
 
         //----------------------
         // userdata
-        const std::vector<char> getUserdata() const override
+        std::vector<char> getUserdata() const override
         {
             return obj->userdata;
         }
@@ -575,7 +569,7 @@ namespace rcp {
 
         //----------------------
         // userid
-        const std::string& getUserid() const override
+        std::string getUserid() const override
         {
             return obj->userid.value();
         }
@@ -684,10 +678,6 @@ namespace rcp {
             obj->updatedCallbacks.clear();
         }
 
-        void dispose() override
-        {
-        }
-
         friend class ParameterManager;
         friend class GroupParameter;
         friend class ParameterFactory;
@@ -705,7 +695,7 @@ namespace rcp {
         void setDirty() override
         {
             if (auto manager = obj->parameterManager.lock()) {
-                manager->setParameterDirty(*this);
+                manager->setParameterDirty(shared_from_this());
             }
         }
 
@@ -727,12 +717,12 @@ namespace rcp {
 
     private:
 
-        virtual void setParent(GroupParameter& parent) override;
-        virtual void setParent(GroupParameterPtr parent);
+        virtual void setParent(GroupParameterPtr parent) override;
         virtual void clearParent() override
         {
             obj->parent.reset();
             obj->parentChanged = true;
+            m_waitForParent = false;
             setDirty();
         }
 
@@ -1024,12 +1014,6 @@ namespace rcp {
 
         std::shared_ptr<Value> obj;
         bool m_waitForParent;
-
-        //
-//        Parameter(std::shared_ptr<Value> obj)
-//            : obj(obj)
-//            , waitingForParent(false)
-//        {}
     };
 
 
@@ -1098,12 +1082,6 @@ namespace rcp {
         ~ValueParameter()
         {}
 
-
-        virtual ParameterPtr newReference() override
-        {
-            return std::make_shared<ValueParameter<T, TD, type_id> >(*this);
-        }
-
         //------------------------------------
         // Writeable
         void write(Writer& out, bool all) override
@@ -1164,7 +1142,7 @@ namespace rcp {
 
         //---------------------------
         // IValueParameter
-        const T& getValue() const override
+        T getValue() const override
         {
             return obj->value.value();
         }
@@ -1379,10 +1357,6 @@ namespace rcp {
             obj->valueUpdatedCallbacks.clear();
         }
 
-        virtual void dispose() override
-        {
-        }
-
         friend class ParameterManager;
         friend class GroupParameter;
         friend class ParameterFactory;
@@ -1469,7 +1443,7 @@ namespace rcp {
      Y8a.    .a88  88     `8b    Y8a.    .a8P   Y8a.    .a8P  88
       `"Y88888P"   88      `8b    `"Y8888Y"'     `"Y8888Y"'   88
     */
-    class GroupParameter : public Parameter<GroupTypeDefinition>, public std::enable_shared_from_this<GroupParameter>
+    class GroupParameter : public Parameter<GroupTypeDefinition>
     {
     public:
 //        template<typename> friend class Parameter;
@@ -1493,11 +1467,6 @@ namespace rcp {
             , obj(std::make_shared<Value>())
         {}
 
-
-        virtual ParameterPtr newReference() {
-            return std::make_shared<GroupParameter>(*this);
-        }
-
         //
         void dumpChildren(int indent);
 
@@ -1506,14 +1475,8 @@ namespace rcp {
         friend class ParameterServer;
         friend class ParameterFactory;
 
-        void addChild(IParameter& child);
-        void addChild(ParameterPtr& child);
-        void removeChild(IParameter& child);
-        void removeChild(ParameterPtr& child);
-
-        GroupParameterPtr getShared() {
-            return shared_from_this();
-        }
+        void addChild(ParameterPtr child);
+        void removeChild(ParameterPtr child);
 
         std::map<short, ParameterPtr >& children() {
             return obj->children;
@@ -1621,7 +1584,7 @@ namespace rcp {
         if (other->hasParent()) {
             std::shared_ptr<GroupParameter> p = other->getParent().lock();
             // TODO: avoid setting paramter dirty when adding a child
-            p->addChild(*this);
+            p->addChild(shared_from_this());
             updated = obj->parentChanged;
         }
 
@@ -1653,11 +1616,6 @@ namespace rcp {
     }
 
     template <typename TD>
-    void Parameter<TD>::setParent(GroupParameter& parent) {
-        setParent(parent.getShared());
-    }
-
-    template <typename TD>
     void Parameter<TD>::setParent(GroupParameterPtr parent) {
 
         if (auto p = obj->parent.lock()) {
@@ -1666,12 +1624,13 @@ namespace rcp {
                 return;
             } else {
                 // remove from parent...
-                p->removeChild(*this);
+                p->removeChild(shared_from_this());
             }
         }
 
         obj->parent = parent;
         obj->parentChanged = true;
+        m_waitForParent = false;
         setDirty();
     }
 

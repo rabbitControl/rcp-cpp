@@ -378,6 +378,17 @@ namespace rcp {
             }
         }
 
+
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->minimum.setUnchanged();
+            obj->maximum.setUnchanged();
+            obj->multipleof.setUnchanged();
+            obj->scale.setUnchanged();
+            obj->unit.setUnchanged();
+        }
+
     private:
         void setDirty() {
             obj->parameter.setDirty();

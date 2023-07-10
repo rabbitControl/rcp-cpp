@@ -36,6 +36,7 @@ namespace rcp {
         virtual void writeMandatory(Writer& out) const = 0;
 
         virtual bool anyOptionChanged() const = 0;
+        virtual void setAllUnchanged() = 0;
     };
 
 

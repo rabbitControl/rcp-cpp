@@ -136,7 +136,7 @@ namespace rcp {
         virtual void setParent(std::shared_ptr<GroupParameter> parent) = 0;
         virtual void clearParent() = 0;
         virtual void setManager(std::shared_ptr<IParameterManager> manager) = 0;
-
+        virtual void setAllUnchanged() = 0;
     };
 
 

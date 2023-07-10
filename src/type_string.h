@@ -186,6 +186,13 @@ namespace rcp {
             }
         }
 
+
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->regex.setUnchanged();
+        }
+
     private:
         void setDirty() {
             obj->parameter.setDirty();

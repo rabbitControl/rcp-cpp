@@ -82,6 +82,9 @@ namespace rcp {
             }
         }
 
+        void setAllUnchanged() override
+        {}
+
     private:
         // mandatory
         datatype_t datatype;

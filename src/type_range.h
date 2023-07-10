@@ -211,6 +211,11 @@ namespace rcp {
             obj->element_type.setUnit(v);
         }
 
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->element_type.setAllUnchanged();
+        }
 
     private:
         void setDirty() {

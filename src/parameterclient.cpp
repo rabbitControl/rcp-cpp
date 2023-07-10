@@ -217,6 +217,9 @@ namespace rcp {
                 // parameter not in cache, add it
                 m_parameterManager->_addParameter(param);
 
+                // on client new parameters are all unchanged
+                param->setAllUnchanged();
+
                 // call parameter added callbacks
                 for (ParameterClientListener* listener : m_listener)
                 {

@@ -156,6 +156,10 @@ namespace rcp {
             }
         } // parseOptions
 
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+        }
 
     private:
         void setDirty() {

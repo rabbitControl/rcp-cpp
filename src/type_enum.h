@@ -244,6 +244,13 @@ namespace rcp {
             }
         }
 
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->optionsChanged = false;
+            obj->multiselect.setUnchanged();
+        }
+
     private:
         void setDirty() {
             obj->parameter.setDirty();

@@ -237,6 +237,14 @@ namespace rcp {
             }
         }
 
+
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->filter.setUnchanged();
+            obj->schemaChanged = false;;
+        }
+
     private:
         void setDirty() {
             obj->parameter.setDirty();

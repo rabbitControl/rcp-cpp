@@ -247,6 +247,12 @@ namespace rcp {
             setDirty();
         }
 
+        void setAllUnchanged() override
+        {
+            obj->defaultValue.setUnchanged();
+            obj->uuidChanged = false;
+            obj->configChanged = false;
+        }
 
     private:
         void setDirty() {

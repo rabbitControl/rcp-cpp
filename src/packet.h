@@ -198,78 +198,75 @@ namespace rcp {
 
         Packet() :
             m_command(COMMAND_INVALID)
-          , m_timestamp(0)
-          , m_hasTimestamp(false)
-          , m_data(nullptr)
-          , m_hasData(false)
         {}
 
-        Packet(enum command_t cmd) :
-            m_command(cmd)
-          , m_timestamp(0)
-          , m_hasTimestamp(false)
-          , m_data(nullptr)
-          , m_hasData(false)
-        {}
-
-        Packet(enum command_t cmd, ParameterPtr& data) :
-            m_command(cmd)
-          , m_timestamp(0)
-          , m_hasTimestamp(false)
+        Packet(enum command_t cmd)
+            : m_command(cmd)
+            , m_timestamp(0)
         {
+            m_timestamp.clearValue();
+        }
+
+        Packet(enum command_t cmd, ParameterPtr& data)
+            : m_command(cmd)
+            , m_timestamp(0)
+        {
+            m_timestamp.clearValue();
             setData(data);
         }
 
-        Packet(enum command_t cmd, WriteablePtr& data) :
-            m_command(cmd)
-          , m_timestamp(0)
-          , m_hasTimestamp(false)
+        Packet(enum command_t cmd, WriteablePtr& data)
+            : m_command(cmd)
+            , m_timestamp(0)
         {
+            m_timestamp.clearValue();
             setData(data);
         }
 
         Packet(enum command_t cmd, uint64_t timestamp, ParameterPtr& data) :
             m_command(cmd)
           , m_timestamp(timestamp)
-          , m_hasTimestamp(true)
         {
             setData(data);
         }
 
-        Packet(const Packet& other) :
-            m_hasTimestamp(false)
-          , m_data(nullptr)
-          , m_hasData(false)
+        Packet(const Packet& other)
         {
             m_command = other.getCommand();
 
-            if (other.hasTimestamp()) {
-                setTimestamp(other.getTimestamp());
+            if (other.m_timestamp.hasValue())
+            {
+                m_timestamp = other.m_timestamp;
             }
 
-            if (other.hasData()) {
-                setData(other.getData());
+            if (other.m_data.hasValue())
+            {
+                m_data = other.m_data;
             }
         }
 
         ~Packet();
 
-
-
-        Packet& operator=(const Packet& other) {
-
+        Packet& operator=(const Packet& other)
+        {
             m_command = other.getCommand();
 
-            if (other.hasTimestamp()) {
-                setTimestamp(other.getTimestamp());
-            } else {
-                clearTimestamp();
+            if (other.m_timestamp.hasValue())
+            {
+                m_timestamp = other.m_timestamp;
+            }
+            else
+            {
+                m_timestamp.clearValue();
             }
 
-            if (other.hasData()) {
-                setData(other.getData());
-            } else {
-                clearData();
+            if (other.m_data.hasValue())
+            {
+                m_data = other.m_data;
+            }
+            else
+            {
+                m_data.clearValue();
             }
 
             return *this;
@@ -277,14 +274,14 @@ namespace rcp {
 
 
         // writeable interface
-        virtual void write(Writer& out, bool all) {
-
+        virtual void write(Writer& out, bool all)
+        {
             out.write(static_cast<char>(m_command));
 
             if (m_command == COMMAND_UPDATEVALUE)
             {
                 // only parameter
-                ParameterPtr param = std::dynamic_pointer_cast<IParameter>(m_data);
+                ParameterPtr param = std::dynamic_pointer_cast<IParameter>(m_data.value());
                 if (param)
                 {
                     param->write(out, all);
@@ -292,74 +289,83 @@ namespace rcp {
             }
             else
             {
-                if (m_hasTimestamp) {
+                if (m_timestamp.hasValue())
+                {
                     out.write(static_cast<char>(PACKET_OPTIONS_TIMESTAMP));
-                    out.write(m_timestamp);
+                    out.write(m_timestamp.value());
                 }
 
-                if (m_hasData) {
+                if (m_data.hasValue())
+                {
                     out.write(static_cast<char>(PACKET_OPTIONS_DATA));
-                    m_data->write(out, all);
+                    m_data.value()->write(out, all);
                 }
 
                 // terminator
                 out.write(static_cast<char>(TERMINATOR));
             }
-
         }
 
 
         // public methods
 
-        void setCommand(enum command_t cmd) {
+        //----------------------
+        // command
+        void setCommand(enum command_t cmd)
+        {
             m_command = cmd;
         }
-
-        enum command_t getCommand() const {
+        enum command_t getCommand() const
+        {
             return m_command;
         }
 
-
+        //----------------------
         // option - timestamp
-        bool hasTimestamp() const {
-            return m_hasTimestamp;
+        bool hasTimestamp() const
+        {
+            return m_timestamp.hasValue();
         }
-
-        void setTimestamp(uint64_t timestamp) {
+        void setTimestamp(uint64_t timestamp)
+        {
             m_timestamp = timestamp;
-            m_hasTimestamp = true;
+        }
+        uint64_t getTimestamp() const
+        {
+            if (m_timestamp.hasValue())
+            {
+                return m_timestamp.value();
+            }
+
+            return 0;
+        }
+        void clearTimestamp()
+        {
+            m_timestamp.clearValue();
         }
 
-        uint64_t getTimestamp() const {
-            return m_timestamp;
-        }
-
-        void clearTimestamp() {
-            m_hasTimestamp = false;
-        }
-
-
+        //----------------------
         // option - data
-        bool hasData() const {
-            return m_hasData;
+        bool hasData() const
+        {
+            return m_data.hasValue();
         }
-
-        void setData(IParameter& data) {
-            setData(data.newReference());
-        }
-
-        void setData(const WriteablePtr& data) {
+        void setData(const WriteablePtr& data)
+        {
             m_data = data;
-            m_hasData = data != nullptr;
         }
+        WriteablePtr getData() const
+        {
+            if (m_data.hasValue())
+            {
+                return m_data.value();
+            }
 
-        WriteablePtr getData() const {
-            return m_data;
+            return nullptr;
         }
-
-        void clearData() {
-            m_data = nullptr;
-            m_hasData = false;
+        void clearData()
+        {
+            m_data.clearValue();
         }
 
 
@@ -369,11 +375,8 @@ namespace rcp {
         enum command_t m_command;
 
         // options
-        uint64_t m_timestamp;
-        bool m_hasTimestamp;
-
-        WriteablePtr m_data;
-        bool m_hasData;
+        Option<uint64_t> m_timestamp;
+        Option<WriteablePtr> m_data;
     };
 
 

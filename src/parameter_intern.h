@@ -564,13 +564,20 @@ namespace rcp {
         }
         bool hasUserdata() const override
         {
-            return obj->userdata.size() > 0;
+            return !obj->userdata.empty();
         }
         void clearUserdata() override
         {
-            obj->userdata.clear();
-            obj->userdataChanged = true;
-            setDirty();
+            if (!obj->userdata.empty())
+            {
+                obj->userdata.clear();
+                obj->userdataChanged = true;
+                setDirty();
+            }
+            else
+            {
+                obj->userdataChanged = false;
+            }
         }
 
         //----------------------
@@ -927,18 +934,22 @@ namespace rcp {
                 // TODO: widget
 
                 // userdata
-                if (userdata.size() > 0) {
-
-                    if (all || userdataChanged) {
+                if (!userdata.empty())
+                {
+                    if (all || userdataChanged)
+                    {
                         out.write(static_cast<char>(PARAMETER_OPTIONS_USERDATA));
-                        out.write(&userdata[0], userdata.size());
+                        out.write(static_cast<uint32_t>(userdata.size()));
+                        out.write(userdata.data(), userdata.size());
 
-                        if (!all) {
+                        if (!all)
+                        {
                             userdataChanged = false;
                         }
                     }
-                } else if (userdataChanged) {
-
+                }
+                else if (userdataChanged)
+                {
                     out.write(static_cast<char>(PARAMETER_OPTIONS_USERDATA));
                     out.write(static_cast<uint32_t>(0));
                     userdataChanged = false;
@@ -1622,21 +1633,24 @@ namespace rcp {
     }
 
     template <typename TD>
-    void Parameter<TD>::setParent(GroupParameterPtr parent) {
-
-        if (auto p = obj->parent.lock()) {
-            if (parent->getId() == p->getId()) {
+    void Parameter<TD>::setParent(GroupParameterPtr parent)
+    {
+        if (auto p = obj->parent.lock())
+        {
+            if (parent->getId() == p->getId())
+            {
                 // parent already set
                 return;
-            } else {
-                // remove from parent...
-                p->removeChild(shared_from_this());
             }
+
+            // remove from parent...
+            p->removeChild(shared_from_this());
         }
+
+        m_waitForParent = false;
 
         obj->parent = parent;
         obj->parentChanged = true;
-        m_waitForParent = false;
         setDirty();
     }
 

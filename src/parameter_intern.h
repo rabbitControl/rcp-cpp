@@ -1702,10 +1702,45 @@ namespace rcp {
             Parameter<BangTypeDefinition>(id)
         {}
 
+        void update(const ParameterPtr& other) override
+        {
+            if (other.get() == this) {
+                return;
+            }
+
+            if (other->getId() != getId()) {
+                // different id - discard
+                return;
+            }
+
+            if (!other->hasLabel() &&
+                    !other->hasDescription() &&
+                    !other->hasOrder() &&
+                    !other->hasParent() &&
+                    !other->hasReadonly() &&
+                    !other->hasTags() &&
+                    !other->hasUserdata() &&
+                    !other->hasUserid())
+            {
+                // empty other
+                m_cb();
+            }
+            else
+            {
+                Parameter::update(other);
+            }
+        }
+
         void bang() {
             setDirty();
         }
 
+        void setFunction(const std::function<void()>&& cb) {
+            m_cb = cb;
+        }
+
+    private:
+        std::function<void()> m_cb;
     };
 
     //---------------------------------------------------------------------------------

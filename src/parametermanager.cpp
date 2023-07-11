@@ -330,27 +330,32 @@ namespace rcp {
         // add parameter to map
         params[parameter->getId()] = parameter;
 
-        // set manager again
-        parameter->setManager(shared_from_this());
-
         if (isGroup(parameter))
         {
             // resolve missing parents
+            // NOTE: this is only relevant for clients
             GroupParameterPtr group_parameter = std::dynamic_pointer_cast<GroupParameter>(parameter);
 
             auto missing_it = missingParents.find(parameter->getId());
             if (missing_it != missingParents.end())
             {
-                for (auto child : missing_it->second)
+                for (ParameterPtr& child : missing_it->second)
                 {
-                    // NOTE: this makes child dirty!
-                    // TOOO: don't make child dirty?
+                    // avoid child getting dirty when setting parent
+                    child->setManager(nullptr);
+
                     group_parameter->addChild(child);
+                    child->setParentUnchanged();
+
+                    child->setManager(shared_from_this());
                 }
 
                 missingParents.erase(missing_it);
             }
         }
+
+        // set manager again
+        parameter->setManager(shared_from_this());
     }
 
     void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)

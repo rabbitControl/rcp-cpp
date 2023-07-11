@@ -217,10 +217,13 @@ namespace rcp {
                 // parameter not in cache, add it
                 m_parameterManager->_addParameter(param);
 
-                // on client new parameters are all unchanged
+                // NOTE: parameters might not have a parent by now,
+                // if waitForParent == true
+
+                // at the client new parameters are all unchanged when added
                 param->setAllUnchanged();
 
-                // call parameter added callbacks
+                // call parameter added callbacks                
                 for (ParameterClientListener* listener : m_listener)
                 {
                     listener->parameterAdded(param);

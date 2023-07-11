@@ -771,6 +771,11 @@ namespace rcp {
             getTypeDefinition().setAllUnchanged();
         }
 
+        void setParentUnchanged() override
+        {
+            obj->parentChanged = false;
+        }
+
 
         class Value {
         public:

@@ -137,6 +137,7 @@ namespace rcp {
         virtual void clearParent() = 0;
         virtual void setManager(std::shared_ptr<IParameterManager> manager) = 0;
         virtual void setAllUnchanged() = 0;
+        virtual void setParentUnchanged() = 0;
     };
 
 

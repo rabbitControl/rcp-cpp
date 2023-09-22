@@ -24,13 +24,13 @@
 namespace rcp {
 
     ParameterServer::ParameterServer()
-        : parameterManager(std::make_shared<ParameterManager>())
+        : m_parameterManager(std::make_shared<ParameterManager>())
         , m_applicationId("cpp-server")
     {
     }
 
     ParameterServer::ParameterServer(ServerTransporter& transporter)
-        : parameterManager(std::make_shared<ParameterManager>())
+        : m_parameterManager(std::make_shared<ParameterManager>())
         , m_applicationId("cpp-server")
     {
         addTransporter(transporter);
@@ -46,14 +46,14 @@ namespace rcp {
     }
 
     void ParameterServer::clear() {
-        parameterManager->clear();
+        m_parameterManager->clear();
     }
 
 
     void ParameterServer::received(std::istream& data, ServerTransporter& transporter, void* id)
     {
         // parse data
-        Option<Packet> packet_option = Packet::parse(data, parameterManager);
+        Option<Packet> packet_option = Packet::parse(data, m_parameterManager);
 
         if (packet_option.hasValue())
         {
@@ -152,19 +152,19 @@ namespace rcp {
         }
 		
 		// protect lists to be used from multiple threads
-		parameterManager->lock();
+        m_parameterManager->lock();
 
         // send removes
-        for (auto& p : parameterManager->removedParameter)
+        for (auto& p : m_parameterManager->removedParameter)
         {
             WriteablePtr id_data = IdData::create(p.second->getId());
             Packet packet(COMMAND_REMOVE, id_data);
             sendPacket(packet);
         }
-        parameterManager->removedParameter.clear();
+        m_parameterManager->removedParameter.clear();
 
         // send updates
-        for (auto& p : parameterManager->dirtyParameter) {
+        for (auto& p : m_parameterManager->dirtyParameter) {
 
             // TODO send COMMAND_UPDATEVALUE
             command_t cmd = COMMAND_UPDATE;
@@ -177,10 +177,10 @@ namespace rcp {
             Packet packet(cmd, p.second);
             sendPacket(packet);
         }
-        parameterManager->dirtyParameter.clear();
+        m_parameterManager->dirtyParameter.clear();
 
 		// unlock mutex
-		parameterManager->unlock();
+        m_parameterManager->unlock();
 		
         return false;
     }
@@ -222,7 +222,7 @@ namespace rcp {
 
     void ParameterServer::_init(ServerTransporter& transporter, void *id) {
 
-        for (auto& child : parameterManager->rootGroup()->children()) {
+        for (auto& child : m_parameterManager->rootGroup()->children()) {
             _sendParameterFull(child.second, transporter, id);
         }
     }
@@ -238,7 +238,7 @@ namespace rcp {
         ParameterPtr param = std::dynamic_pointer_cast<IParameter>(packet.getData());
         if (param)
         {
-            ParameterPtr chached_param = parameterManager->getParameter(param->getId());
+            ParameterPtr chached_param = m_parameterManager->getParameter(param->getId());
 
             if (chached_param)
             {

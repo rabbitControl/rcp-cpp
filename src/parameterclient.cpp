@@ -17,7 +17,6 @@
 #include "parameterclient.h"
 
 #include "stringstreamwriter.h"
-#include "streamwriter.h"
 #include "rcp.h"
 
 namespace rcp {
@@ -91,6 +90,8 @@ namespace rcp {
     // interface ClientTransporterListener
     void ParameterClient::connected()
     {
+        m_initializeSent = false;
+
         // request version
         char data[2];
         data[0] = 0x01;
@@ -100,6 +101,9 @@ namespace rcp {
 
     void ParameterClient::disconnected()
     {
+        m_initializeSent = false;
+
+        // clear manager
         m_parameterManager->clear();
     }
 
@@ -173,12 +177,13 @@ namespace rcp {
                     // TODO: disconnect from server
                 }
 
-                if (!initializeSent &&
+                if (!m_initializeSent &&
                         version_ok)
-                {
-                    // send initialize command
+                {                    
                     initialize();
-                    initializeSent = true;
+
+                    // only send initialize once
+                    m_initializeSent = true;
                 }
             }
         } else {

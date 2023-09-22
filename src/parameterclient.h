@@ -99,7 +99,7 @@ namespace rcp {
         std::vector<ParameterClientListener*> m_listener;
 
         std::string m_applicationId;
-        bool initializeSent{false};
+        bool m_initializeSent{false};
 
         // server
         std::string m_serverApplicationId;

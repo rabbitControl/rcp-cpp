@@ -27,8 +27,6 @@ namespace rcp {
     }
 
     ParameterManager::~ParameterManager() {
-        params.clear();
-        ids.clear();
     }
 
     void ParameterManager::removeParameter(ParameterPtr parameter) {
@@ -445,6 +443,8 @@ namespace rcp {
         params.clear();
         dirtyParameter.clear();
         removedParameter.clear();
+        m_rootGroup->children().clear();
+        missingParents.clear();
     }
 
 	void ParameterManager::lock()

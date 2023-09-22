@@ -30,7 +30,6 @@
 #endif
 
 #include "parameter_intern.h"
-#include "parameterfactory.h"
 #include "iparametermanager.h"
 
 namespace rcp {
@@ -91,6 +90,7 @@ public:
 public:
 	// IParameterManager
 	ParameterPtr getParameter(int16_t id) override;
+
 private:
 	// IParameterManager
 	void setParameterDirty(ParameterPtr parameter) override;

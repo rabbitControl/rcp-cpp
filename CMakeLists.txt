@@ -26,7 +26,7 @@ set(RABBIT_NAME RabbitControl)
 #set(COMPILE_AS_FRAMEWORK ON)
 
 # to compile universal binary on macos
-#set(CMAKE_OSX_ARCHITECTURES x86_64;arm64)
+set(CMAKE_OSX_ARCHITECTURES x86_64;arm64)
 
 
 if (MSVC)
@@ -62,7 +62,7 @@ SET(CMAKE_DEBUG_POSTFIX "-d")
 
 set_target_properties(${RABBIT_NAME} PROPERTIES
     # "current version" in semantic format in Mach-O binary file
-    VERSION 0.1.1
+    VERSION 0.1.2
     # "compatibility version" in semantic format in Mach-O binary file
     SOVERSION 0.1.1
     PUBLIC_HEADER "${HEADERS}"

@@ -64,7 +64,7 @@ set_target_properties(${RABBIT_NAME} PROPERTIES
     # "current version" in semantic format in Mach-O binary file
     VERSION 0.1.2
     # "compatibility version" in semantic format in Mach-O binary file
-    SOVERSION 0.1.1
+    SOVERSION 0.1.2
     PUBLIC_HEADER "${HEADERS}"
     DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
 )

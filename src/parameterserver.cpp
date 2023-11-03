@@ -18,7 +18,6 @@
 #include "parameterserver.h"
 
 #include "rcp.h"
-#include "streamwriter.h"
 #include "infodata.h"
 
 namespace rcp {

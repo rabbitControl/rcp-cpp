@@ -7,7 +7,7 @@
 *
 * This file is part of rabbitcontrol for c++.
 *
-* Written by Ingo Randolf, 2018-2023
+* Written by Ingo Randolf, 2018-2024
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,23 +15,11 @@
 *********************************************************************
 */
 
-#ifndef RCP_RCP_H
-#define RCP_RCP_H
+#ifndef VERSION_H
+#define VERSION_H
 
-#include "types.h"
+#define RCP_SPECIFICATION_VERSION "0.1.0"
 
-#include "writeable.h"
-#include "option.h"
-#include "packet.h"
-#include "typedefinition.h"
-#include "parameter_intern.h"
-#include "parameter_range.h"
-#include "parameter_custom.h"
-#include "parameterfactory.h"
+#define RCP_CPP_LIB_VERSION "0.1.1"
 
-#include "stringstreamwriter.h"
-
-#include "parametermanager.h"
-#include "parameterserver.h"
-
-#endif
+#endif // VERSION_H

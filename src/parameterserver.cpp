@@ -17,8 +17,10 @@
 
 #include "parameterserver.h"
 
-#include "rcp.h"
 #include "infodata.h"
+#include "packet.h"
+#include "stringstreamwriter.h"
+#include "version.h"
 
 namespace rcp {
 

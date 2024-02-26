@@ -17,7 +17,7 @@
 #include "parameterclient.h"
 
 #include "stringstreamwriter.h"
-#include "rcp.h"
+#include "version.h"
 
 namespace rcp {
 

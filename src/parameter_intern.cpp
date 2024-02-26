@@ -16,7 +16,6 @@
 */
 
 #include "parameter_intern.h"
-#include "parameter_group.h"
 #include "streamwriter.h"
 
 namespace rcp {

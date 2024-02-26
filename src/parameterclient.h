@@ -31,6 +31,7 @@ namespace rcp {
         virtual void serverInfoReceived(const std::string& applicationId, const std::string& version) = 0;
         virtual void parameterAdded(ParameterPtr parameter) = 0;
         virtual void parameterRemoved(ParameterPtr parameter) = 0;
+        virtual void parsingError() = 0;
     };
 
 
@@ -78,6 +79,10 @@ namespace rcp {
         std::string getServerApplicationId() const
         {
             return m_serverApplicationId;
+        }
+
+        void dump() {
+            m_parameterManager->dumpHierarchy();
         }
 
     public:

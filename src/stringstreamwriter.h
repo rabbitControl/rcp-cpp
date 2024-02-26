@@ -56,6 +56,7 @@ namespace rcp {
         }
 
         std::stringstream& getBuffer() {
+            buffer.seekg(0);
             return buffer;
         }
 

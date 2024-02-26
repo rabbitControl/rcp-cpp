@@ -26,6 +26,7 @@
 #include "writeable.h"
 #include "optionparser.h"
 #include "typedefinition.h"
+#include "parameter_listener.h"
 
 namespace rcp {
 
@@ -86,6 +87,7 @@ namespace rcp {
 
         virtual std::weak_ptr<GroupParameter>& getParent() const = 0;
         virtual bool hasParent() const = 0;
+        virtual void removeFromParent() = 0;
 
         virtual std::vector<char> getUserdata() const = 0;
         virtual void setUserdata(const std::vector<char> userdata) = 0;
@@ -107,6 +109,10 @@ namespace rcp {
         // update parameter from other parameter
         virtual void update(const ParameterPtr& other) = 0;
         virtual ParameterPtr getShared() = 0;
+
+        // listener
+        virtual void addUpdateListener(ParameterListener* listener) = 0;
+        virtual void removeUpdateListener(ParameterListener* listener) = 0;
 
         // update callbacks
         virtual const std::function< void() >& addUpdatedCb(std::function< void() >& func) = 0;
@@ -133,7 +139,9 @@ namespace rcp {
         virtual bool onlyValueChanged() const = 0;
 
     private:
+        virtual bool setParentInternal(std::shared_ptr<GroupParameter> parent) = 0;
         virtual void setParent(std::shared_ptr<GroupParameter> parent) = 0;
+        virtual void clearParentInternal() = 0;
         virtual void clearParent() = 0;
         virtual void setManager(std::shared_ptr<IParameterManager> manager) = 0;
         virtual void setAllUnchanged() = 0;

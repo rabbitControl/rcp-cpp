@@ -215,9 +215,10 @@ namespace rcp {
                     int16_t parent_id = readFromStream(is, parent_id);
                     CHECK_STREAM
 
-                    if (parent_id != 0)
+
+                    if (auto manager = obj->parameterManager.lock())
                     {
-                        if (auto manager = obj->parameterManager.lock())
+                        if (parent_id != 0)
                         {
                             ParameterPtr parent = manager->getParameter(parent_id);
                             if (parent)
@@ -233,7 +234,7 @@ namespace rcp {
                                     {
                                         if (parent->getId() != p->getId())
                                         {
-                                            // remove from parent...
+                                            // remove parameter-id from parent...
                                             p->removeChild(shared_from_this());
                                         }
                                     }
@@ -254,10 +255,15 @@ namespace rcp {
                         }
                         else
                         {
-                            // TODO: manager not set... look parent up later?
-                            std::cerr << "no manager set!\n";
-                            std::flush(std::cerr);
+                            // set root group as parent
+                            obj->parent = std::dynamic_pointer_cast<GroupParameter>(manager->getRootGroup());
                         }
+                    }
+                    else
+                    {
+                        // TODO: manager not set... look parent up later?
+                        std::cerr << "no manager set!\n";
+                        std::flush(std::cerr);
                     }
 
 
@@ -342,16 +348,10 @@ namespace rcp {
         }
         void setLabel(const std::string& label) override
         {
-            obj->hasLabel = true;
-
-            if (obj->label == label) {
-                return;
+            if (obj->setLabel(label))
+            {
+                setDirty();
             }
-
-            obj->label = label;
-            obj->labelChanged = true;
-
-            setDirty();
         }
         bool hasLabel() const override
         {
@@ -393,9 +393,10 @@ namespace rcp {
 
         void setLanguageLabel(const std::string& code, const std::string& label) override
         {
-            obj->languageLabel[code] = label;
-            obj->labelChanged = true;
-            setDirty();
+            if (obj->setLanguageLabel(code, label))
+            {
+                setDirty();
+            }
         }
 
         void removeLanguageLabel(const std::string& code) override
@@ -415,15 +416,10 @@ namespace rcp {
         }
         void setDescription(const std::string& description) override
         {
-            obj->hasDescription = true;
-
-            if (obj->description == description) {
-                return;
+            if (obj->setDescription(description))
+            {
+                setDirty();
             }
-
-            obj->description = description;
-            obj->descriptionChanged = true;
-            setDirty();
         }
         bool hasDescription() const override
         {
@@ -465,9 +461,10 @@ namespace rcp {
 
         void setDescriptionLanguage(const std::string& code, const std::string& description) override
         {
-            obj->languageDescription[code] = description;
-            obj->descriptionChanged = true;
-            setDirty();
+            if (obj->setLanguageDescription(code, description))
+            {
+                setDirty();
+            }
         }
 
         void removeDescriptionLanguage(const std::string& code) override
@@ -489,8 +486,7 @@ namespace rcp {
         }
         void setTags(const std::string& tags) override
         {
-            obj->tags= tags;
-            if (obj->tags.changed())
+            if (obj->setTags(tags))
             {
                 setDirty();
             }
@@ -522,8 +518,7 @@ namespace rcp {
         }
         void setOrder(const int32_t order) override
         {
-            obj->order = order;
-            if (obj->order.changed())
+            if (obj->setOrder(order))
             {
                 setDirty();
             }
@@ -549,6 +544,8 @@ namespace rcp {
             return obj->parent.lock() != nullptr;
         }
 
+        virtual void removeFromParent() override;
+
 
         //----------------------
         // userdata
@@ -558,9 +555,10 @@ namespace rcp {
         }
         void setUserdata(const std::vector<char> userdata) override
         {
-            obj->userdata = userdata;
-            obj->userdataChanged = true;
-            setDirty();
+            if (obj->setUserData(userdata))
+            {
+                setDirty();
+            }
         }
         bool hasUserdata() const override
         {
@@ -588,8 +586,7 @@ namespace rcp {
         }
         void setUserid(const std::string& userid) override
         {
-            obj->userid = userid;
-            if (obj->userid.changed())
+            if (obj->setUserid(userid))
             {
                 setDirty();
             }
@@ -620,8 +617,7 @@ namespace rcp {
         };
         void setReadonly(const bool readonly) override
         {
-            obj->readonly = readonly;
-            if (obj->readonly.changed())
+            if (obj->setReadonly(readonly))
             {
                 setDirty();
             }
@@ -642,6 +638,8 @@ namespace rcp {
         //----------------------
         //
         void dump() override;
+
+        // update from proxy-parameter
         void update(const ParameterPtr& other) override;
 
         // update callbacks
@@ -691,6 +689,28 @@ namespace rcp {
             obj->updatedCallbacks.clear();
         }
 
+
+        // listener
+
+        void addUpdateListener(ParameterListener* listener) override
+        {
+            if (std::find(obj->m_parameterListener.begin(), obj->m_parameterListener.end(), listener) == obj->m_parameterListener.end())
+            {
+                obj->m_parameterListener.push_back(listener);
+            }
+        }
+
+        void removeUpdateListener(ParameterListener* listener) override
+        {
+            auto it = std::find(obj->m_parameterListener.begin(), obj->m_parameterListener.end(), listener);
+            if (it != obj->m_parameterListener.end())
+            {
+                obj->m_parameterListener.erase(it);
+            }
+        }
+
+
+
         friend class ParameterManager;
         friend class GroupParameter;
         friend class ParameterFactory;
@@ -735,12 +755,17 @@ namespace rcp {
 
     private:
 
+        virtual bool setParentInternal(GroupParameterPtr parent) override;
         virtual void setParent(GroupParameterPtr parent) override;
-        virtual void clearParent() override
+        virtual void clearParentInternal() override
         {
             obj->parent.reset();
             obj->parentChanged = true;
             m_waitForParent = false;
+        }
+        virtual void clearParent() override
+        {
+            clearParentInternal();
             setDirty();
         }
 
@@ -1015,6 +1040,188 @@ namespace rcp {
             }
 
 
+            bool setLabel(const std::string& newLabel)
+            {
+                if (label != newLabel)
+                {
+                    std::string old_value = label;
+
+                    label = newLabel;
+                    hasLabel = true;
+                    labelChanged = true;
+
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onLabelChanged(label, old_value);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool setLanguageLabel(const std::string& lang, const std::string& newLabel)
+            {
+                std::string old_value = "";
+
+                if (languageLabel.find(lang) != languageLabel.end())
+                {
+                    // found key
+                    old_value = languageLabel[lang];
+                }
+
+                if (newLabel != old_value)
+                {
+                    languageLabel[lang] = newLabel;
+                    labelChanged = true;
+
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onLanguageLabelChanged(lang, newLabel, old_value);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool setDescription(const std::string& newDescription)
+            {
+                if (description != newDescription)
+                {
+                    std::string old_value = description;
+
+                    description = newDescription;
+                    hasDescription = true;
+                    descriptionChanged = true;
+
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onDescriptionChanged(description, old_value);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool setLanguageDescription(const std::string& lang, const std::string& newDescription)
+            {
+                std::string old_value = "";
+
+                if (languageDescription.find(lang) != languageDescription.end())
+                {
+                    // found key
+                    old_value = languageDescription[lang];
+                }
+
+                if (newDescription != old_value)
+                {
+                    languageDescription[lang] = newDescription;
+                    descriptionChanged = true;
+
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onLanguageDescriptionChanged(lang, newDescription, old_value);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool setTags(const std::string& newTags)
+            {
+                std::string old_value = tags.value();
+                tags = newTags;
+                if (tags.changed())
+                {
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onTagsChanged(tags.value(), old_value);
+                    }
+                }
+
+                return tags.changed();
+            }
+
+            bool setOrder(int32_t newOrder)
+            {
+                int32_t old_value = order.value();
+                order = newOrder;
+                if (order.changed())
+                {
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onOrderChanged(order.value(), old_value);
+                    }
+                }
+
+                return order.changed();
+            }
+
+            bool setUserData(const std::vector<char>& newUserdata)
+            {
+                std::vector<char> old_value = userdata;
+
+                // always changes
+                userdata = newUserdata;
+                userdataChanged = true;
+
+                // call listener
+                for (auto listener : m_parameterListener)
+                {
+                    listener->onUserdataChanged(userdata, old_value);
+                }
+
+                return true;
+            }
+
+            bool setUserid(const std::string& newUserid)
+            {
+                std::string old_value = userid.value();
+
+                userid = newUserid;
+
+                if (userid.changed())
+                {
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onUseridChanged(userid.value(), old_value);
+                    }
+                }
+
+                return userid.changed();
+            }
+
+            bool setReadonly(bool newReadonly)
+            {
+                readonly = newReadonly;
+
+                if (readonly.changed())
+                {
+                    // call listener
+                    for (auto listener : m_parameterListener)
+                    {
+                        listener->onReadonlyChanged(readonly.value());
+                    }
+                }
+
+                return readonly.changed();
+            }
+
+
             void callUpdatedCb() {
                 for (auto& event : updatedCallbacks) {
                     event->callback();
@@ -1052,6 +1259,7 @@ namespace rcp {
 
             std::vector< std::shared_ptr<UpdateEventHolder> > updatedCallbacks;
             std::weak_ptr<IParameterManager> parameterManager;
+            std::vector<ParameterListener*> m_parameterListener;
         };
 
         std::shared_ptr<Value> obj;
@@ -1152,7 +1360,7 @@ namespace rcp {
             Parameter<TD>::dump();
 
             if (hasValue()) {
-                std::cout << "value: " << obj->value.value() << "\n";
+                std::cout << "value: " << value_to_string(obj->value.value()) << "\n";
             }
         }
 
@@ -1510,22 +1718,20 @@ namespace rcp {
             , obj(std::make_shared<Value>())
         {}
 
-        //
-        void dumpChildren(int indent);
 
-
+        template<typename> friend class Parameter;
         friend class ParameterManager;
         friend class ParameterServer;
         friend class ParameterFactory;
 
         void addChild(ParameterPtr child);
-        void removeChild(ParameterPtr child);
-
-        std::map<short, ParameterPtr >& children() {
-            return obj->children;
-        }
+        std::map<short, ParameterPtr >& children() const;
+        void dumpChildren(int indent) const;
 
     private:
+        void removeChild(ParameterPtr child);
+        void addChildInternal(ParameterPtr child);
+
 
         class Value {
         public:
@@ -1549,12 +1755,14 @@ namespace rcp {
     template <typename TD>
     void Parameter<TD>::update(const ParameterPtr& other)
     {
-        if (other.get() == this) {
-            //c'mon, it's me!
+        if (other.get() == this)
+        {
+            // c'mon, it's me!
             return;
         }
 
-        if (other->getId() != getId()) {
+        if (other->getId() != getId())
+        {
             std::cerr << "trying to update from parameter with wrong id: " << getId() << " != " << other->getId() << "\n";
             return;
         }
@@ -1563,173 +1771,252 @@ namespace rcp {
 
         if (other->hasLabel())
         {
-            auto label = other->getLabel();
-
             // copy other language labels
-            // NOTE: no check if langauge already exists or language label actually changed
             auto o_lang = other->getLabelLanguages();
             if (!o_lang.empty())
             {
                 for (std::string& l : o_lang)
                 {
-                    setLanguageLabel(l, other->getLanguageLabel(l));
+                    if (obj->setLanguageLabel(l, other->getLanguageLabel(l)))
+                    {
+                        updated = true;
+                    }
                 }
-                obj->labelChanged = true;
-                updated = true;
             }
 
             // default label
-            if (obj->label != label)
+            if (obj->setLabel(other->getLabel()))
             {
-                obj->hasLabel = true;
-                obj->label = label;
-                obj->labelChanged = true;
                 updated = true;
             }
         }
 
-        if (other->hasDescription()) {
-            auto description = other->getDescription();
-
+        if (other->hasDescription())
+        {
             // copy other language descriptions
-            // NOTE: no check if langauge already exists or language descriptions actually changed
             auto o_lang = other->getDescriptionLanguages();
             if (!o_lang.empty())
             {
                 for (std::string& l : o_lang)
                 {
-                    setDescriptionLanguage(l, other->getDescriptionLanguage(l));
+                    if (obj->setLanguageDescription(l, other->getDescriptionLanguage(l)))
+                    {
+                        updated = true;
+                    }
                 }
-                obj->descriptionChanged = true;
-                updated = true;
             }
 
             // default description
-            if (obj->description != description)
+            if (obj->setDescription(other->getDescription()))
             {
-                obj->description = description;
-                obj->hasDescription = true;
-                obj->descriptionChanged = true;
                 updated = true;
             }
         }
 
-        if (other->hasTags()) {
-            obj->tags = other->getTags();
-            updated = obj->tags.changed();
+        if (other->hasTags())
+        {
+            if (obj->setTags(other->getTags()))
+            {
+                updated = true;
+            }
         }
 
-        if (other->hasOrder()) {
-            obj->order = other->getOrder();
-            updated = obj->order.changed();
+        if (other->hasOrder())
+        {
+            if (obj->setOrder(other->getOrder()))
+            {
+                updated = true;
+            }
         }
 
-        if (other->hasParent()) {
-            std::shared_ptr<GroupParameter> p = other->getParent().lock();
-            // TODO: avoid setting paramter dirty when adding a child
-            p->addChild(shared_from_this());
-            updated = obj->parentChanged;
+        if (other->hasParent())
+        {
+            // TODO: handle pending parent correctly...
+
+
+            auto parent = other->getParent().lock();
+            auto old_value = obj->parent.lock();
+
+            if (parent)
+            {
+                if ((old_value && parent->getId() != old_value->getId())
+                    || !old_value)
+                {
+                    // don't mark dirty
+                    parent->addChildInternal(shared_from_this());
+                    updated = true;
+                }
+            }
         }
 
-        if (other->hasUserdata()) {
-            obj->userdata = other->getUserdata();
-            obj->userdataChanged = true;
-            updated = obj->userdataChanged;
+        if (other->hasUserdata())
+        {
+            if (obj->setUserData(other->getUserdata()))
+            {
+                updated = true;
+            }
         }
 
-        if (other->hasUserid()) {
-            obj->userid = other->getUserid();
-            updated = obj->userid.changed();
+        if (other->hasUserid())
+        {
+            if (obj->setUserid(other->getUserid()))
+            {
+                updated = true;
+            }
         }
 
-        if (other->hasReadonly()) {
-            obj->readonly = other->getReadonly();
-            updated = obj->readonly.changed();
+        if (other->hasReadonly())
+        {
+            if (obj->setReadonly(other->getReadonly()))
+            {
+                updated = true;
+            }
         }
 
-        if (updated) {
+        if (updated)
+        {
             obj->callUpdatedCb();
         }
     }
 
+    template <typename TD>
+    void Parameter<TD>::dump() {
+
+        std::cout << "parameter id: " << getId() << "\n";
+        if (auto manager = obj->parameterManager.lock())
+        {
+            std::cout << "dirty: " << manager->isParameterDirty(shared_from_this()) << "\n";
+        }
+        else
+        {
+            std::cout << "no manager\n";
+        }
+
+        //
+        getTypeDefinition().dump();
+
+        //
+        if (hasLabel())
+        {
+            std::cout << "label: " << getLabel() << "\n";
+        }
+        auto langs = getLabelLanguages();
+        if (langs.size() < 0)
+        {
+            for (auto& code : langs)
+            {
+                std::cout << "label " << code << ": " << getLanguageLabel(code) << "\n";
+            }
+        }
+
+        if (hasDescription())
+        {
+            std::cout << "description: " << getDescription() << "\n";
+        }
+        auto descs = getDescriptionLanguages();
+        if (descs.size() < 0)
+        {
+            for (auto& code : descs)
+            {
+                std::cout << "description " << code << ": " << getDescriptionLanguage(code) << "\n";
+            }
+        }
+
+        if (hasTags())
+        {
+            std::cout << "Tags: " << getTags() << "\n";
+        }
+
+        if (hasOrder())
+        {
+            std::cout << "order: " << getOrder() << "\n";
+        }
+
+        if (hasParent())
+        {
+            if (auto p = obj->parent.lock())
+            {
+                std::cout << "parent id: " << p->getId() << "\n";
+            }
+            else
+            {
+                std::cout << "parent id: -\n";
+            }
+        }
+
+        if (hasUserdata())
+        {
+            std::cout << "has userdata\n";
+        }
+
+        if (hasUserid())
+        {
+            std::cout << "userid: " << getUserid() << "\n";
+        }
+
+        if (hasReadonly())
+        {
+            std::cout << "readonly: " << getReadonly() << "\n";
+        }
+    }
 
     template <typename TD>
-    std::weak_ptr<GroupParameter>& Parameter<TD>::getParent() const {
+    std::weak_ptr<GroupParameter>& Parameter<TD>::getParent() const
+    {
         return obj->parent;
     }
 
     template <typename TD>
-    void Parameter<TD>::setParent(GroupParameterPtr parent)
+    void Parameter<TD>::removeFromParent()
     {
-        if (auto p = obj->parent.lock())
+        // move to root-group
+        if (auto manager = obj->parameterManager.lock())
         {
-            if (parent->getId() == p->getId())
+            GroupParameterPtr root_group = std::dynamic_pointer_cast<GroupParameter>(manager->getRootGroup());
+            if (root_group)
+            {
+                root_group->addChild(shared_from_this());
+            }
+        }
+    }
+
+    template <typename TD>
+    bool Parameter<TD>::setParentInternal(GroupParameterPtr parent)
+    {
+        auto old_value = obj->parent.lock();
+
+        if (old_value)
+        {
+            if (parent->getId() == old_value->getId())
             {
                 // parent already set
-                return;
+                return false;
             }
 
             // remove from parent...
-            p->removeChild(shared_from_this());
+            old_value->removeChild(shared_from_this());
         }
 
         m_waitForParent = false;
 
         obj->parent = parent;
         obj->parentChanged = true;
-        setDirty();
+
+        // call listener
+        for (auto listener : obj->m_parameterListener)
+        {
+            listener->onParentChanged(parent->getId(), old_value ? old_value->getId() : 0);
+        }
+
+        return true;
     }
 
-
-
     template <typename TD>
-    void Parameter<TD>::dump() {
-
-        std::cout << "parameter id: " << getId() << "\n";
-        getTypeDefinition().dump();
-
-        if (hasLabel()) {
-            std::cout << "label: " << getLabel() << "\n";
-        }
-        auto langs = getLabelLanguages();
-        if (langs.size() < 0) {
-            for (auto& code : langs) {
-                std::cout << "label " << code << ": " << getLanguageLabel(code) << "\n";
-            }
-        }
-
-        if (hasDescription()) {
-            std::cout << "description: " << getDescription() << "\n";
-        }
-        auto descs = getDescriptionLanguages();
-        if (descs.size() < 0) {
-            for (auto& code : descs) {
-                std::cout << "description " << code << ": " << getDescriptionLanguage(code) << "\n";
-            }
-        }
-
-        if (hasTags()) {
-            std::cout << "Tags: " << getTags() << "\n";
-        }
-
-        if (hasOrder()) {
-            std::cout << "order: " << getOrder() << "\n";
-        }
-
-        if (hasParent()) {
-            if (auto p = obj->parent.lock()) {
-                std::cout << "parent id: " << p->getId() << "\n";
-            } else {
-                std::cout << "parent id: -\n";
-            }
-        }
-
-        if (hasUserdata()) {
-            std::cout << "has userdata\n";
-        }
-
-        if (hasUserid()) {
-            std::cout << "userid: " << getUserid() << "\n";
+    void Parameter<TD>::setParent(GroupParameterPtr parent)
+    {
+        if (setParentInternal(parent))
+        {
+            setDirty();
         }
     }
 
@@ -1808,6 +2095,7 @@ namespace rcp {
     typedef ValueParameter<bool, BooleanTypeDefinition, DATATYPE_BOOLEAN > BooleanParameter;
     typedef std::shared_ptr<BooleanParameter> BooleanParameterPtr;
 
+    // number parameter
     typedef ValueParameter<int8_t, Int8TypeDefinition, DATATYPE_INT8 > Int8Parameter;
     typedef ValueParameter<uint8_t, UInt8TypeDefinition, DATATYPE_UINT8 > UInt8Parameter;
     typedef std::shared_ptr<Int8Parameter> Int8ParameterPtr;
@@ -1834,25 +2122,56 @@ namespace rcp {
     typedef ValueParameter<double, Float64TypeDefinition, DATATYPE_FLOAT64 > Float64Parameter;
     typedef std::shared_ptr<Float64Parameter> Float64ParameterPtr;
 
+
+    // vector parameter
+    // vector 2
+    typedef ValueParameter<Vector2<int>, Vector2I32TypeDefinition, DATATYPE_VECTOR2I32 > Vector2I32Parameter;
+    typedef std::shared_ptr<Vector2I32Parameter> Vector2I32ParameterPtr;
+
+    typedef ValueParameter<Vector2<float>, Vector2F32TypeDefinition, DATATYPE_VECTOR2F32 > Vector2F32Parameter;
+    typedef std::shared_ptr<Vector2F32Parameter> Vector2F32ParameterPtr;
+
+    // vector 3
+    typedef ValueParameter<Vector3<int>, Vector3I32TypeDefinition, DATATYPE_VECTOR3I32 > Vector3I32Parameter;
+    typedef std::shared_ptr<Vector3I32Parameter> Vector3I32ParameterPtr;
+
+    typedef ValueParameter<Vector3<float>, Vector3F32TypeDefinition, DATATYPE_VECTOR3F32 > Vector3F32Parameter;
+    typedef std::shared_ptr<Vector3F32Parameter> Vector3F32ParameterPtr;
+
+    // vector 4
+    typedef ValueParameter<Vector4<int>, Vector4I32TypeDefinition, DATATYPE_VECTOR4I32 > Vector4I32Parameter;
+    typedef std::shared_ptr<Vector4I32Parameter> Vector4I32ParameterPtr;
+
+    typedef ValueParameter<Vector4<float>, Vector4F32TypeDefinition, DATATYPE_VECTOR4F32 > Vector4F32Parameter;
+    typedef std::shared_ptr<Vector4F32Parameter> Vector4F32ParameterPtr;
+
+
+
     typedef ValueParameter<std::string, StringTypeDefinition, DATATYPE_STRING > StringParameter;
     typedef std::shared_ptr<StringParameter> StringParameterPtr;
 
     typedef ValueParameter<TinyString, EnumTypeDefinition, DATATYPE_ENUM > EnumParameter;
     typedef std::shared_ptr<EnumParameter> EnumParameterPtr;
 
+    // color parameter
     typedef ValueParameter<Color, RGBTypeDefinition, DATATYPE_RGB > RGBParameter;
-    typedef ValueParameter<Color, RGBATypeDefinition, DATATYPE_RGBA > RGBAParameter;
     typedef std::shared_ptr<RGBParameter> RGBParameterPtr;
+
+    typedef ValueParameter<Color, RGBATypeDefinition, DATATYPE_RGBA > RGBAParameter;
     typedef std::shared_ptr<RGBAParameter> RGBAParameterPtr;
 
+    // uri parameter
     typedef ValueParameter<std::string, UriTypeDefinition, DATATYPE_URI > URIParameter;
     typedef std::shared_ptr<URIParameter> URIParameterPtr;
 
+    // ip parameter
     typedef ValueParameter<IPv4, IPv4TypeDefinition, DATATYPE_IPV4 > IPv4Parameter;
-    typedef ValueParameter<IPv6, IPv6TypeDefinition, DATATYPE_IPV6 > IPv6Parameter;
     typedef std::shared_ptr<IPv4Parameter> IPv4ParameterPtr;
+
+    typedef ValueParameter<IPv6, IPv6TypeDefinition, DATATYPE_IPV6 > IPv6Parameter;
     typedef std::shared_ptr<IPv6Parameter> IPv6ParameterPtr;
 
+    // non-value parameter
     typedef std::shared_ptr<BangParameter> BangParameterPtr;
 
     typedef Parameter<InvalidTypeDefinition> InvalidParameter;

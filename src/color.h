@@ -38,6 +38,11 @@ namespace rcp {
             return *this;
         }
 
+        Color& operator=(Color& other) {
+            value = other.getValue();
+            return *this;
+        }
+
         bool operator==(const Color& other) {
             return value == other.getValue();
         }
@@ -50,10 +55,12 @@ namespace rcp {
         uint32_t value{0};
     };
 
-    Color& swap_endian(const Color& u);
+    Color& swap_endian(Color& u);
     Color readFromStream(std::istream& is, const Color& i);
 
     std::ostream& operator<<(std::ostream& out, const Color& v);
+
+    std::string value_to_string(Color value);
 }
 
 #endif

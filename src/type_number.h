@@ -24,14 +24,35 @@
 #include "typedefinition.h"
 #include "iparameter.h"
 #include "stream_tools.h"
+#include "vector2.h"
+#include "vector3.h"
+#include "vector4.h"
 
 namespace rcp {
+
+    template<typename T,
+             typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+    T type_min(T) { return std::numeric_limits<T>::min(); }
+
+    template<typename T,
+             typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+    T type_max(T) { return std::numeric_limits<T>::max(); }
+
+    template<typename T,
+             typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+    T type_zero(T) { return 0; }
+
+    template<typename T>
+    std::string value_to_string(T value) { return std::to_string(value); }
+
+
 
     template<
         typename T,
         datatype_t type_id
     >
-    class TypeDefinition<T, type_id, td_num > : public INumberDefinition<T>
+    class TypeDefinition<T, type_id, td_num >
+        : public INumberDefinition<T>
     {
     public:
         TypeDefinition(TypeDefinition<T, type_id, td_num >& v) :
@@ -91,19 +112,19 @@ namespace rcp {
             std::cout << "--- type number ---\n";
 
             if (hasDefault()) {
-                std::cout << "\tdefault: " << (int)getDefault() << "\n";
+                std::cout << "\tdefault: " << value_to_string(getDefault()) << "\n";
             }
 
             if (hasMinimum()) {
-                std::cout << "\tminimum: " << (int)getMinimum() << "\n";
+                std::cout << "\tminimum: " << value_to_string(getMinimum()) << "\n";
             }
 
             if (hasMaximum()) {
-                std::cout << "\tmaximum: " << (int)getMaximum() << "\n";
+                std::cout << "\tmaximum: " << value_to_string(getMaximum()) << "\n";
             }
 
             if (hasMultipleof()) {
-                std::cout << "\tmultipleof: " << (int)getMultipleof() << "\n";
+                std::cout << "\tmultipleof: " << value_to_string(getMultipleof()) << "\n";
             }
 
             if (hasScale()) {
@@ -201,7 +222,7 @@ namespace rcp {
             {
                 return obj->defaultValue.value();
             }
-            return 0;
+            return type_zero(obj->defaultValue.value());
         }
         void setDefault(const T& defaultValue) override
         {
@@ -235,7 +256,7 @@ namespace rcp {
             {
                 return obj->minimum.value();
             }
-            return 0;
+            return type_zero(obj->minimum.value());
         }
         void setMinimum(const T& val) override
         {
@@ -266,7 +287,7 @@ namespace rcp {
             {
                 return obj->maximum.value();
             }
-            return 0;
+            return type_zero(obj->maximum.value());
         }
         void setMaximum(const T& val) override
         {
@@ -297,7 +318,7 @@ namespace rcp {
             {
                 return obj->multipleof.value();
             }
-            return 0;
+            return type_zero(obj->multipleof.value());
         }
         void setMultipleof(const T& val) override
         {
@@ -436,7 +457,7 @@ namespace rcp {
                     }
                 } else if (defaultValue.changed()) {
                     out.write(static_cast<char>(NUMBER_OPTIONS_DEFAULT));
-                    out.write(static_cast<T>(0));
+                    out.write(type_zero(defaultValue.value()));
                     defaultValue.setUnchanged();
                 }
 
@@ -455,7 +476,7 @@ namespace rcp {
                 } else if (minimum.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MINIMUM));
-                    out.write(std::numeric_limits<T>::min());
+                    out.write(type_min(minimum.value()));
                     minimum.setUnchanged();
                 }
 
@@ -474,7 +495,7 @@ namespace rcp {
                 } else if (maximum.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MAXIMUM));
-                    out.write(std::numeric_limits<T>::max());
+                    out.write(type_max(maximum.value()));
                     maximum.setUnchanged();
                 }
 
@@ -493,7 +514,7 @@ namespace rcp {
                 } else if (multipleof.changed()) {
 
                     out.write(static_cast<char>(NUMBER_OPTIONS_MULTIPLEOF));
-                    out.write(static_cast<T>(0));
+                    out.write(static_cast<T>(type_zero(multipleof.value())));
                     multipleof.setUnchanged();
                 }
 
@@ -567,6 +588,14 @@ namespace rcp {
     typedef TypeDefinition<uint64_t, DATATYPE_UINT64, td_num > UInt64TypeDefinition;
     typedef TypeDefinition<float, DATATYPE_FLOAT32, td_num > Float32TypeDefinition;
     typedef TypeDefinition<double, DATATYPE_FLOAT64, td_num > Float64TypeDefinition;
+
+    // vector
+    typedef TypeDefinition<Vector2<int>, DATATYPE_VECTOR2I32, td_num > Vector2I32TypeDefinition;
+    typedef TypeDefinition<Vector2<float>, DATATYPE_VECTOR2F32, td_num > Vector2F32TypeDefinition;
+    typedef TypeDefinition<Vector3<int>, DATATYPE_VECTOR3I32, td_num > Vector3I32TypeDefinition;
+    typedef TypeDefinition<Vector3<float>, DATATYPE_VECTOR3F32, td_num > Vector3F32TypeDefinition;
+    typedef TypeDefinition<Vector4<int>, DATATYPE_VECTOR4I32, td_num > Vector4I32TypeDefinition;
+    typedef TypeDefinition<Vector4<float>, DATATYPE_VECTOR4F32, td_num > Vector4F32TypeDefinition;
 }
 
 #endif // NUMBERTYPE_H

@@ -16,7 +16,6 @@
 */
 
 #include "parametermanager.h"
-#include "stringstreamwriter.h"
 
 namespace rcp {
 
@@ -33,12 +32,16 @@ namespace rcp {
         removeParameter(parameter->getId());
     }
 
-    void ParameterManager::removeParameter(short id) {
-
-        if (id == 0) return;
+    void ParameterManager::removeParameter(short id)
+    {
+        if (id == 0)
+        {
+            return;
+        }
 
         auto it = params.find(id);
-        if (it == params.end()) {
+        if (it == params.end())
+        {
             return;
         }
 
@@ -248,7 +251,7 @@ namespace rcp {
 
 
 
-    ParameterPtr ParameterManager::getParameter(int16_t id)
+    ParameterPtr ParameterManager::getParameter(int16_t id) const
     {
         auto it = params.find(id);
 
@@ -311,18 +314,18 @@ namespace rcp {
         ids.insert(parameter->getId());
 
         // avoid parameter getting dirty when setting parent
-        parameter->setManager(nullptr);
+//        parameter->setManager(nullptr);
 
         // parsed parameters are proxy parameter until they are in params-map
         // proxy parameter are not set as children...
-        // so: add parameter to its parent
+        // so: add parameter as child to its parent
         if (auto parent = parameter->getParent().lock())
         {
-            parent->addChild(parameter);
+            parent->addChildInternal(parameter);
         }
         else if (!parameter->waitForParent())
         {
-            m_rootGroup->addChild(parameter);
+            m_rootGroup->addChildInternal(parameter);
         }
 
         // add parameter to map
@@ -340,12 +343,12 @@ namespace rcp {
                 for (ParameterPtr& child : missing_it->second)
                 {
                     // avoid child getting dirty when setting parent
-                    child->setManager(nullptr);
+//                    child->setManager(nullptr);
 
-                    group_parameter->addChild(child);
+                    group_parameter->addChildInternal(child);
                     child->setParentUnchanged();
 
-                    child->setManager(shared_from_this());
+//                    child->setManager(shared_from_this());
                 }
 
                 missingParents.erase(missing_it);
@@ -353,7 +356,7 @@ namespace rcp {
         }
 
         // set manager again
-        parameter->setManager(shared_from_this());
+//        parameter->setManager(shared_from_this());
     }
 
     void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
@@ -385,6 +388,7 @@ namespace rcp {
         parameter->setDirty();
 
         // add to group
+        // mark as dirty?
         if (group != nullptr)
         {
             group->addChild(parameter);
@@ -400,6 +404,12 @@ namespace rcp {
 
     void ParameterManager::setParameterDirty(ParameterPtr parameter)
 	{
+        if (parameter->getId() == 0)
+        {
+            // root is never dirty
+            return;
+        }
+
 #ifndef RCP_MANAGER_NO_LOCKING
 		// protect lists to be used from multiple threads
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -413,6 +423,16 @@ namespace rcp {
         }
 
         dirtyParameter[parameter->getId()] = parameter;
+    }
+
+    bool ParameterManager::isParameterDirty(ParameterPtr parameter)
+    {
+#ifndef RCP_MANAGER_NO_LOCKING
+        // protect lists to be used from multiple threads
+        std::lock_guard<std::mutex> lock(m_mutex);
+#endif
+
+        return dirtyParameter.find(parameter->getId()) != dirtyParameter.end();
     }
 
     void ParameterManager::setParameterRemoved(ParameterPtr parameter)
@@ -461,4 +481,21 @@ namespace rcp {
 #endif
 	}
 
-}
+
+    GroupParameterPtr ParameterManager::rootGroup() const
+    {
+        return m_rootGroup;
+    }
+
+    ParameterPtr ParameterManager::getRootGroup() const
+    {
+        return m_rootGroup;
+    }
+
+    void ParameterManager::dumpHierarchy() const
+    {
+        m_rootGroup->dumpChildren(0);
+        std::flush(std::cout);
+    }
+
+} // namespace rcp

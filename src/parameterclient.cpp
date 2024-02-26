@@ -55,9 +55,10 @@ namespace rcp {
     }
 
     // sending all dirty parameter to server!
-    void ParameterClient::update() {
-
-        if (!m_transporter.isConnected()) {
+    void ParameterClient::update()
+    {
+        if (!m_transporter.isConnected())
+        {
             return;
         }
 		
@@ -110,11 +111,12 @@ namespace rcp {
     void ParameterClient::received(std::istream& data)
     {
         auto packet = rcp::Packet::parse(data, m_parameterManager);
-        if (packet.hasValue()) {
 
+        if (packet.hasValue())
+        {
             rcp::Packet& the_packet = packet.value();
-            switch (the_packet.getCommand()) {
-
+            switch (the_packet.getCommand())
+            {
             case COMMAND_INITIALIZE:
                 // error
                 std::cerr << "invalid command 'initialize' on client\n";
@@ -147,7 +149,14 @@ namespace rcp {
         else
         {
             // parsing error??
-            for (const auto& kv : parsing_error_cb) {
+
+            for (auto listener : m_listener)
+            {
+                listener->parsingError();
+            }
+
+            for (const auto& kv : parsing_error_cb)
+            {
                 (kv.first->*kv.second)();
             }
         }
@@ -199,9 +208,12 @@ namespace rcp {
 
     // private functions
     // receiving dirty parameter from server!
-    void ParameterClient::_update(rcp::Packet& packet) {
+    void ParameterClient::_update(rcp::Packet& packet)
+    {
+        std::cout << "client _update\n";
 
-        if (!packet.hasData()) {
+        if (!packet.hasData())
+        {
             std::cerr << "_update: packet has no data\n";
             return;
         }
@@ -214,12 +226,18 @@ namespace rcp {
 
             if (chached_param)
             {
+                std::cout << "cached parameter: " << param->getId() << "\n";
+
                 // got it... update it
                 chached_param->update(param);
 
-            } else {
+            }
+            else
+            {
+                std::cout << "add parameter: " << param->getId() << "\n";
 
                 // parameter not in cache, add it
+                // this sets the parent
                 m_parameterManager->_addParameter(param);
 
                 // NOTE: parameters might not have a parent by now,
@@ -234,9 +252,11 @@ namespace rcp {
                     listener->parameterAdded(param);
                 }
             }
-            return;
 
-        } else {
+            return;
+        }
+        else
+        {
             std::cerr << "data not a parameter\n";
         }
 
@@ -253,13 +273,13 @@ namespace rcp {
         IdDataPtr id_data = std::dynamic_pointer_cast<IdData>(packet.getData());
         if (id_data) {
 
-            std::cout << "remove param: " << id_data->getId() << "\n";
+//            std::cout << "remove param: " << id_data->getId() << "\n";
 
             rcp::ParameterPtr cached_param = m_parameterManager->getParameter(id_data->getId());
             if (cached_param)
             {
                 // parameter is in list, remove it
-                std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
+//                std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
 
                 // call parameter removed callbacks
                 for (ParameterClientListener* listener : m_listener)

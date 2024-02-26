@@ -48,6 +48,8 @@ namespace rcp {
         uint32_t m_ip{0};
     };
 
+    std::string value_to_string(IPv4 value);
+
 
 
     class IPv6 {
@@ -91,6 +93,8 @@ namespace rcp {
     private:
         uint32_t m_ip[4]{0, 0, 0, 0};
     };
+
+    std::string value_to_string(IPv6 value);
 
 
     std::ostream& operator<<(std::ostream& out, const IPv4& v);

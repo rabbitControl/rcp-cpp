@@ -21,14 +21,14 @@
 #include <vector>
 
 #include "parameter_intern.h"
-#include "type_range.h"
+#include "range.h"
 
 namespace rcp {
 
     template <typename ElementType>
-    class RangeParameter :
-            public ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE>
-            , public IElementParameter
+    class RangeParameter
+        : public ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE>
+        , public IElementParameter
     {
     public:
 

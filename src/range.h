@@ -18,6 +18,8 @@
 #ifndef RCP_RANGE_H
 #define RCP_RANGE_H
 
+#include <limits>
+#include <string>
 #include <type_traits>
 
 namespace rcp {
@@ -77,6 +79,9 @@ namespace rcp {
         T m_value1{0};
         T m_value2{0};
     };
+
+    template<typename T>
+    std::string value_to_string(Range<T> value) { return std::to_string(value.value1()) + "," + std::to_string(value.value2()); }
 
 }
 

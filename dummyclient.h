@@ -45,34 +45,57 @@ class DummyClientTransporter : public rcp::ClientTransporter
 public:
     ~DummyClientTransporter() {}
 
-    virtual void connect(std::string host, int port) {
-        std::cout << "connect: " << host << ":" << port << "\n";
+    virtual void connect(std::string host, int port, bool secure = false) override
+    {
+        std::cout << "connect: " << host << ":" << port << " : " << secure << "\n";
         m_isConnected = true;
 
-        for (const auto& kv : connected_cb) {
+        for (const auto& kv : connected_cb)
+        {
             (kv.first->*kv.second)();
         }
         std::cout << "--------\n";
     }
 
-    virtual void disconnect() {
+    virtual void disconnect() override
+    {
         std::cout << "disconnected\n";
 
-        for (const auto& kv : disconnected_cb) {
+        for (const auto& kv : disconnected_cb)
+        {
             (kv.first->*kv.second)();
         }
         std::cout << "--------\n";
     }
 
-    virtual bool isConnected() { return m_isConnected; }
+    virtual bool isConnected() override
+    {
+        return m_isConnected;
+    }
 
-    virtual void send(char* data) {
-        std::cout << "send: " << data << "\n";
+    virtual void send(std::istream& /*data*/) override
+    {
+        std::cout << "send stream:\n";
+    }
+
+    virtual void send(char* data, size_t size) override
+    {
+        std::cout << "send: " << data << " : " << size << "\n";
     }
 
     //
-    void receive(const std::string& data) {
-        for (const auto& kv : receive_cb) {
+    void receive(std::istream& data)
+    {
+        for (const auto& kv : receive_cb)
+        {
+            (kv.first->*kv.second)(data);
+        }
+    }
+
+    void receive(const std::string& data)
+    {
+        for (const auto& kv : receive_cb)
+        {
             std::stringstream s;
             s.str(data);
             (kv.first->*kv.second)(s);
@@ -80,15 +103,15 @@ public:
         std::cout << "--------\n";
     }
 
-    void testcallall(const std::string& data) {
+    void testcallall(const std::string& data)
+    {
         connect("host", 123);
         disconnect();
         receive(data);
     }
 
 private:
-    bool m_isConnected;
-
+    bool m_isConnected{true};
 };
 
 

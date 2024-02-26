@@ -92,13 +92,22 @@ namespace rcp {
 
         case DATATYPE_RANGE:
             //return RangeParameter::create(parameter_id);
+            break;
 
         case DATATYPE_VECTOR2I32:
+            return Vector2I32Parameter::create(parameter_id);
         case DATATYPE_VECTOR2F32:
+            return Vector2F32Parameter::create(parameter_id);
+
         case DATATYPE_VECTOR3I32:
+            return Vector3I32Parameter::create(parameter_id);
         case DATATYPE_VECTOR3F32:
+            return Vector3F32Parameter::create(parameter_id);
+
         case DATATYPE_VECTOR4I32:
+            return Vector4I32Parameter::create(parameter_id);
         case DATATYPE_VECTOR4F32:
+            return Vector4F32Parameter::create(parameter_id);
 
         case DATATYPE_CUSTOMTYPE:
 
@@ -178,14 +187,22 @@ namespace rcp {
 //            datatype_t element_type_id = static_cast<datatype_t>(is.get());
 //            return createRangeParameterReadValue(parameter_id, element_type_id, is);
 //         }
+            return nullptr;
 
         case DATATYPE_VECTOR2I32:
+            return readValue(Vector2I32Parameter::create(parameter_id), is);
         case DATATYPE_VECTOR2F32:
+            return readValue(Vector2F32Parameter::create(parameter_id), is);
+
         case DATATYPE_VECTOR3I32:
+            return readValue(Vector3I32Parameter::create(parameter_id), is);
         case DATATYPE_VECTOR3F32:
+            return readValue(Vector3F32Parameter::create(parameter_id), is);
+
         case DATATYPE_VECTOR4I32:
+            return readValue(Vector4I32Parameter::create(parameter_id), is);
         case DATATYPE_VECTOR4F32:
-            return nullptr;
+            return readValue(Vector4F32Parameter::create(parameter_id), is);
 
         case DATATYPE_CUSTOMTYPE:
             return nullptr;

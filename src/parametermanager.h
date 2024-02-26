@@ -75,25 +75,21 @@ public:
     GroupParameterPtr createGroupParameter(const std::string& label, GroupParameterPtr group = nullptr);
 
 
-    GroupParameterPtr rootGroup() const {
-        return m_rootGroup;
-    }
-
-    void dumpHierarchy() const {
-        m_rootGroup->dumpChildren(0);
-        std::flush(std::cout);
-    }
+    GroupParameterPtr rootGroup() const;
+    void dumpHierarchy() const;
 
     friend class ParameterServer;
     friend class ParameterClient;
 	
 public:
 	// IParameterManager
-	ParameterPtr getParameter(int16_t id) override;
+	ParameterPtr getParameter(int16_t id) const override;
+    ParameterPtr getRootGroup() const override;
 
 private:
 	// IParameterManager
 	void setParameterDirty(ParameterPtr parameter) override;
+    bool isParameterDirty(ParameterPtr parameter) override;
 	void setParameterRemoved(ParameterPtr parameter) override;
     void addMissingParent(int16_t parentId, ParameterPtr child) override;
 	

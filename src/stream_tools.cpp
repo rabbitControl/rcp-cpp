@@ -58,4 +58,15 @@ namespace rcp {
         return readStringFromStream(is, size);
     }
 
+
+    // to string
+    std::string value_to_string(std::string value)
+    {
+        return value;
+    }
+
+    std::string value_to_string(TinyString value)
+    {
+        return value;
+    }
 }

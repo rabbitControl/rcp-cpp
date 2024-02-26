@@ -43,6 +43,7 @@
 #include "color.h"
 #include "ip.h"
 #include "range.h"
+#include "tinystring.h"
 
 
 #define CHECK_STREAM if (is.eof()) { /* std::cerr << "could not read from stream\n";*/ break;}
@@ -141,6 +142,9 @@ namespace rcp {
         out << v.value2();
         return out;
     }
+
+    std::string value_to_string(std::string value);
+    std::string value_to_string(TinyString value);
 
 } // namespace rcp
 

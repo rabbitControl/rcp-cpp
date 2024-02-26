@@ -43,7 +43,7 @@ namespace rcp {
         return u;
     }
 
-    IPv4 readFromStream(std::istream& is, const IPv4& i) {
+    IPv4 readFromStream(std::istream& is, const IPv4& /*i*/) {
 
         uint32_t value;
         is.read(reinterpret_cast<char *>(&value), sizeof(uint32_t));
@@ -55,7 +55,7 @@ namespace rcp {
         return IPv4(value);
     }
 
-    IPv6 readFromStream(std::istream& is, const IPv6& i) {
+    IPv6 readFromStream(std::istream& is, const IPv6& /*i*/) {
 
         uint32_t val1;
         uint32_t val2;
@@ -76,4 +76,17 @@ namespace rcp {
         return IPv6(val1, val2, val3, val4);
     }
 
+
+    std::string value_to_string(IPv4 value)
+    {
+        return std::to_string(value.getAddress());
+    }
+
+    std::string value_to_string(IPv6 value)
+    {
+        return std::to_string(value.getAddress(0)) + ", " +
+               std::to_string(value.getAddress(1)) + ", " +
+               std::to_string(value.getAddress(2)) + ", " +
+               std::to_string(value.getAddress(3)) + ", ";
+    }
 }

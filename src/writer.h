@@ -24,6 +24,9 @@
 #include "range.h"
 #include "ip.h"
 #include "tinystring.h"
+#include "vector2.h"
+#include "vector3.h"
+#include "vector4.h"
 
 namespace rcp {
 
@@ -53,6 +56,27 @@ namespace rcp {
         void write(const Range<T>& c) {
             write(c.value1());
             write(c.value2());
+        }
+
+        template<typename T>
+        void write(const Vector2<T>& c) {
+            write(c.x());
+            write(c.y());
+        }
+
+        template<typename T>
+        void write(const Vector3<T>& c) {
+            write(c.x());
+            write(c.y());
+            write(c.z());
+        }
+
+        template<typename T>
+        void write(const Vector4<T>& c) {
+            write(c.x());
+            write(c.y());
+            write(c.z());
+            write(c.w());
         }
 
         void write(const TinyString& s) {

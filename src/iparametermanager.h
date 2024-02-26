@@ -31,10 +31,12 @@ namespace rcp {
         friend class ParameterClient;
 
     public:
-        virtual ParameterPtr getParameter(int16_t id) = 0;
+        virtual ParameterPtr getParameter(int16_t id) const = 0;
+        virtual ParameterPtr getRootGroup() const = 0;
 
     private:
         virtual void setParameterDirty(ParameterPtr parameter) = 0;
+        virtual bool isParameterDirty(ParameterPtr parameter) = 0;
         virtual void setParameterRemoved(ParameterPtr parameter) = 0;
         virtual void addMissingParent(int16_t parentId, ParameterPtr child) = 0;
     };

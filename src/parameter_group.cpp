@@ -21,28 +21,62 @@ namespace rcp {
 
     void GroupParameter::addChild(ParameterPtr child)
     {
+        // set parent in child
+        // this remove it from the old parameter
+        child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
+
+        // add child to list of children
         std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
-        if (it == obj->children.end()) {
+        if (it == obj->children.end())
+        {
             obj->children[child->getId()] = child;
         }
+        else
+        {
+            // child already in list
+        }
+    }
 
+    void GroupParameter::addChildInternal(ParameterPtr child)
+    {
         // set parent in child
-        child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
+        // this remove it from the old parameter
+        child->setParentInternal(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
+
+        // add child to list of children
+        std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
+        if (it == obj->children.end())
+        {
+            obj->children[child->getId()] = child;
+        }
+        else
+        {
+            // child already in list
+        }
     }
 
     void GroupParameter::removeChild(ParameterPtr child)
     {
         auto it = obj->children.find(child->getId());
-        if (it != obj->children.end()) {
-            // found! - remove
-            child->clearParent();
-            obj->children.erase(child->getId());
+
+        if (it != obj->children.end())
+        {
+            // remove child
+            it->second->clearParentInternal();
+            obj->children.erase(it);
         }
     }
 
-    void GroupParameter::dumpChildren(int indent) {
+    std::map<short, ParameterPtr >& GroupParameter::children() const
+    {
+        return obj->children;
+    }
+
+    void GroupParameter::dumpChildren(int indent) const
+    {
         std::string in = "";
-        for (int i=0; i<indent; i++) {
+        for (int i=0; i<indent; i++)
+        {
             in += "  ";
         }
 
@@ -50,13 +84,17 @@ namespace rcp {
 
         in += "  ";
 
-        for (auto& child : obj->children) {
-
-            if (child.second->getTypeDefinition().getDatatype() == DATATYPE_GROUP) {
+        for (auto& child : obj->children)
+        {
+            if (child.second->getTypeDefinition().getDatatype() == DATATYPE_GROUP)
+            {
                 GroupParameter* group = (GroupParameter*)child.second.get();
                 group->dumpChildren(indent+1);
-            } else {
+            }
+            else
+            {
                 std::cout << in << child.second->getLabel() << " (" << child.second->getId() << ")\n";
+                child.second->dump();
             }
         }
     }

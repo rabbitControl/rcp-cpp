@@ -37,6 +37,7 @@
 #include <istream>
 #include <strstream>
 
+#include "src/parameterclient.h"
 #include "src/rcp.h"
 
 #include "dummyserver.h"
@@ -96,6 +97,157 @@ void testHierarchy() {
     std::cout << "\n\n";
 }
 
+
+class ParameterUpdateListener : public rcp::ParameterListener
+{
+public:
+    void onParentChanged(const int16_t parentId, const int16_t oldParentId)
+    {
+        std::cout << "---- parent changed: " << oldParentId << " -> " << parentId << "\n";
+    }
+};
+
+
+class ClientListener : public rcp::ParameterClientListener
+{
+public:
+    void serverInfoReceived(const std::string& applicationId, const std::string& version) override
+    {
+        std::cout << "server: " << applicationId << " - version: " << version << "\n";
+    }
+
+    void parameterAdded(ParameterPtr parameter) override
+    {
+        std::cout << "parameter added: " << parameter->getLabel() << " : isgroup: " << (parameter->getDatatype() == DATATYPE_GROUP) << "\n";
+
+        switch (parameter->getDatatype())
+        {
+        case DATATYPE_BOOLEAN:
+        {
+            parameter->addUpdateListener(&listener);
+            m_bool = std::dynamic_pointer_cast<BooleanParameter>(parameter);
+
+//            auto param = static_cast<rcp::BooleanParameter*>(parameter.get());
+            //                std::cout << "flip bool value: " << param->getValue() << "\n";
+            //                param->setValue(!param->getValue());
+
+            if (m_group)
+            {
+                m_group->addChild(parameter);
+            }
+
+            break;
+        }
+        case DATATYPE_GROUP:
+            if (parameter->getId() == 0x03)
+            {
+                m_group = std::dynamic_pointer_cast<GroupParameter>(parameter);
+            }
+
+            break;
+
+        default:
+            std::cout << "not handled datatype: " << parameter->getDatatype() << "\n";
+            break;
+        }
+    }
+
+    void parameterRemoved(ParameterPtr parameter) override
+    {
+        std::cout << "parameter removed: " << parameter->getId() << "\n";
+    }
+
+    void parsingError() override
+    {
+        std::cout << "parsing error\n";
+    }
+
+    BooleanParameterPtr m_bool;
+    GroupParameterPtr m_group;
+
+    ParameterUpdateListener listener;
+};
+
+
+void testClientParents()
+{
+    DummyClientTransporter transporter;
+    ParameterClient client(transporter);
+
+    ClientListener listener;
+    client.addListener(&listener);
+
+
+    GroupParameterPtr group = GroupParameter::create(0x07);
+    group->setLabel("test");
+
+    GroupParameterPtr group1 = GroupParameter::create(0x03);
+    group1->setLabel("group1");
+
+    StringStreamWriter writer;
+
+    Packet packet(COMMAND_UPDATE);
+
+    // add a group
+    packet.setData(group);
+    packet.write(writer, true);
+    transporter.receive(writer.getBuffer());
+
+    // add another group
+    packet.setData(group1);
+    packet.write(writer, true);
+    transporter.receive(writer.getBuffer());
+
+    // add a child
+    std::cout << "\nadd client\n";
+    std::cout << "----------------------------\n";
+    std::vector<char> data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x21, 0x61, 0x6e, 0x79, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x00, 0x25, 0x00, 0x07, 0x00, 0x00};
+    std::istrstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+    transporter.receive(stream);
+    client.dump();
+
+
+    std::cout << "\nupdate client\n";
+    std::cout << "----------------------------\n";
+    client.update();
+    client.dump();
+
+//    if (listener.m_group && listener.m_bool)
+//    {
+//        listener.m_group->addChild(listener.m_bool);
+//    }
+
+//    std::cout << "----------------------------\n";
+//    client.dump();
+
+    // update bool value
+//    data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x20, 0x01, 0x00, 0x00};
+//    stream = std::istrstream(reinterpret_cast<const char*>(data.data()), data.size());
+//    transporter.receive(stream);
+
+//    std::cout << "----------------------------\n";
+//    client.dump();
+
+
+    // move bool to root group
+//    data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x25, 0x00, 0x00, 0x00, 0x00};
+//    stream = std::istrstream(reinterpret_cast<const char*>(data.data()), data.size());
+//    transporter.receive(stream);
+
+    if (listener.m_bool)
+    {
+        std::cout << "\nrmove from parent\n";
+        std::cout << "----------------------------\n";
+
+        // sets dirty
+        listener.m_bool->removeFromParent();
+        client.dump();
+    }
+    else
+    {
+        std::cout << "no bool parameter\n";
+    }
+}
 
 void testUpdatedCb() {
 
@@ -628,41 +780,142 @@ void testFloatParam()
 }
 
 
-
-//-------------------------------
-//-------------------------------
-int main(int argc, char const *argv[])
+void testVector2f()
 {
-    std::vector<char> data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x21, 0x61, 0x6e, 0x79, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x00, 0x25, 0x00, 0x07, 0x00, 0x00};
-    parseData(data);
+    Vector2F32ParameterPtr param = Vector2F32Parameter::create(1);
+
+    param->getDefaultTypeDefinition().setMinimum(Vector2f(-1, -1));
+    param->getDefaultTypeDefinition().setMaximum(Vector2f(100, 200));
+    param->getDefaultTypeDefinition().setDefault(Vector2f(10, 10));
+    param->getDefaultTypeDefinition().setMultipleof(Vector2f(0.5, 0.5));
+    param->getDefaultTypeDefinition().setUnit("%");
+    param->getDefaultTypeDefinition().setScale(NUMBER_SCALE_LINEAR);
+
+    param->setValue(Vector2f(10, 11));
+
+
+    Packet packet(COMMAND_UPDATE);
+    packet.setData(param);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    writer.dump();
+
+    _parseStream(writer.getBuffer());
+}
+
+void testVector2i()
+{
+    Vector2I32ParameterPtr param = Vector2I32Parameter::create(1);
+
+    param->getDefaultTypeDefinition().setMinimum(Vector2i(-1, -1));
+    param->getDefaultTypeDefinition().setMaximum(Vector2i(100, 200));
+    param->getDefaultTypeDefinition().setDefault(Vector2i(10, 10));
+    param->getDefaultTypeDefinition().setMultipleof(Vector2i(2, 2));
+    param->setValue(Vector2i(10, 11));
+
+
+    Packet packet(COMMAND_UPDATE);
+    packet.setData(param);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    writer.dump();
+
+    _parseStream(writer.getBuffer());
+}
+
+
+void testVector3f()
+{
+    Vector3F32ParameterPtr param = Vector3F32Parameter::create(1);
+
+    param->getDefaultTypeDefinition().setMinimum(Vector3f(-1, -1, -1));
+    param->getDefaultTypeDefinition().setMaximum(Vector3f(100, 200, 120));
+    param->getDefaultTypeDefinition().setDefault(Vector3f(10, 10, 12));
+    param->getDefaultTypeDefinition().setMultipleof(Vector3f(0.5, 0.5, 0.5));
+    param->setValue(Vector3f(10, 11, 12));
+
+
+    Packet packet(COMMAND_UPDATE);
+    packet.setData(param);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    writer.dump();
+
+    _parseStream(writer.getBuffer());
+}
+
+void testVector4f()
+{
+    Vector4F32ParameterPtr param = Vector4F32Parameter::create(1);
+
+    param->getDefaultTypeDefinition().setMinimum(Vector4f(-1, -1, -1, -1));
+    param->getDefaultTypeDefinition().setMaximum(Vector4f(100, 200, 120, 110));
+    param->getDefaultTypeDefinition().setDefault(Vector4f(10, 10, 12, 11));
+    param->getDefaultTypeDefinition().setMultipleof(Vector4f(0.5, 0.5, 0.5, 0.5));
+    param->setValue(Vector4f(10, 11, 12, 13));
+
+
+    Packet packet(COMMAND_UPDATE);
+    packet.setData(param);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    writer.dump();
+
+    _parseStream(writer.getBuffer());
+}
+
+
+//-------------------------------
+//-------------------------------
+int main(int /*argc*/, char const */*argv*/[])
+{
+    testVector2f();
+    testVector2i();
+    testVector3f();
+    testVector4f();
     return 0;
 
-//    testFloatParam();
-    parseData("../RCP/example_data/packet_update_float32.rcp");
+//    std::vector<char> data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x21, 0x61, 0x6e, 0x79, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x00, 0x25, 0x00, 0x07, 0x00, 0x00};
+//    parseData(data);
+//    return 0;
+
+////    testFloatParam();
+//    parseData("../RCP/example_data/packet_update_float32.rcp");
+//    return 0;
+
+//    parseData("../RCP/example_data/packet_update_bool.rcp");
+////    testBoolParam();
+//    return 0;
+
+//    testEnumParam();
+//    return 0;
+
+//    parseData("../RCP/example_data/packet_updatevalue_s8.rcp");
+//    parseData("../RCP/example_data/packet_updatevalue_s32.rcp");
+//    parseData("../RCP/example_data/packet_updatevalue_string.rcp");
+//    return 0;
+
+
+//    parseData("../RCP/example_data/packet_remove.rcp");
+//    testRemovePacket();
+//    return 0;
+
+//    parseData("../RCP/example_data/packet_bool_no_user.rcp");
+//    return  0;
+
+
+    testClientParents();
+//    testHierarchy();
     return 0;
 
-    parseData("../RCP/example_data/packet_update_bool.rcp");
-//    testBoolParam();
-    return 0;
-
-    testEnumParam();
-    return 0;
-
-    parseData("../RCP/example_data/packet_updatevalue_s8.rcp");
-    parseData("../RCP/example_data/packet_updatevalue_s32.rcp");
-    parseData("../RCP/example_data/packet_updatevalue_string.rcp");
-    return 0;
-
-
-    parseData("../RCP/example_data/packet_remove.rcp");
-    testRemovePacket();
-    return 0;
-
-    parseData("../RCP/example_data/packet_bool_no_user.rcp");
-    return  0;
-
-
-    testHierarchy();
     testTransporter();
 
     testUpdatedCb();

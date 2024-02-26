@@ -46,7 +46,8 @@
 namespace rcp {
 
     template <typename ElementType>
-    class TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num> : public IDefaultDefinition<Range<ElementType>>
+    class TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>
+        : public IDefaultDefinition<Range<ElementType>>
     {
     public:
         template <

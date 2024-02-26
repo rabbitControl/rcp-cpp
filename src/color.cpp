@@ -41,4 +41,9 @@ namespace rcp {
         out << v.getValue();
         return out;
     }
+
+    std::string value_to_string(Color value)
+    {
+        return std::to_string(value.getValue());
+    }
 }

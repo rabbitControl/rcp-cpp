@@ -80,8 +80,20 @@ namespace rcp {
         T m_value2{0};
     };
 
+
+
+    template <typename T>
+    std::ostream& operator<<(std::ostream& out, const Range<T>& v) {
+        out << v.value1();
+        out << v.value2();
+        return out;
+    }
+
     template<typename T>
-    std::string value_to_string(Range<T> value) { return std::to_string(value.value1()) + "," + std::to_string(value.value2()); }
+    std::string value_to_string(Range<T> value)
+    {
+        return std::to_string(value.value1()) + "," + std::to_string(value.value2());
+    }
 
 }
 

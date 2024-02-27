@@ -136,13 +136,7 @@ namespace rcp {
     std::string readShortString(std::istream& is);
     std::string readLongString(std::istream& is);
 
-    template <typename T>
-    std::ostream& operator<<(std::ostream& out, const Range<T>& v) {
-        out << v.value1();
-        out << v.value2();
-        return out;
-    }
-
+    //
     std::string value_to_string(std::string value);
     std::string value_to_string(TinyString value);
 

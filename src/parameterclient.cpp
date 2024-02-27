@@ -119,7 +119,7 @@ void ParameterClient::received(std::istream& data)
         {
         case COMMAND_INITIALIZE:
             // error
-            std::cerr << "invalid command 'initialize' on client\n";
+//            std::cerr << "invalid command 'initialize' on client\n";
             break;
 
         case COMMAND_UPDATE:
@@ -133,7 +133,7 @@ void ParameterClient::received(std::istream& data)
 
         case COMMAND_DISCOVER:
             // not implemented
-            std::cerr << "invalid command 'discover' on client\n";
+//            std::cerr << "invalid command 'discover' on client\n";
             break;
 
         case COMMAND_REMOVE:
@@ -142,7 +142,7 @@ void ParameterClient::received(std::istream& data)
 
         case COMMAND_INVALID:
         case COMMAND_MAX_:
-            std::cerr << "got invalid command!\n";
+//            std::cerr << "got invalid command!\n";
             break;
         }
     }
@@ -195,7 +195,9 @@ void ParameterClient::_version(Packet& packet) {
                 m_initializeSent = true;
             }
         }
-    } else {
+    }
+    else
+    {
         // no data, respond with version
         WriteablePtr version = InfoData::create(RCP_SPECIFICATION_VERSION, m_applicationId);
         Packet resp_packet(COMMAND_INFO, version);
@@ -207,14 +209,12 @@ void ParameterClient::_version(Packet& packet) {
 
 
 // private functions
-// receiving dirty parameter from server!
+// receiving dirty parameter from server
 void ParameterClient::_update(rcp::Packet& packet)
 {
-    std::cout << "client _update\n";
-
     if (!packet.hasData())
     {
-        std::cerr << "_update: packet has no data\n";
+//        std::cerr << "_update: packet has no data\n";
         return;
     }
 
@@ -226,16 +226,12 @@ void ParameterClient::_update(rcp::Packet& packet)
 
         if (chached_param)
         {
-            std::cout << "cached parameter: " << param->getId() << "\n";
-
             // got it... update it
             chached_param->update(param);
 
         }
         else
         {
-            std::cout << "add parameter: " << param->getId() << "\n";
-
             // parameter not in cache, add it
             // this sets the parent
             m_parameterManager->_addParameter(param);
@@ -257,29 +253,29 @@ void ParameterClient::_update(rcp::Packet& packet)
     }
     else
     {
-        std::cerr << "data not a parameter\n";
+//        std::cerr << "data not a parameter\n";
     }
 
 }
 
-void ParameterClient::_remove(Packet& packet) {
-
-    if (!packet.hasData()) {
-        std::cerr << "_remove: packet has no data\n";
+void ParameterClient::_remove(Packet& packet)
+{
+    if (!packet.hasData())
+    {
         return;
     }
 
     // assume this is id-data (rcp > 0.0.0)
     IdDataPtr id_data = std::dynamic_pointer_cast<IdData>(packet.getData());
-    if (id_data) {
-
-        //            std::cout << "remove param: " << id_data->getId() << "\n";
+    if (id_data)
+    {
+//        std::cout << "remove param: " << id_data->getId() << "\n";
 
         rcp::ParameterPtr cached_param = m_parameterManager->getParameter(id_data->getId());
         if (cached_param)
         {
             // parameter is in list, remove it
-            //                std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
+//            std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
 
             // call parameter removed callbacks
             for (ParameterClientListener* listener : m_listener)
@@ -289,14 +285,15 @@ void ParameterClient::_remove(Packet& packet) {
 
             // remove it (direct)
             m_parameterManager->removeParameterDirect(cached_param);
-
-        } else {
-            std::cout << "parameter not in list!: " << id_data->getId() << "\n";
         }
-        return;
-
-    } else {
-        std::cerr << "data not a parameter\n";
+        else
+        {
+//            std::cout << "parameter not in list!: " << id_data->getId() << "\n";
+        }
+    }
+    else
+    {
+//        std::cerr << "data not a parameter\n";
     }
 }
 

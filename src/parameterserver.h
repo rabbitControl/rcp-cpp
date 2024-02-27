@@ -28,7 +28,16 @@ namespace rcp {
 
 class Packet;
 
-class ParameterServer : public ServerTransporterReceiver
+
+class ParameterServerListener
+{
+public:
+    virtual void clientInfoReceived(const std::string& /*applicationId*/, const std::string& /*version*/) {};
+};
+
+
+class ParameterServer
+    : public ServerTransporterReceiver
 {
 public:
     ParameterServer();
@@ -42,6 +51,10 @@ public:
     bool addTransporter(ServerTransporter& transporter);
     bool removeTransporter(ServerTransporter& transporter);
     int getConnectionCount();
+
+    // listener
+    void addListener(ParameterServerListener* listener);
+    void removeListener(ParameterServerListener* listener);
 
     virtual bool update();
 
@@ -181,6 +194,8 @@ private:
     //    Events:
     std::map<ParsingErrorListener*, void(ParsingErrorListener::*)()> parsing_error_cb;
     //    onError(Exception ex);
+
+    std::vector<ParameterServerListener*> m_listener;
 };
 
 }

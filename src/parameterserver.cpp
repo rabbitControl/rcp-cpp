@@ -37,16 +37,19 @@ ParameterServer::ParameterServer(ServerTransporter& transporter)
     addTransporter(transporter);
 }
 
-ParameterServer::~ParameterServer() {
+ParameterServer::~ParameterServer()
+{
     dispose();
 }
 
-void ParameterServer::dispose() {
+void ParameterServer::dispose()
+{
     // TODO
     clear();
 }
 
-void ParameterServer::clear() {
+void ParameterServer::clear()
+{
     m_parameterManager->clear();
 }
 
@@ -69,9 +72,11 @@ void ParameterServer::received(std::istream& data, ServerTransporter& transporte
 
         case COMMAND_UPDATEVALUE:
         case COMMAND_UPDATE:
-            if (_update(the_packet, transporter, id)) {
+            if (_update(the_packet, transporter, id))
+            {
                 // send data to all clients
-                for (auto& transporter : transporterList) {
+                for (auto& transporter : transporterList)
+                {
                     transporter.get().sendToAll(data, id);
                 }
             }
@@ -97,16 +102,19 @@ void ParameterServer::received(std::istream& data, ServerTransporter& transporte
     }
     else
     {
-        for (const auto& kv : parsing_error_cb) {
+        for (const auto& kv : parsing_error_cb)
+        {
             (kv.first->*kv.second)();
         }
     }
 }
 
-bool ParameterServer::addTransporter(ServerTransporter& transporter) {
-
-    for(auto it = transporterList.begin(); it != transporterList.end(); it++ )    {
-        if (&transporter == &(*it).get()) {
+bool ParameterServer::addTransporter(ServerTransporter& transporter)
+{
+    for(auto it = transporterList.begin(); it != transporterList.end(); it++ )
+    {
+        if (&transporter == &(*it).get())
+        {
             // allready contained
             return false;
         }
@@ -122,8 +130,10 @@ bool ParameterServer::addTransporter(ServerTransporter& transporter) {
 
 bool ParameterServer::removeTransporter(ServerTransporter& transporter) {
 
-    for(auto it = transporterList.begin(); it != transporterList.end(); it++ )    {
-        if (&transporter == &(*it).get()) {
+    for(auto it = transporterList.begin(); it != transporterList.end(); it++ )
+    {
+        if (&transporter == &(*it).get())
+        {
             // contained
             it->get().removeReceivedCb(this);
             transporterList.erase(it);
@@ -134,11 +144,12 @@ bool ParameterServer::removeTransporter(ServerTransporter& transporter) {
     return false;
 }
 
-int ParameterServer::getConnectionCount() {
-
+int ParameterServer::getConnectionCount()
+{
     int count = 0;
 
-    for (const auto& t : transporterList) {
+    for (const auto& t : transporterList)
+    {
         count += t.get().getConnectionCount();
     }
 
@@ -146,9 +157,31 @@ int ParameterServer::getConnectionCount() {
 }
 
 
-bool ParameterServer::update() {
+// listener
+void ParameterServer::addListener(ParameterServerListener* listener)
+{
+    if (std::find(m_listener.begin(), m_listener.end(), listener) == m_listener.end())
+    {
+        // not found - add it to list
+        m_listener.push_back(listener);
+    }
+}
 
-    if (transporterList.size() == 0) {
+void ParameterServer::removeListener(ParameterServerListener* listener)
+{
+    auto it = std::find(m_listener.begin(), m_listener.end(), listener);
+    if (it != m_listener.end())
+    {
+        // rmove listener
+        m_listener.erase(it);
+    }
+}
+
+
+bool ParameterServer::update()
+{
+    if (transporterList.empty())
+    {
         return false;
     }
 
@@ -165,8 +198,8 @@ bool ParameterServer::update() {
     m_parameterManager->removedParameter.clear();
 
     // send updates
-    for (auto& p : m_parameterManager->dirtyParameter) {
-
+    for (auto& p : m_parameterManager->dirtyParameter)
+    {
         // TODO send COMMAND_UPDATEVALUE
         command_t cmd = COMMAND_UPDATE;
 
@@ -186,19 +219,28 @@ bool ParameterServer::update() {
     return false;
 }
 
-void ParameterServer::sendPacket(Packet& packet, void *id) {
+void ParameterServer::sendPacket(Packet& packet, void *id)
+{
+    if (transporterList.empty())
+    {
+        return;
+    }
 
     // serialize
     StringStreamWriter writer;
     packet.write(writer, false);
 
-    for (auto& transporterW : transporterList) {
+    for (auto& transporterW : transporterList)
+    {
         transporterW.get().sendToAll(writer.getBuffer(), id);
     }
 }
 
 
-void ParameterServer::_sendParameterFull(ParameterPtr& parameter, ServerTransporter& transporter, void *id) {
+void ParameterServer::_sendParameterFull(ParameterPtr& parameter,
+                                         ServerTransporter& transporter,
+                                         void *id)
+{
 
     Packet packet(COMMAND_UPDATE);
     packet.setData(parameter);
@@ -209,11 +251,13 @@ void ParameterServer::_sendParameterFull(ParameterPtr& parameter, ServerTranspor
 
     transporter.sendToOne(aWriter.getBuffer(), id);
 
-    if (parameter->getTypeDefinition().getDatatype() == DATATYPE_GROUP) {
-
+    if (parameter->getTypeDefinition().getDatatype() == DATATYPE_GROUP)
+    {
         std::shared_ptr<GroupParameter> group_param = std::dynamic_pointer_cast<GroupParameter>(parameter);
-        if (group_param) {
-            for (auto& child : group_param->children()) {
+        if (group_param)
+        {
+            for (auto& child : group_param->children())
+            {
                 _sendParameterFull(child.second, transporter, id);
             }
         }
@@ -221,16 +265,18 @@ void ParameterServer::_sendParameterFull(ParameterPtr& parameter, ServerTranspor
 }
 
 
-void ParameterServer::_init(ServerTransporter& transporter, void *id) {
-
-    for (auto& child : m_parameterManager->rootGroup()->children()) {
+void ParameterServer::_init(ServerTransporter& transporter, void *id)
+{
+    for (auto& child : m_parameterManager->rootGroup()->children())
+    {
         _sendParameterFull(child.second, transporter, id);
     }
 }
 
-bool ParameterServer::_update(Packet& packet, ServerTransporter& transporter, void *id) {
-
-    if (!packet.hasData()) {
+bool ParameterServer::_update(Packet& packet, ServerTransporter& transporter, void *id)
+{
+    if (!packet.hasData())
+    {
         std::cerr << "_update: packet has no data\n";
         return false;
     }
@@ -255,24 +301,32 @@ bool ParameterServer::_update(Packet& packet, ServerTransporter& transporter, vo
 
         return true;
 
-    } else {
-        std::cerr << "data not a parameter\n";
+    }
+    else
+    {
+//        std::cerr << "data not a parameter\n";
     }
 
     return false;
 }
 
-void ParameterServer::_version(Packet& packet, ServerTransporter& transporter, void *id) {
-
+void ParameterServer::_version(Packet& packet, ServerTransporter& transporter, void *id)
+{
     // got client
-    if (packet.hasData()) {
+    if (packet.hasData())
+    {
         // log info data
         InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
-        if (info_data) {
-            std::cout << "version: " << info_data->getVersion() << std::endl;
-            std::cout << "applicationid: " << info_data->getApplicationId() << std::endl;
+        if (info_data)
+        {
+            for (auto listener : m_listener)
+            {
+                listener->clientInfoReceived(info_data->getApplicationId(), info_data->getVersion());
+            }
         }
-    } else {
+    }
+    else
+    {
         // no data, respond with version
         WriteablePtr version = InfoData::create(RCP_SPECIFICATION_VERSION, m_applicationId);
         Packet resp_packet(COMMAND_INFO, version);
@@ -285,9 +339,7 @@ void ParameterServer::_version(Packet& packet, ServerTransporter& transporter, v
         Packet req_info_packet(COMMAND_INFO);
         req_info_packet.write(writer1, false);
         transporter.sendToOne(writer1.getBuffer(), id);
-
     }
-
 }
 
 }

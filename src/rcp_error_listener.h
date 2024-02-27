@@ -20,11 +20,11 @@
 
 namespace rcp {
 
-    class ParsingErrorListener
-    {
-    public:
-        virtual void parsingError() = 0;
-    };
+class ParsingErrorListener
+{
+public:
+    virtual void parsingError() = 0;
+};
 
 }
 

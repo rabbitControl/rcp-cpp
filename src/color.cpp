@@ -20,30 +20,33 @@
 
 namespace rcp {
 
-    Color& swap_endian(Color& u) {
-        u.setValue(swap_endian(u.getValue()));
-        return u;
-    }
+Color& swap_endian(Color& u)
+{
+    u.setValue(swap_endian(u.getValue()));
+    return u;
+}
 
-    Color readFromStream(std::istream& is, const Color& i) {
+Color readFromStream(std::istream& is, const Color& /*i*/)
+{
+    uint32_t value;
+    is.read(reinterpret_cast<char *>(&value), sizeof(uint32_t));
 
-        uint32_t value;
-        is.read(reinterpret_cast<char *>(&value), sizeof(uint32_t));
+#if BYTE_ORDER == LITTLE_ENDIAN
+    value = swap_endian(value);
+#endif
 
-    #if BYTE_ORDER == LITTLE_ENDIAN
-        value = swap_endian(value);
-    #endif
+    return Color(value);
+}
 
-        return Color(value);
-    }
+std::ostream& operator<<(std::ostream& out, const Color& v)
+{
+    out << v.getValue();
+    return out;
+}
 
-    std::ostream& operator<<(std::ostream& out, const Color& v) {
-        out << v.getValue();
-        return out;
-    }
+std::string value_to_string(Color value)
+{
+    return std::to_string(value.getValue());
+}
 
-    std::string value_to_string(Color value)
-    {
-        return std::to_string(value.getValue());
-    }
 }

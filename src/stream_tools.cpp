@@ -19,54 +19,60 @@
 
 namespace rcp {
 
-    //---------------------------------------------------
-    // swap string
-    std::string& swap_endian(std::string &u) {
-        return u;
-    }
+//---------------------------------------------------
+// swap string
+std::string& swap_endian(std::string &u)
+{
+    return u;
+}
 
-    //---------------------------------------------------
-    // read from stream
-    bool readFromStream(std::istream& is, bool const& i) {
-        bool value;
-        is.read(reinterpret_cast<char*>(&value), sizeof(bool));
-        return value;
-    }
+//---------------------------------------------------
+// read from stream
+bool readFromStream(std::istream& is, bool const& /*i*/)
+{
+    bool value;
+    is.read(reinterpret_cast<char*>(&value), sizeof(bool));
+    return value;
+}
 
-    std::string readFromStream(std::istream& is, std::string const& i)
-    {
-        return i;
-    }
+std::string readFromStream(std::istream& /*is*/, std::string const& i)
+{
+    return i;
+}
 
-    //---------------------------------------------------
-    // read strings from stream
-    std::string readTinyString(std::istream& is) {
+//---------------------------------------------------
+// read strings from stream
+std::string readTinyString(std::istream& is)
+{
 
-        char size = 0;
-        return readStringFromStream(is, size);
-    }
+    char size = 0;
+    return readStringFromStream(is, size);
+}
 
-    std::string readShortString(std::istream& is) {
+std::string readShortString(std::istream& is)
+{
 
-        uint16_t size = 0;
-        return readStringFromStream(is, size);
-    }
+    uint16_t size = 0;
+    return readStringFromStream(is, size);
+}
 
-    std::string readLongString(std::istream& is) {
+std::string readLongString(std::istream& is)
+{
 
-        uint32_t size = 0;
-        return readStringFromStream(is, size);
-    }
+    uint32_t size = 0;
+    return readStringFromStream(is, size);
+}
 
 
-    // to string
-    std::string value_to_string(std::string value)
-    {
-        return value;
-    }
+// to string
+std::string value_to_string(std::string value)
+{
+    return value;
+}
 
-    std::string value_to_string(TinyString value)
-    {
-        return value;
-    }
+std::string value_to_string(TinyString value)
+{
+    return value;
+}
+
 }

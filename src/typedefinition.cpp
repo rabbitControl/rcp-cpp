@@ -24,16 +24,16 @@
 
 namespace rcp {
 
-    template<typename T,
-             datatype_t type_id,
-             td_types t
-    >
-    std::ostream& operator<<(std::ostream& out, rcp::TypeDefinition<T, type_id, t>& type)
-    {
-        StreamWriter w(out);
-        type.write(w);
-        return out;
-    }
+template<typename T,
+         datatype_t type_id,
+         td_types t
+         >
+std::ostream& operator<<(std::ostream& out, rcp::TypeDefinition<T, type_id, t>& type)
+{
+    StreamWriter w(out);
+    type.write(w);
+    return out;
+}
 
 
 }

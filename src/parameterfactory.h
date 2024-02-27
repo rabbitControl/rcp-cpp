@@ -27,27 +27,27 @@
 
 namespace rcp {
 
-    class ParameterFactory
-    {
-    public:
-        template<typename T>
-        static ParameterPtr readValue(const T& p, std::istream& is) {
-            p->setValue(p->getDefaultTypeDefinition().readValue(is));
-            return p;
-        }
+class ParameterFactory
+{
+public:
+    template<typename T>
+    static ParameterPtr readValue(const T& p, std::istream& is) {
+        p->setValue(p->getDefaultTypeDefinition().readValue(is));
+        return p;
+    }
 
-        static ParameterPtr createParameter(int16_t parameter_id, datatype_t type_id);
-        static ParameterPtr createParameterReadValue(int16_t parameter_id, datatype_t type_id, std::istream& is);
+    static ParameterPtr createParameter(int16_t parameter_id, datatype_t type_id);
+    static ParameterPtr createParameterReadValue(int16_t parameter_id, datatype_t type_id, std::istream& is);
 
 
-        template<typename T>
-        static ParameterPtr createRangeParameter(int16_t id, T /*type*/) {
-            return std::make_shared<RangeParameter<T> >(id);
-        }
+    template<typename T>
+    static ParameterPtr createRangeParameter(int16_t id, T /*type*/) {
+        return std::make_shared<RangeParameter<T> >(id);
+    }
 
-        static ParameterPtr createRangeParameter(int16_t parameter_id, datatype_t type_id);
-        static ParameterPtr createRangeParameterReadValue(int16_t parameter_id, datatype_t type_id, std::istream& is);
-    };
+    static ParameterPtr createRangeParameter(int16_t parameter_id, datatype_t type_id);
+    static ParameterPtr createRangeParameterReadValue(int16_t parameter_id, datatype_t type_id, std::istream& is);
+};
 
 }
 

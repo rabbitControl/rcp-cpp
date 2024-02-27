@@ -25,63 +25,63 @@
 
 namespace rcp {
 
-    template <typename ElementType>
-    class RangeParameter
-        : public ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE>
-        , public IElementParameter
-    {
-    public:
+template <typename ElementType>
+class RangeParameter
+    : public ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE>
+    , public IElementParameter
+{
+public:
 
-        typedef TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num> _RangeType;
-        typedef ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE> _RangeParameter;
+    typedef TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num> _RangeType;
+    typedef ValueParameter<Range<ElementType>, TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>, DATATYPE_RANGE> _RangeParameter;
 
-        static std::shared_ptr< _RangeParameter > create(int16_t id) {
-            return std::make_shared<RangeParameter<ElementType> >(id);
-        }
+    static std::shared_ptr< _RangeParameter > create(int16_t id) {
+        return std::make_shared<RangeParameter<ElementType> >(id);
+    }
 
-        RangeParameter(int16_t id) :
-            _RangeParameter(id)
-        {}
+    RangeParameter(int16_t id) :
+        _RangeParameter(id)
+    {}
 
-        ~RangeParameter()
-        {}
+    ~RangeParameter()
+    {}
 
-        // IElementParameter
-        virtual datatype_t getElementType() {
-            return _RangeParameter::getDefaultTypeDefinition().getElementType().getDatatype();
-        }
+    // IElementParameter
+    virtual datatype_t getElementType() {
+        return _RangeParameter::getDefaultTypeDefinition().getElementType().getDatatype();
+    }
 
-        // convenience
-        void setDefault(const Range<ElementType>& v) {
-            _RangeParameter::getDefaultTypeDefinition().setDefault(v);
-        }
-        void setElementDefault(const ElementType& v) {
-            _RangeParameter::getDefaultTypeDefinition().getElementType().setDefault(v);
-        }
-        void setMinimum(const ElementType& v) {
-            _RangeParameter::getDefaultTypeDefinition().setMinimum(v);
-        }
-        void setMaximum(const ElementType& v) {
-            _RangeParameter::getDefaultTypeDefinition().setMaximum(v);
-        }
-        void setMultipleof(const ElementType& v) {
-            _RangeParameter::getDefaultTypeDefinition().setMultipleof(v);
-        }
-        void setScale(const number_scale_t& v) {
-            _RangeParameter::getDefaultTypeDefinition().setScale(v);
-        }
-        void setUnit(const std::string& v) {
-            _RangeParameter::getDefaultTypeDefinition().setUnit(v);
-        }
+    // convenience
+    void setDefault(const Range<ElementType>& v) {
+        _RangeParameter::getDefaultTypeDefinition().setDefault(v);
+    }
+    void setElementDefault(const ElementType& v) {
+        _RangeParameter::getDefaultTypeDefinition().getElementType().setDefault(v);
+    }
+    void setMinimum(const ElementType& v) {
+        _RangeParameter::getDefaultTypeDefinition().setMinimum(v);
+    }
+    void setMaximum(const ElementType& v) {
+        _RangeParameter::getDefaultTypeDefinition().setMaximum(v);
+    }
+    void setMultipleof(const ElementType& v) {
+        _RangeParameter::getDefaultTypeDefinition().setMultipleof(v);
+    }
+    void setScale(const number_scale_t& v) {
+        _RangeParameter::getDefaultTypeDefinition().setScale(v);
+    }
+    void setUnit(const std::string& v) {
+        _RangeParameter::getDefaultTypeDefinition().setUnit(v);
+    }
 
-        virtual void dump() {
-            Parameter<_RangeType>::dump();
+    virtual void dump() {
+        Parameter<_RangeType>::dump();
 
-            if (_RangeParameter::hasValue()) {
-                Range<ElementType> r = _RangeParameter::getValue();
-            }
+        if (_RangeParameter::hasValue()) {
+            Range<ElementType> r = _RangeParameter::getValue();
         }
-    };
+    }
+};
 }
 
 #endif

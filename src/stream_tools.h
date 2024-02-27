@@ -55,90 +55,90 @@
 
 namespace rcp {
 
-    template <typename T>
-    T swap_endian(const T& u)
-    {
+template <typename T>
+T swap_endian(const T& u)
+{
 #ifdef CHAR_BIT
-        static_assert (CHAR_BIT == 8, "CHAR_BIT != 8");
+    static_assert (CHAR_BIT == 8, "CHAR_BIT != 8");
 #endif
 
-        union
-        {
-            T u;
-            unsigned char u8[sizeof(T)];
-        } source, dest;
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
 
-        source.u = u;
+    source.u = u;
 
-        for (size_t k = 0; k < sizeof(T); k++) {
-            dest.u8[k] = source.u8[sizeof(T) - k - 1];
-        }
-
-        return dest.u;
+    for (size_t k = 0; k < sizeof(T); k++) {
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
     }
 
-    // TODO do this with templates...?    
-    std::string& swap_endian(const std::string &u);    
+    return dest.u;
+}
 
-    template <typename T>
-    Range<T>& swap_endian(Range<T>& u) {
-        u.setValue1(swap_endian(u.value1()));
-        u.setValue2(swap_endian(u.value2()));
-        return u;
-    }
+// TODO do this with templates...?
+std::string& swap_endian(const std::string &u);
+
+template <typename T>
+Range<T>& swap_endian(Range<T>& u) {
+    u.setValue1(swap_endian(u.value1()));
+    u.setValue2(swap_endian(u.value2()));
+    return u;
+}
 
 
 
-    //---------------------------------------------------
-    // read from stream
+//---------------------------------------------------
+// read from stream
 
-    template <
-        typename T,
-        typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr
+template <
+    typename T,
+    typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr
     >
-    T readFromStream(std::istream& is, const T& /*i*/) {
+T readFromStream(std::istream& is, const T& /*i*/) {
 
-        T value;
-        is.read(reinterpret_cast<char *>(&value), sizeof(T));
-
-#if BYTE_ORDER == LITTLE_ENDIAN
-        value = swap_endian(value);
-#endif
-
-        return value;
-    }
-
-
-    bool readFromStream(std::istream& is, bool const& i);
-    std::string readFromStream(std::istream& is, std::string const& i);
-
-
-    template <typename T,
-              typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, T>>
-    std::string readStringFromStream(std::istream& is, T /*s*/) {
-        T size;
-        is.read(reinterpret_cast<char *>(&size), sizeof(size));
+    T value;
+    is.read(reinterpret_cast<char *>(&value), sizeof(T));
 
 #if BYTE_ORDER == LITTLE_ENDIAN
-        size = swap_endian(size);
+    value = swap_endian(value);
 #endif
 
-        // read to buffer
-		std::vector<char> buffer( size );
-		is.read(buffer.data(), size);
-
-		return std::string(buffer.data(), size);
-    }
+    return value;
+}
 
 
-    // read strings from stream
-    std::string readTinyString(std::istream& is);
-    std::string readShortString(std::istream& is);
-    std::string readLongString(std::istream& is);
+bool readFromStream(std::istream& is, bool const& i);
+std::string readFromStream(std::istream& is, std::string const& i);
 
-    //
-    std::string value_to_string(std::string value);
-    std::string value_to_string(TinyString value);
+
+template <typename T,
+         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, T>>
+std::string readStringFromStream(std::istream& is, T /*s*/) {
+    T size;
+    is.read(reinterpret_cast<char *>(&size), sizeof(size));
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+    size = swap_endian(size);
+#endif
+
+    // read to buffer
+    std::vector<char> buffer( size );
+    is.read(buffer.data(), size);
+
+    return std::string(buffer.data(), size);
+}
+
+
+// read strings from stream
+std::string readTinyString(std::istream& is);
+std::string readShortString(std::istream& is);
+std::string readLongString(std::istream& is);
+
+//
+std::string value_to_string(std::string value);
+std::string value_to_string(TinyString value);
 
 } // namespace rcp
 

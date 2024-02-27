@@ -22,38 +22,46 @@
 
 namespace rcp {
 
-    template <typename T>
-    class CustomParameter :
-            public ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE>
+template <typename T>
+class CustomParameter
+    : public ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE>
+{
+
+public:
+    typedef TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom> _CustomType;
+    typedef ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE> _CustomParameter;
+
+public:
+    static ParameterPtr create(int16_t id)
     {
-    public:
-        typedef TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom> _CustomType;
-        typedef ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE> _CustomParameter;
+        return std::make_shared<CustomParameter<T> >(id);
+    }
 
-        static ParameterPtr create(int16_t id) {
-            return std::make_shared<CustomParameter<T> >(id);
-        }
+public:
+    CustomParameter(int16_t id)
+        : _CustomParameter(id)
+    {}
 
-        CustomParameter(int16_t id) :
-            _CustomParameter(id)
-        {}
+    ~CustomParameter()
+    {}
 
-        ~CustomParameter()
-        {}
+    // convenience
+    void setDefault(const T& v)
+    {
+        _CustomParameter::getDefaultTypeDefinition().setDefault(v);
+    }
 
-        // convenience
-        void setDefault(const T& v) {
-            _CustomParameter::getDefaultTypeDefinition().setDefault(v);
-        }
+    void setUuid(char* uuid, uint8_t length)
+    {
+        _CustomParameter::getDefaultTypeDefinition().setUuid(uuid, length);
+    }
 
-        void setUuid(char* uuid, uint8_t length) {
-            _CustomParameter::getDefaultTypeDefinition().setUuid(uuid, length);
-        }
+    void setConfig(const std::vector<int8_t>& config)
+    {
+        _CustomParameter::getDefaultTypeDefinition().setConfig(config);
+    }
+};
 
-        void setConfig(const std::vector<int8_t>& config) {
-            _CustomParameter::getDefaultTypeDefinition().setConfig(config);
-        }
-    };
 }
 
 #endif

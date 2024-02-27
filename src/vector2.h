@@ -27,7 +27,8 @@ namespace rcp {
 
 template <class T,
          typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
-class Vector2 {
+class Vector2
+{
 
 public:
     Vector2()

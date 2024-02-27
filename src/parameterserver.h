@@ -26,7 +26,8 @@
 
 namespace rcp {
 
-    class Packet;
+class Packet;
+
 class ParameterServer : public ServerTransporterReceiver
 {
 public:
@@ -167,8 +168,8 @@ public:
 
 protected:
     std::shared_ptr<ParameterManager> m_parameterManager;
-	std::vector<std::reference_wrapper<ServerTransporter> > transporterList;
-	
+    std::vector<std::reference_wrapper<ServerTransporter> > transporterList;
+
 private:
     void _init(ServerTransporter& transporter, void *id);
     bool _update(Packet& Packet, ServerTransporter& transporter, void *id);
@@ -177,9 +178,9 @@ private:
     void sendPacket(Packet& packet, void *id=nullptr);
 
     std::string m_applicationId;
-//    Events:
+    //    Events:
     std::map<ParsingErrorListener*, void(ParsingErrorListener::*)()> parsing_error_cb;
-//    onError(Exception ex);
+    //    onError(Exception ex);
 };
 
 }

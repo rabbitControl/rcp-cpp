@@ -23,44 +23,52 @@
 
 namespace rcp {
 
-    class Color
-    {
-    public:
-        Color() {}
-        Color(uint32_t c) : value(c) {}
+class Color
+{
+public:
+    Color()
+    {}
 
-        uint32_t getValue() { return value; }
-        uint32_t getValue() const { return value; }
-        void setValue(uint32_t v) { value = v; }
+    Color(uint32_t c)
+        : value(c)
+    {}
 
-        Color& operator=(const Color& other) {
-            value = other.getValue();
-            return *this;
-        }
+    Color(const Color& other)
+        : value(other.value)
+    {}
 
-        Color& operator=(Color& other) {
-            value = other.getValue();
-            return *this;
-        }
+    uint32_t getValue() { return value; }
+    uint32_t getValue() const { return value; }
+    void setValue(uint32_t v) { value = v; }
 
-        bool operator==(const Color& other) {
-            return value == other.getValue();
-        }
+    Color& operator=(const Color& other) {
+        value = other.getValue();
+        return *this;
+    }
 
-        bool operator!=(const Color& other) {
-            return value != other.getValue();
-        }
+    Color& operator=(Color& other) {
+        value = other.getValue();
+        return *this;
+    }
 
-    private:
-        uint32_t value{0};
-    };
+    bool operator==(const Color& other) {
+        return value == other.getValue();
+    }
 
-    Color& swap_endian(Color& u);
-    Color readFromStream(std::istream& is, const Color& i);
+    bool operator!=(const Color& other) {
+        return value != other.getValue();
+    }
 
-    std::ostream& operator<<(std::ostream& out, const Color& v);
+private:
+    uint32_t value{0};
+};
 
-    std::string value_to_string(Color value);
+Color& swap_endian(Color& u);
+Color readFromStream(std::istream& is, const Color& i);
+
+std::ostream& operator<<(std::ostream& out, const Color& v);
+
+std::string value_to_string(Color value);
 }
 
 #endif

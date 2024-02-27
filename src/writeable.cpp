@@ -19,10 +19,13 @@
 
 namespace rcp {
 
-    Writeable::~Writeable() {}
+Writeable::~Writeable()
+{}
 
-    Writer& operator<<(Writer& out, Writeable& writeable) {
-        writeable.write(out, false);
-        return out;
-    }
+Writer& operator<<(Writer& out, Writeable& writeable)
+{
+    writeable.write(out, false);
+    return out;
+}
+
 }

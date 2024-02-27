@@ -19,84 +19,84 @@
 
 namespace rcp {
 
-    void GroupParameter::addChild(ParameterPtr child)
-    {
-        // set parent in child
-        // this remove it from the old parameter
-        child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
+void GroupParameter::addChild(ParameterPtr child)
+{
+    // set parent in child
+    // this remove it from the old parameter
+    child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
 
-        // add child to list of children
-        std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
-        if (it == obj->children.end())
-        {
-            obj->children[child->getId()] = child;
-        }
-        else
-        {
-            // child already in list
-        }
+    // add child to list of children
+    std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
+    if (it == obj->children.end())
+    {
+        obj->children[child->getId()] = child;
     }
-
-    void GroupParameter::addChildInternal(ParameterPtr child)
+    else
     {
-        // set parent in child
-        // this remove it from the old parameter
-        child->setParentInternal(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
-
-        // add child to list of children
-        std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
-        if (it == obj->children.end())
-        {
-            obj->children[child->getId()] = child;
-        }
-        else
-        {
-            // child already in list
-        }
+        // child already in list
     }
+}
 
-    void GroupParameter::removeChild(ParameterPtr child)
+void GroupParameter::addChildInternal(ParameterPtr child)
+{
+    // set parent in child
+    // this remove it from the old parameter
+    child->setParentInternal(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
+
+    // add child to list of children
+    std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
+    if (it == obj->children.end())
     {
-        auto it = obj->children.find(child->getId());
-
-        if (it != obj->children.end())
-        {
-            // remove child
-            it->second->clearParentInternal();
-            obj->children.erase(it);
-        }
+        obj->children[child->getId()] = child;
     }
-
-    std::map<short, ParameterPtr >& GroupParameter::children() const
+    else
     {
-        return obj->children;
+        // child already in list
     }
+}
 
-    void GroupParameter::dumpChildren(int indent) const
+void GroupParameter::removeChild(ParameterPtr child)
+{
+    auto it = obj->children.find(child->getId());
+
+    if (it != obj->children.end())
     {
-        std::string in = "";
-        for (int i=0; i<indent; i++)
-        {
-            in += "  ";
-        }
+        // remove child
+        it->second->clearParentInternal();
+        obj->children.erase(it);
+    }
+}
 
-        std::cout << in << getLabel() << " (" << getId() << "):\n";
+std::map<short, ParameterPtr >& GroupParameter::children() const
+{
+    return obj->children;
+}
 
+void GroupParameter::dumpChildren(int indent) const
+{
+    std::string in = "";
+    for (int i=0; i<indent; i++)
+    {
         in += "  ";
+    }
 
-        for (auto& child : obj->children)
+    std::cout << in << getLabel() << " (" << getId() << "):\n";
+
+    in += "  ";
+
+    for (auto& child : obj->children)
+    {
+        if (child.second->getTypeDefinition().getDatatype() == DATATYPE_GROUP)
         {
-            if (child.second->getTypeDefinition().getDatatype() == DATATYPE_GROUP)
-            {
-                GroupParameter* group = (GroupParameter*)child.second.get();
-                group->dumpChildren(indent+1);
-            }
-            else
-            {
-                std::cout << in << child.second->getLabel() << " (" << child.second->getId() << ")\n";
-                child.second->dump();
-            }
+            GroupParameter* group = (GroupParameter*)child.second.get();
+            group->dumpChildren(indent+1);
+        }
+        else
+        {
+            std::cout << in << child.second->getLabel() << " (" << child.second->getId() << ")\n";
+            child.second->dump();
         }
     }
+}
 }
 

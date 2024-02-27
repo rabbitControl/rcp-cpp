@@ -25,76 +25,77 @@
 
 namespace rcp {
 
-    template <datatype_t type>
-    class TypeDefinitionNoOpt : public ITypeDefinition
+template <datatype_t type>
+class TypeDefinitionNoOpt
+    : public ITypeDefinition
+{
+public:
+    TypeDefinitionNoOpt() : datatype(type)
+    {}
+
+    TypeDefinitionNoOpt(IParameter& /*param*/) :
+        datatype(type)
+    {}
+
+    //------------------------------------
+    // Writeable
+    void write(Writer& out, bool /*all*/) override
     {
-    public:
-        TypeDefinitionNoOpt() : datatype(type)
-        {}
+        writeMandatory(out);
 
-        TypeDefinitionNoOpt(IParameter& /*param*/) :
-            datatype(type)
-        {}
+        // terminator
+        out.write(static_cast<char>(TERMINATOR));
+    }
 
-        //------------------------------------
-        // Writeable
-        void write(Writer& out, bool /*all*/) override
-        {
-            writeMandatory(out);
+    //------------------------------------
+    // ITypeDefinition
+    datatype_t getDatatype() const override
+    {
+        return datatype;
+    }
 
-            // terminator
-            out.write(static_cast<char>(TERMINATOR));
+    void writeMandatory(Writer& out) const override
+    {
+        out.write(static_cast<char>(datatype));
+    }
+
+    bool anyOptionChanged() const override
+    {
+        return false;
+    }
+
+    void dump() override
+    {
+        std::cout << "--- type with no options ---\n";
+    }
+
+    //------------------------------------
+    // IOptionparser
+    void parseOptions(std::istream& is) override
+    {
+        // no options - expect terminator
+
+        // read one byte
+        int did = is.get();
+
+        if (did != TERMINATOR) {
+            std::cerr << "error - no-option typedefinition has no terminator!";
         }
+    }
 
-        //------------------------------------
-        // ITypeDefinition
-        datatype_t getDatatype() const override
-        {
-            return datatype;
-        }
+    void setAllUnchanged() override
+    {}
 
-        void writeMandatory(Writer& out) const override
-        {
-            out.write(static_cast<char>(datatype));
-        }
+private:
+    // mandatory
+    datatype_t datatype;
+};
 
-        bool anyOptionChanged() const override
-        {
-            return false;
-        }
+//
+typedef TypeDefinitionNoOpt<DATATYPE_BANG> BangTypeDefinition;
+typedef TypeDefinitionNoOpt<DATATYPE_GROUP> GroupTypeDefinition;
 
-        void dump() override
-        {
-            std::cout << "--- type with no options ---\n";
-        }
-
-        //------------------------------------
-        // IOptionparser
-        void parseOptions(std::istream& is) override
-        {
-            // no options - expect terminator
-
-            // read one byte
-            int did = is.get();
-
-            if (did != TERMINATOR) {
-                std::cerr << "error - no-option typedefinition has no terminator!";
-            }
-        }
-
-        void setAllUnchanged() override
-        {}
-
-    private:
-        // mandatory
-        datatype_t datatype;
-    };
-
-    //
-    typedef TypeDefinitionNoOpt<DATATYPE_BANG> BangTypeDefinition;
-    typedef TypeDefinitionNoOpt<DATATYPE_GROUP> GroupTypeDefinition;
-
-    typedef TypeDefinitionNoOpt<DATATYPE_MAX_> InvalidTypeDefinition;
+typedef TypeDefinitionNoOpt<DATATYPE_MAX_> InvalidTypeDefinition;
 
 }
 

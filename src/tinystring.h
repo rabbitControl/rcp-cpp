@@ -21,7 +21,8 @@
 
 namespace rcp {
 
-class TinyString : public std::string
+class TinyString
+    : public std::string
 {
 public:
     TinyString() : std::string() {}

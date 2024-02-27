@@ -22,70 +22,69 @@
 
 namespace rcp {
 
+class ClientTransporterListener
+{
+public:
+    virtual void connected() = 0;
+    virtual void disconnected() = 0;
+    virtual void received(std::istream& data) = 0;
+};
 
-    class ClientTransporterListener
-    {
-    public:
-        virtual void connected() = 0;
-        virtual void disconnected() = 0;
-        virtual void received(std::istream& data) = 0;
-    };
 
+class ClientTransporter
+{
+public:
 
-    class ClientTransporter
-    {
-    public:
+    virtual void connect(std::string host, int port, bool secure = false) = 0;
+    virtual void disconnect() = 0;
+    virtual bool isConnected() = 0;
 
-        virtual void connect(std::string host, int port, bool secure = false) = 0;
-        virtual void disconnect() = 0;
-        virtual bool isConnected() = 0;
+    virtual void send(std::istream& data) = 0;
+    virtual void send(char* data, size_t size) = 0;
 
-        virtual void send(std::istream& data) = 0;
-        virtual void send(char* data, size_t size) = 0;
+    void addConnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
+        connected_cb[c] = func;
+    }
+    void removeConnectedCb(ClientTransporterListener* c) {
+        connected_cb.erase(c);
+    }
 
-        void addConnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
-            connected_cb[c] = func;
+    void addDisconnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
+        disconnected_cb[c] = func;
+    }
+    void removeDisconnectedCb(ClientTransporterListener* c) {
+        disconnected_cb.erase(c);
+    }
+
+    void addReceivedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)(std::istream&)) {
+        receive_cb[c] = func;
+    }
+    void removeReceivedCb(ClientTransporterListener* c) {
+        receive_cb.erase(c);
+    }
+
+protected:
+    void _connected() {
+        for (const auto& kv : connected_cb) {
+            (kv.first->*kv.second)();
         }
-        void removeConnectedCb(ClientTransporterListener* c) {
-            connected_cb.erase(c);
+    }
+    void _disconnected() {
+        for (const auto& kv : disconnected_cb) {
+            (kv.first->*kv.second)();
         }
-
-        void addDisconnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
-            disconnected_cb[c] = func;
+    }
+    void _received(std::istream& in) {
+        for (const auto& kv : receive_cb) {
+            (kv.first->*kv.second)(in);
         }
-        void removeDisconnectedCb(ClientTransporterListener* c) {
-            disconnected_cb.erase(c);
-        }
-
-        void addReceivedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)(std::istream&)) {
-            receive_cb[c] = func;
-        }
-        void removeReceivedCb(ClientTransporterListener* c) {
-            receive_cb.erase(c);
-        }
-
-    protected:
-        void _connected() {
-            for (const auto& kv : connected_cb) {
-                (kv.first->*kv.second)();
-            }
-        }
-        void _disconnected() {
-            for (const auto& kv : disconnected_cb) {
-                (kv.first->*kv.second)();
-            }
-        }
-        void _received(std::istream& in) {
-            for (const auto& kv : receive_cb) {
-                (kv.first->*kv.second)(in);
-            }
-        }
+    }
 
 
-        std::map<ClientTransporterListener*, void(ClientTransporterListener::*)()> connected_cb;
-        std::map<ClientTransporterListener*, void(ClientTransporterListener::*)()> disconnected_cb;
-        std::map<ClientTransporterListener*, void(ClientTransporterListener::*)(std::istream&)> receive_cb;
-    };
+    std::map<ClientTransporterListener*, void(ClientTransporterListener::*)()> connected_cb;
+    std::map<ClientTransporterListener*, void(ClientTransporterListener::*)()> disconnected_cb;
+    std::map<ClientTransporterListener*, void(ClientTransporterListener::*)(std::istream&)> receive_cb;
+};
 
 }
 

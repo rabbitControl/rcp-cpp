@@ -20,17 +20,18 @@
 
 namespace rcp {
 
-    IParameter::~IParameter() {}
+IParameter::~IParameter() {}
 
-    template<
-        typename T,
-        typename TD,
-        datatype_t type_id
+template<
+    typename T,
+    typename TD,
+    datatype_t type_id
     >
-    std::ostream& operator<<(std::ostream& out, ValueParameter<T, TD, type_id>& param)
-    {
-        StreamWriter w(out);
-        param.write(w);
-        return out;
-    }
+std::ostream& operator<<(std::ostream& out, ValueParameter<T, TD, type_id>& param)
+{
+    StreamWriter w(out);
+    param.write(w);
+    return out;
+}
+
 }

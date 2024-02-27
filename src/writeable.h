@@ -26,15 +26,16 @@
 
 namespace rcp {
 
-    class Writeable {
-    public:
-        virtual ~Writeable();
-        virtual void write(Writer& out, bool all) = 0;
-    };
+class Writeable
+{
+public:
+    virtual ~Writeable();
+    virtual void write(Writer& out, bool all) = 0;
+};
 
-    Writer& operator<<(Writer& out, Writeable& Writeable);
+Writer& operator<<(Writer& out, Writeable& Writeable);
 
-    typedef std::shared_ptr<Writeable> WriteablePtr;
+typedef std::shared_ptr<Writeable> WriteablePtr;
 }
 
 #endif // RCP_WRITEABLE_H

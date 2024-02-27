@@ -34,14 +34,14 @@
 
 namespace rcp {
 
-class ParameterManager :
-        public IParameterManager,
-        public std::enable_shared_from_this<ParameterManager>
+class ParameterManager
+    : public IParameterManager
+    , public std::enable_shared_from_this<ParameterManager>
 {
 public:
-	static bool isValid(const IParameter& parameter) {
+    static bool isValid(const IParameter& parameter) {
         return parameter.getTypeDefinition().getDatatype() != DATATYPE_MAX_ &&
-                parameter.getId() != 0;
+               parameter.getId() != 0;
     }
 
     static bool isValid(const ParameterPtr& parameter) {
@@ -55,7 +55,7 @@ public:
 public:
     ParameterManager();
     ~ParameterManager();
-	
+
 public:
     //
     void removeParameter(ParameterPtr parameter);
@@ -80,24 +80,24 @@ public:
 
     friend class ParameterServer;
     friend class ParameterClient;
-	
+
 public:
-	// IParameterManager
-	ParameterPtr getParameter(int16_t id) const override;
+    // IParameterManager
+    ParameterPtr getParameter(int16_t id) const override;
     ParameterPtr getRootGroup() const override;
 
 private:
-	// IParameterManager
-	void setParameterDirty(ParameterPtr parameter) override;
+    // IParameterManager
+    void setParameterDirty(ParameterPtr parameter) override;
     bool isParameterDirty(ParameterPtr parameter) override;
-	void setParameterRemoved(ParameterPtr parameter) override;
+    void setParameterRemoved(ParameterPtr parameter) override;
     void addMissingParent(int16_t parentId, ParameterPtr child) override;
-	
+
 private:
     short getNextId();
     void _addParameter(ParameterPtr& parameter);
     void _addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group);
-	void removeParameterDirect(ParameterPtr& parameter);    
+    void removeParameterDirect(ParameterPtr& parameter);
     void clear();
 
     //--------
@@ -109,12 +109,12 @@ private:
 
     //
     std::map<int16_t, std::vector<ParameterPtr> > missingParents;
-	
+
 private:
-	void lock();
-	void unlock();
+    void lock();
+    void unlock();
 #ifndef RCP_MANAGER_NO_LOCKING
-	std::mutex m_mutex;
+    std::mutex m_mutex;
 #endif
 };
 

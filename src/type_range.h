@@ -45,245 +45,245 @@
 
 namespace rcp {
 
-    template <typename ElementType>
-    class TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>
-        : public IDefaultDefinition<Range<ElementType>>
+template <typename ElementType>
+class TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>
+    : public IDefaultDefinition<Range<ElementType>>
+{
+public:
+    template <
+        typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
+        >
+    TypeDefinition(TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
+        obj(v.obj)
+    {}
+
+    template <
+        typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
+        >
+    TypeDefinition(const TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
+        obj(v.obj)
+    {}
+
+    TypeDefinition(IParameter& param) :
+        obj(std::make_shared<Value>(param))
+    {}
+
+    TypeDefinition(const std::string& d, IParameter& param) :
+        obj(std::make_shared<Value>(d, param))
+    {}
+
+    //------------------------------------
+    // Writeable
+    void write(Writer& out, bool all) override
     {
-    public:
-        template <
-            typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
-        >
-        TypeDefinition(TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
-            obj(v.obj)
-        {}
+        obj->write(out, all);
 
-        template <
-            typename std::enable_if<std::is_arithmetic<ElementType>::value>::type* = nullptr
-        >
-        TypeDefinition(const TypeDefinition<Range<ElementType>, DATATYPE_RANGE, td_num>& v) :
-            obj(v.obj)
-        {}
+        // terminator
+        out.write(static_cast<char>(TERMINATOR));
+    }
 
-        TypeDefinition(IParameter& param) :
-            obj(std::make_shared<Value>(param))
-        {}
+    //------------------------------------
+    // ITypeDefinition
+    datatype_t getDatatype() const override
+    {
+        return obj->datatype;
+    }
 
-        TypeDefinition(const std::string& d, IParameter& param) :
-            obj(std::make_shared<Value>(d, param))
-        {}
+    void writeMandatory(Writer& out) const override
+    {
+        out.write(static_cast<char>(obj->datatype));
+        obj->element_type.writeMandatory(out);
+    }
 
-        //------------------------------------
-        // Writeable
-        void write(Writer& out, bool all) override
-        {
-            obj->write(out, all);
+    bool anyOptionChanged() const override
+    {
+        return obj->element_type.anyOptionChanged()
+               || obj->defaultValue.changed();
+    }
 
-            // terminator
-            out.write(static_cast<char>(TERMINATOR));
+    void dump() override
+    {
+        std::cout << "--- type range ---\n";
+
+        if (hasDefault()) {
+            std::cout << "\tdefault: " << getDefault().value1() << ":" << getDefault().value2() << "\n";
         }
 
-        //------------------------------------
-        // ITypeDefinition
-        datatype_t getDatatype() const override
-        {
-            return obj->datatype;
-        }
+        obj->element_type.dump();
+    }
 
-        void writeMandatory(Writer& out) const override
-        {
-            out.write(static_cast<char>(obj->datatype));
-            obj->element_type.writeMandatory(out);
-        }
 
-        bool anyOptionChanged() const override
-        {
-            return obj->element_type.anyOptionChanged()
-                    || obj->defaultValue.changed();
-        }
 
-        void dump() override
-        {
-            std::cout << "--- type range ---\n";
 
-            if (hasDefault()) {
-                std::cout << "\tdefault: " << getDefault().value1() << ":" << getDefault().value2() << "\n";
+    //------------------------------------
+    // IOptionparser
+    void parseOptions(std::istream& is) override
+    {
+        // parse element type options first
+        obj->element_type.parseOptions(is);
+
+
+        while (!is.eof()) {
+
+            // get option prefix
+            range_options_t opt = static_cast<range_options_t>(is.get());
+
+            if (opt == TERMINATOR) {
+                break;
             }
 
-            obj->element_type.dump();
-        }
+            // check stream
+            CHECK_STREAM_MSG("range - could not read from stream")
 
 
+            switch (opt) {
+            case RANGE_OPTIONS_DEFAULT:
 
-
-        //------------------------------------
-        // IOptionparser
-        void parseOptions(std::istream& is) override
-        {
-            // parse element type options first
-            obj->element_type.parseOptions(is);
-
-
-            while (!is.eof()) {
-
-                // get option prefix
-                range_options_t opt = static_cast<range_options_t>(is.get());
-
-                if (opt == TERMINATOR) {
-                    break;
-                }
-
-                // check stream
-                CHECK_STREAM_MSG("range - could not read from stream")
-
-
-                switch (opt) {
-                case RANGE_OPTIONS_DEFAULT:
-
-                    // read 2 values of elementtype
-                    ElementType v1 = readFromStream(is, v1);
-                    CHECK_STREAM
+                // read 2 values of elementtype
+                ElementType v1 = readFromStream(is, v1);
+                CHECK_STREAM
                     ElementType v2 = readFromStream(is, v2);
-                    CHECK_STREAM
+                CHECK_STREAM
 
-                    obj->defaultValue = Range<ElementType>(v1, v2);
-                    break;
-                }
-
+                        obj->defaultValue = Range<ElementType>(v1, v2);
+                break;
             }
-        } // parseOptions
+
+        }
+    } // parseOptions
 
 
 
-        //------------------------------------
-        // IDefaultDefinition<T>
-        Range<ElementType> readValue(std::istream& is) override
+    //------------------------------------
+    // IDefaultDefinition<T>
+    Range<ElementType> readValue(std::istream& is) override
+    {
+        ElementType v1 = readFromStream(is, v1);
+        ElementType v2 = readFromStream(is, v2);
+        return Range<ElementType>(v1, v2);
+    }
+
+    //----------------------
+    // default
+    const Range<ElementType> getDefault() const override
+    {
+        return obj->defaultValue.value();
+    }
+    void setDefault(const Range<ElementType>& defaultValue) override
+    {
+        obj->defaultValue = defaultValue;
+        if (obj->defaultValue.changed())
         {
-            ElementType v1 = readFromStream(is, v1);
-            ElementType v2 = readFromStream(is, v2);
-            return Range<ElementType>(v1, v2);
+            setDirty();
         }
-
-        //----------------------
-        // default
-        const Range<ElementType> getDefault() const override
+    }
+    bool hasDefault() const override
+    {
+        return obj->defaultValue.hasValue();
+    }
+    void clearDefault() override
+    {
+        obj->defaultValue.clearValue();
+        if (obj->defaultValue.changed())
         {
-            return obj->defaultValue.value();
+            setDirty();
         }
-        void setDefault(const Range<ElementType>& defaultValue) override
-        {
-            obj->defaultValue = defaultValue;            
-            if (obj->defaultValue.changed())
-            {
-                setDirty();
-            }
-        }
-        bool hasDefault() const override
-        {
-            return obj->defaultValue.hasValue();
-        }
-        void clearDefault() override
-        {
-            obj->defaultValue.clearValue();
-            if (obj->defaultValue.changed())
-            {
-                setDirty();
-            }
-        }
+    }
 
-        //------------------------------------
-        //
-        TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>& getElementType() {
-            return obj->element_type;
-        }
+    //------------------------------------
+    //
+    TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>& getElementType() {
+        return obj->element_type;
+    }
 
-        void setMinimum(const ElementType& v) {
-            obj->element_type.setMinimum(v);
-        }
-        void setMaximum(const ElementType& v) {
-            obj->element_type.setMaximum(v);
-        }
-        void setMultipleof(const ElementType& v) {
-            obj->element_type.setMultipleof(v);
-        }
-        void setScale(const number_scale_t& v) {
-            obj->element_type.setScale(v);
-        }
-        void setUnit(const std::string& v) {
-            obj->element_type.setUnit(v);
-        }
+    void setMinimum(const ElementType& v) {
+        obj->element_type.setMinimum(v);
+    }
+    void setMaximum(const ElementType& v) {
+        obj->element_type.setMaximum(v);
+    }
+    void setMultipleof(const ElementType& v) {
+        obj->element_type.setMultipleof(v);
+    }
+    void setScale(const number_scale_t& v) {
+        obj->element_type.setScale(v);
+    }
+    void setUnit(const std::string& v) {
+        obj->element_type.setUnit(v);
+    }
 
-        void setAllUnchanged() override
-        {
-            obj->defaultValue.setUnchanged();
-            obj->element_type.setAllUnchanged();
-        }
+    void setAllUnchanged() override
+    {
+        obj->defaultValue.setUnchanged();
+        obj->element_type.setAllUnchanged();
+    }
 
-    private:
-        void setDirty() {
-            obj->parameter.setDirty();
-        }
+private:
+    void setDirty() {
+        obj->parameter.setDirty();
+    }
 
-        class Value {
-        public:
-            Value(IParameter& param) :
-                datatype(DATATYPE_RANGE)
-              , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
-              , parameter(param)
-            {}
+    class Value {
+    public:
+        Value(IParameter& param) :
+            datatype(DATATYPE_RANGE)
+            , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
+            , parameter(param)
+        {}
 
-            Value(const Range<ElementType>& defaultValue, IParameter& param) :
-                datatype(DATATYPE_URI)
-              , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
-              , defaultValue(defaultValue)
-              , parameter(param)
-            {}
+        Value(const Range<ElementType>& defaultValue, IParameter& param) :
+            datatype(DATATYPE_URI)
+            , element_type(TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>(param))
+            , defaultValue(defaultValue)
+            , parameter(param)
+        {}
 
-            void write(Writer& out, bool all) {
+        void write(Writer& out, bool all) {
 
-                out.write(static_cast<char>(datatype));
-                element_type.write(out, all);
+            out.write(static_cast<char>(datatype));
+            element_type.write(out, all);
 
-                // write default value
-                if (defaultValue.hasValue()) {
+            // write default value
+            if (defaultValue.hasValue()) {
 
-                    if (all || defaultValue.changed()) {
-                        out.write(static_cast<char>(RANGE_OPTIONS_DEFAULT));
-
-                        out.write(defaultValue.value().value1());
-                        out.write(defaultValue.value().value2());
-
-                        if (!all) {
-                            defaultValue.setUnchanged();
-                        }
-                    }
-                } else if (defaultValue.changed()) {
-
+                if (all || defaultValue.changed()) {
                     out.write(static_cast<char>(RANGE_OPTIONS_DEFAULT));
 
-                    ElementType v{};
-                    if (element_type.hasDefault()) {
-                         v = element_type.getDefault();
+                    out.write(defaultValue.value().value1());
+                    out.write(defaultValue.value().value2());
+
+                    if (!all) {
+                        defaultValue.setUnchanged();
                     }
-                    out.write(v);
-                    out.write(v);
-
-                    defaultValue.setUnchanged();
                 }
+            } else if (defaultValue.changed()) {
+
+                out.write(static_cast<char>(RANGE_OPTIONS_DEFAULT));
+
+                ElementType v{};
+                if (element_type.hasDefault()) {
+                    v = element_type.getDefault();
+                }
+                out.write(v);
+                out.write(v);
+
+                defaultValue.setUnchanged();
             }
+        }
 
-            // mandatory
-            datatype_t datatype;
-            TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num> element_type;
+        // mandatory
+        datatype_t datatype;
+        TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num> element_type;
 
 
-            // options - default
-            Option<Range<ElementType>> defaultValue;
+        // options - default
+        Option<Range<ElementType>> defaultValue;
 
-            IParameter& parameter;
-        };
-        std::shared_ptr<Value> obj;
-        TypeDefinition(std::shared_ptr<Value> obj) :obj(obj) {}
+        IParameter& parameter;
     };
+    std::shared_ptr<Value> obj;
+    TypeDefinition(std::shared_ptr<Value> obj) :obj(obj) {}
+};
 
 }
 #endif // TYPE_RANGE_H

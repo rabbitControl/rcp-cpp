@@ -26,17 +26,17 @@ namespace rcp
 class ParameterListener
 {
 public:
-    virtual void onLabelChanged(const std::string& label, const std::string& oldLabel) {}
-    virtual void onLanguageLabelChanged(const std::string& languageCode, const std::string& label, const std::string& oldLabel) {}
-    virtual void onDescriptionChanged(const std::string& description, const std::string& oldDescription) {}
-    virtual void onLanguageDescriptionChanged(const std::string& languageCode, const std::string& description, const std::string& oldDescription) {}
-    virtual void onTagsChanged(const std::string& tags, const std::string& oldTags) {}
-    virtual void onOrderChanged(const int32_t order, const int32_t oldOrder) {}
-    virtual void onParentChanged(const int16_t parentId, const int16_t oldParentId) {}
-    /*TODO*/virtual void onWidgetChange() {}
-    virtual void onUserdataChanged(const std::vector<char>& data, const std::vector<char>& oldData) {}
-    virtual void onUseridChanged(const std::string& userid, const std::string& oldUserid) {}
-    virtual void onReadonlyChanged(bool readonly) {}
+    virtual void onLabelChanged(const std::string& /*label*/, const std::string& /*oldLabel*/) {}
+    virtual void onLanguageLabelChanged(const std::string& /*languageCode*/, const std::string& /*label*/, const std::string& /*oldLabel*/) {}
+    virtual void onDescriptionChanged(const std::string& /*description*/, const std::string& /*oldDescription*/) {}
+    virtual void onLanguageDescriptionChanged(const std::string& /*languageCode*/, const std::string& /*description*/, const std::string& /*oldDescription*/) {}
+    virtual void onTagsChanged(const std::string& /*tags*/, const std::string& /*oldTags*/) {}
+    virtual void onOrderChanged(const int32_t /*order*/, const int32_t /*oldOrder*/) {}
+    virtual void onParentChanged(const int16_t /*parentId*/, const int16_t /*oldParentId*/) {}
+//    /*TODO*/virtual void onWidgetChange() {}
+    virtual void onUserdataChanged(const std::vector<char>& /*data*/, const std::vector<char>& /*oldData*/) {}
+    virtual void onUseridChanged(const std::string& /*userid*/, const std::string& /*oldUserid*/) {}
+    virtual void onReadonlyChanged(bool /*readonly*/) {}
 };
 
 }

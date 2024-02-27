@@ -38,6 +38,7 @@
 #include <strstream>
 
 #include "src/parameterclient.h"
+
 #include "src/rcp.h"
 
 #include "dummyserver.h"
@@ -72,9 +73,6 @@ void testHierarchy() {
     server.dumpHierarchy();
 
     std::cout << "----------- \n";
-    std::weak_ptr<GroupParameter>& gg = server.getRoot()->getParent();
-//    std::cout << gg.getId();
-
 
 
     // e.g. store parameters in a list
@@ -290,6 +288,8 @@ void testUpdatedCb() {
     param.update(param2.getShared());
 
     std::cout << "\n\n";
+
+    param.removeUpdatedCb(cb2);
 }
 
 
@@ -501,7 +501,7 @@ void testCustomParameter() {
 
     char uuid[16];
     for (char i=0; i<16; i++) {
-        uuid[i] = i+60;
+        uuid[int(i)] = i + 60;
     }
 
     std::vector<int8_t> config;

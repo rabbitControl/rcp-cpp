@@ -31,17 +31,18 @@ class Vector3 {
 
 public:
     Vector3()
+    {}
+
+    Vector3(T x, T y, T z)
     {
-        m_value[0] = 0;
-        m_value[1] = 0;
-        m_value[2] = 0;
+        m_value[0] = x;
+        m_value[1] = y;
+        m_value[2] = z;
     }
 
-    Vector3(T v1, T v2, T v3)
+    Vector3(const Vector3& other)
     {
-        m_value[0] = v1;
-        m_value[1] = v2;
-        m_value[2] = v3;
+        std::memcpy(m_value, other.m_value, 3 * sizeof(T));
     }
 
     // x
@@ -55,9 +56,9 @@ public:
     }
 
     // y
-    void setY(T x)
+    void setY(T y)
     {
-        m_value[1] = x;
+        m_value[1] = y;
     }
 
     T y() const {
@@ -74,28 +75,28 @@ public:
         return m_value[2];
     }
 
+    void set(T x, T y, T z) {
+        m_value[0] = x;
+        m_value[1] = y;
+        m_value[2] = z;
+    }
+
     //
     bool operator==(const Vector3<T>& other) {
-        return m_value[0] == other.m_value[0] &&
-               m_value[1] == other.m_value[1] &&
-               m_value[2] == other.m_value[2];
+        return std::memcmp(m_value, other.m_value, 3 * sizeof(T)) == 0;
     }
 
     bool operator!=(const Vector3<T>& other) {
-        return m_value[0] != other.m_value[0] ||
-               m_value[1] != other.m_value[1] ||
-               m_value[2] != other.m_value[2];
+        return std::memcmp(m_value, other.m_value, 3 * sizeof(T)) != 0;
     }
 
     Vector3& operator=(const Vector3& other) {
-        m_value[0] = other.m_value[0];
-        m_value[1] = other.m_value[1];
-        m_value[2] = other.m_value[2];
+        std::memcpy(m_value, other.m_value, 3 * sizeof(T));
         return *this;
     }
 
 private:
-    T m_value[3];
+    T m_value[3] = {0, 0, 0};
 };
 
 
@@ -117,11 +118,11 @@ template <class T,
          typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
 Vector3<T> readFromStream(std::istream& is, const Vector3<T>& /*i*/)
 {
-    T v1 = readFromStream(is, v1);
-    T v2 = readFromStream(is, v2);
-    T v3 = readFromStream(is, v3);
+    T x = readFromStream(is, x);
+    T y = readFromStream(is, y);
+    T z = readFromStream(is, z);
 
-    return Vector3<T>(v1, v2, v3);
+    return Vector3<T>(x, y, z);
 }
 
 template <class T,
@@ -155,13 +156,15 @@ Vector3<T> type_max(Vector3<T>)
 template<typename T>
 Vector3<T> type_zero(Vector3<T>)
 {
-    return Vector3<T>(0, 0, 0);
+    return Vector3<T>();
 }
 
 template<typename T>
 std::string value_to_string(Vector3<T> value)
 {
-    return std::to_string(value.x()) + "," + std::to_string(value.y()) + "," + std::to_string(value.z());
+    return std::to_string(value.x()) + "," +
+           std::to_string(value.y()) + "," +
+           std::to_string(value.z());
 }
 
 }

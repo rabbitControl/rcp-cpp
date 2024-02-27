@@ -782,6 +782,31 @@ void testFloatParam()
 
 void testVector2f()
 {
+    rcp::Vector2f v1;
+    assert(v1.x() == 0);
+    assert(v1.y() == 0);
+
+    // test set
+    v1.set(1, 2);
+    assert(v1.x() == 1);
+    assert(v1.y() == 2);
+
+    // test copy
+    rcp::Vector2f v2(v1);
+    assert(v1 == v2);
+    assert(!(v1 != v2));
+
+
+    v2.setX(11);
+
+    // test assignment
+    rcp::Vector2f v3;    
+    v3 = v2;
+    assert(v3 == v2);
+}
+
+void testVector2fParameter()
+{
     Vector2F32ParameterPtr param = Vector2F32Parameter::create(1);
 
     param->getDefaultTypeDefinition().setMinimum(Vector2f(-1, -1));
@@ -805,7 +830,7 @@ void testVector2f()
     _parseStream(writer.getBuffer());
 }
 
-void testVector2i()
+void testVector2iParameter()
 {
     Vector2I32ParameterPtr param = Vector2I32Parameter::create(1);
 
@@ -830,6 +855,32 @@ void testVector2i()
 
 void testVector3f()
 {
+    rcp::Vector3f v1;
+    assert(v1.x() == 0);
+    assert(v1.y() == 0);
+
+    // test set
+    v1.set(1, 2, 3);
+    assert(v1.x() == 1);
+    assert(v1.y() == 2);
+    assert(v1.z() == 3);
+
+    // test copy
+    rcp::Vector3f v2(v1);
+    assert(v1 == v2);
+    assert(!(v1 != v2));
+
+
+    v2.setX(11);
+
+    // test assignment
+    rcp::Vector3f v3;
+    v3 = v2;
+    assert(v3 == v2);
+}
+
+void testVector3fParameter()
+{
     Vector3F32ParameterPtr param = Vector3F32Parameter::create(1);
 
     param->getDefaultTypeDefinition().setMinimum(Vector3f(-1, -1, -1));
@@ -851,6 +902,33 @@ void testVector3f()
 }
 
 void testVector4f()
+{
+    rcp::Vector4f v1;
+    assert(v1.x() == 0);
+    assert(v1.y() == 0);
+
+    // test set
+    v1.set(1, 2, 3, 4);
+    assert(v1.x() == 1);
+    assert(v1.y() == 2);
+    assert(v1.z() == 3);
+    assert(v1.w() == 4);
+
+    // test copy
+    rcp::Vector4f v2(v1);
+    assert(v1 == v2);
+    assert(!(v1 != v2));
+
+
+    v2.setX(11);
+
+    // test assignment
+    rcp::Vector4f v3;
+    v3 = v2;
+    assert(v3 == v2);
+}
+
+void testVector4fParameter()
 {
     Vector4F32ParameterPtr param = Vector4F32Parameter::create(1);
 
@@ -878,9 +956,12 @@ void testVector4f()
 int main(int /*argc*/, char const */*argv*/[])
 {
     testVector2f();
-    testVector2i();
+    testVector2fParameter();
+    testVector2iParameter();
     testVector3f();
+    testVector3fParameter();
     testVector4f();
+    testVector4fParameter();
     return 0;
 
 //    std::vector<char> data = {0x04, 0x12, 0x00, 0x09, 0x10, 0x00, 0x21, 0x61, 0x6e, 0x79, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x00, 0x25, 0x00, 0x07, 0x00, 0x00};

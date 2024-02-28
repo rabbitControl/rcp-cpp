@@ -104,6 +104,34 @@ public:
         return std::memcmp(m_value, other.m_value, 4 * sizeof(T)) != 0;
     }
 
+    bool operator<(const Vector4<T>& other) {
+        return m_value[0] < other.m_value[0] &&
+               m_value[1] < other.m_value[1] &&
+               m_value[2] < other.m_value[2] &&
+               m_value[3] < other.m_value[3];
+    }
+
+    bool operator<=(const Vector4<T>& other) {
+        return m_value[0] <= other.m_value[0] &&
+               m_value[1] <= other.m_value[1] &&
+               m_value[2] <= other.m_value[2] &&
+               m_value[3] <= other.m_value[3];
+    }
+
+    bool operator>(const Vector4<T>& other) {
+        return m_value[0] > other.m_value[0] &&
+               m_value[1] > other.m_value[1] &&
+               m_value[2] > other.m_value[2] &&
+               m_value[3] > other.m_value[3];
+    }
+
+    bool operator>=(const Vector4<T>& other) {
+        return m_value[0] >= other.m_value[0] &&
+               m_value[1] >= other.m_value[1] &&
+               m_value[2] >= other.m_value[2] &&
+               m_value[3] >= other.m_value[3];
+    }
+
     Vector4& operator=(const Vector4& other) {
         std::memcpy(m_value, other.m_value, 4 * sizeof(T));
         return *this;

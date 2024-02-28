@@ -79,6 +79,26 @@ public:
         return std::memcmp(m_value, other.m_value, 2 * sizeof(T)) != 0;
     }
 
+    bool operator<(const Vector2<T>& other) {
+        return m_value[0] < other.m_value[0] &&
+               m_value[1] < other.m_value[1];
+    }
+
+    bool operator<=(const Vector2<T>& other) {
+        return m_value[0] <= other.m_value[0] &&
+               m_value[1] <= other.m_value[1];
+    }
+
+    bool operator>(const Vector2<T>& other) {
+        return m_value[0] > other.m_value[0] &&
+               m_value[1] > other.m_value[1];
+    }
+
+    bool operator>=(const Vector2<T>& other) {
+        return m_value[0] >= other.m_value[0] &&
+               m_value[1] >= other.m_value[1];
+    }
+
     Vector2& operator=(const Vector2& other) {
         std::memcpy(m_value, other.m_value, 2 * sizeof(T));
         return *this;

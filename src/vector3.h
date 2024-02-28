@@ -91,6 +91,30 @@ public:
         return std::memcmp(m_value, other.m_value, 3 * sizeof(T)) != 0;
     }
 
+    bool operator<(const Vector3<T>& other) {
+        return m_value[0] < other.m_value[0] &&
+               m_value[1] < other.m_value[1] &&
+               m_value[2] < other.m_value[2];
+    }
+
+    bool operator<=(const Vector3<T>& other) {
+        return m_value[0] <= other.m_value[0] &&
+               m_value[1] <= other.m_value[1] &&
+               m_value[2] <= other.m_value[2];
+    }
+
+    bool operator>(const Vector3<T>& other) {
+        return m_value[0] > other.m_value[0] &&
+               m_value[1] > other.m_value[1] &&
+               m_value[2] > other.m_value[2];
+    }
+
+    bool operator>=(const Vector3<T>& other) {
+        return m_value[0] >= other.m_value[0] &&
+               m_value[1] >= other.m_value[1] &&
+               m_value[2] >= other.m_value[2];
+    }
+
     Vector3& operator=(const Vector3& other) {
         std::memcpy(m_value, other.m_value, 3 * sizeof(T));
         return *this;

@@ -36,6 +36,7 @@
 #include <fstream>
 #include <istream>
 #include <strstream>
+#include <cassert>
 
 #include "src/parameterclient.h"
 

@@ -65,7 +65,7 @@ public:
 public:
     GroupParameterPtr getRoot() const { return m_parameterManager->rootGroup(); }
 
-    ParameterPtr getParameter(const short& id) {
+    ParameterPtr getParameter(const int16_t id) {
         return m_parameterManager->getParameter(id);
     }
 
@@ -73,7 +73,7 @@ public:
     void removeParameter(ParameterPtr parameter) {
         m_parameterManager->removeParameter(parameter);
     }
-    void removeParameter(short id) {
+    void removeParameter(int16_t id) {
         m_parameterManager->removeParameter(id);
     }
 

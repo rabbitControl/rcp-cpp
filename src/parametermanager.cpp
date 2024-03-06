@@ -32,7 +32,7 @@ void ParameterManager::removeParameter(ParameterPtr parameter) {
     removeParameter(parameter->getId());
 }
 
-void ParameterManager::removeParameter(short id)
+void ParameterManager::removeParameter(int16_t id)
 {
     if (id == 0)
     {
@@ -85,7 +85,7 @@ void ParameterManager::removeParameterDirect(ParameterPtr& parameter) {
 //--------------------------------------------
 BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         BooleanParameterPtr p = std::make_shared<BooleanParameter>(id, false);
@@ -100,7 +100,7 @@ BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& 
 
 Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Int8ParameterPtr p = std::make_shared<Int8Parameter>(id, 0);
@@ -115,7 +115,7 @@ Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label,
 
 Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Int16ParameterPtr p = std::make_shared<Int16Parameter>(id, 0);
@@ -130,7 +130,7 @@ Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& labe
 
 Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Int32ParameterPtr p = std::make_shared<Int32Parameter>(id, 0);
@@ -145,7 +145,7 @@ Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& labe
 
 Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Int64ParameterPtr p = std::make_shared<Int64Parameter>(id, 0);
@@ -160,7 +160,7 @@ Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& labe
 
 Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Float32ParameterPtr p = std::make_shared<Float32Parameter>(id, 0.0f);
@@ -175,7 +175,7 @@ Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& 
 
 Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         Float64ParameterPtr p = std::make_shared<Float64Parameter>(id, 0.0);
@@ -191,7 +191,7 @@ Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& 
 
 StringParameterPtr ParameterManager::createStringParameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         StringParameterPtr p = std::make_shared<StringParameter>(id);
@@ -206,7 +206,7 @@ StringParameterPtr ParameterManager::createStringParameter(const std::string& la
 
 RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         RGBAParameterPtr p = std::make_shared<RGBAParameter>(id);
@@ -221,7 +221,7 @@ RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label,
 
 BangParameterPtr ParameterManager::createBangParameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         BangParameterPtr p = std::make_shared<BangParameter>(id);
@@ -236,7 +236,7 @@ BangParameterPtr ParameterManager::createBangParameter(const std::string& label,
 
 GroupParameterPtr ParameterManager::createGroupParameter(const std::string& label, GroupParameterPtr group)
 {
-    short id = getNextId();
+    int16_t id = getNextId();
     if (id != 0)
     {
         GroupParameterPtr p = std::make_shared<GroupParameter>(id);
@@ -251,7 +251,7 @@ GroupParameterPtr ParameterManager::createGroupParameter(const std::string& labe
 
 
 
-ParameterPtr ParameterManager::getParameter(int16_t id) const
+ParameterPtr ParameterManager::getParameter(const int16_t id) const
 {
     auto it = params.find(id);
 
@@ -267,15 +267,13 @@ ParameterPtr ParameterManager::getParameter(int16_t id) const
 // private functions
 
 
-short ParameterManager::getNextId()
+int16_t ParameterManager::getNextId()
 {
     for (unsigned short i=1; i<USHRT_MAX; i++)
     {
-        auto search = ids.find(static_cast<short>(i));
-
-        if (search == ids.end())
+        if (ids.find(static_cast<int16_t>(i)) == ids.end())
         {
-            short i_s = static_cast<short>(i);
+            int16_t i_s = static_cast<int16_t>(i);
             ids.insert(i_s);
             return i_s;
         }

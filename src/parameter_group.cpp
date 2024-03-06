@@ -26,8 +26,7 @@ void GroupParameter::addChild(ParameterPtr child)
     child->setParent(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
 
     // add child to list of children
-    std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
-    if (it == obj->children.end())
+    if (obj->children.find(child->getId()) == obj->children.end())
     {
         obj->children[child->getId()] = child;
     }
@@ -44,8 +43,7 @@ void GroupParameter::addChildInternal(ParameterPtr child)
     child->setParentInternal(std::dynamic_pointer_cast<GroupParameter>(shared_from_this()));
 
     // add child to list of children
-    std::map<short, std::shared_ptr<IParameter > >::iterator it = obj->children.find(child->getId());
-    if (it == obj->children.end())
+    if (obj->children.find(child->getId()) == obj->children.end())
     {
         obj->children[child->getId()] = child;
     }
@@ -67,7 +65,7 @@ void GroupParameter::removeChild(ParameterPtr child)
     }
 }
 
-std::map<short, ParameterPtr >& GroupParameter::children() const
+std::map<int16_t, ParameterPtr >& GroupParameter::children() const
 {
     return obj->children;
 }

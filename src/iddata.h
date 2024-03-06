@@ -39,11 +39,11 @@ public:
         return std::make_shared<IdData>(parameter_id);
     }
 
-    static inline IdDataPtr create(const int16_t& id) {
+    static inline IdDataPtr create(const int16_t id) {
         return std::make_shared<IdData>(id);
     }
 
-    IdData(const int16_t& id) :
+    IdData(const int16_t id) :
         m_id(id)
     {}
 

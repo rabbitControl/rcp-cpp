@@ -1730,7 +1730,7 @@ public:
     friend class ParameterFactory;
 
     void addChild(ParameterPtr child);
-    std::map<short, ParameterPtr >& children() const;
+    std::map<int16_t, ParameterPtr >& children() const;
     void dumpChildren(int indent) const;
 
 private:
@@ -1743,7 +1743,7 @@ private:
         Value()
         {}
 
-        std::map<short, ParameterPtr > children;
+        std::map<int16_t, ParameterPtr > children;
     };
 
     std::shared_ptr<Value> obj;

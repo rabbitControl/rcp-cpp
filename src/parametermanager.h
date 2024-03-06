@@ -59,7 +59,7 @@ public:
 public:
     //
     void removeParameter(ParameterPtr parameter);
-    void removeParameter(short id);
+    void removeParameter(int16_t id);
 
     BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr group = nullptr);
     Int8ParameterPtr createInt8Parameter(const std::string& label, GroupParameterPtr group = nullptr);
@@ -83,7 +83,7 @@ public:
 
 public:
     // IParameterManager
-    ParameterPtr getParameter(int16_t id) const override;
+    ParameterPtr getParameter(const int16_t id) const override;
     ParameterPtr getRootGroup() const override;
 
 private:
@@ -94,7 +94,7 @@ private:
     void addMissingParent(int16_t parentId, ParameterPtr child) override;
 
 private:
-    short getNextId();
+    int16_t getNextId();
     void _addParameter(ParameterPtr& parameter);
     void _addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group);
     void removeParameterDirect(ParameterPtr& parameter);

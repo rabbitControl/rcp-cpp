@@ -2034,7 +2034,9 @@ class BangParameter : public Parameter<BangTypeDefinition>
 public:
     BangParameter(const BangParameter& v) :
         Parameter<BangTypeDefinition>(v)
-    {}
+    {
+        m_cb = v.m_cb;
+    }
 
     BangParameter(int16_t id) :
         Parameter<BangTypeDefinition>(id)
@@ -2061,6 +2063,7 @@ public:
             !other->hasUserid())
         {
             // empty other
+            // call calback
             m_cb();
         }
         else
@@ -2069,11 +2072,13 @@ public:
         }
     }
 
-    void bang() {
+    void bang()
+    {
         setDirty();
     }
 
-    void setFunction(const std::function<void()>&& cb) {
+    void setFunction(const std::function<void()>&& cb)
+    {
         m_cb = cb;
     }
 

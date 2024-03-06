@@ -53,6 +53,7 @@ public:
     void addListener(ParameterClientListener* listener);
     void removeListener(ParameterClientListener* listener);
 
+//    [[deprecated("use ParameterClientListener instead")]]
     // error events
     void addParsingErrorCb(ParsingErrorListener* c, void(ParsingErrorListener::* func)()) {
         parsing_error_cb[c] = func;
@@ -87,7 +88,7 @@ public:
     }
 
 public:
-    // interface ClientTransporterListener
+    // ClientTransporterListener
     virtual void connected();
     virtual void disconnected();
     virtual void received(std::istream& data);

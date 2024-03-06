@@ -40,6 +40,7 @@
 #include "type_custom.h"
 #include "type_array.h"
 #include "tinystring.h"
+#include "parameter_listener.h"
 
 
 namespace rcp {
@@ -351,8 +352,16 @@ public:
     }
     void setLabel(const std::string& label) override
     {
+        std::string old_value = obj->label;
+
         if (obj->setLabel(label))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onLabelChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -396,8 +405,15 @@ public:
 
     void setLanguageLabel(const std::string& code, const std::string& label) override
     {
+        std::string old_value = getLanguageLabel(code);
         if (obj->setLanguageLabel(code, label))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onLanguageLabelChanged(this, code, old_value);
+            }
+
             setDirty();
         }
     }
@@ -419,8 +435,16 @@ public:
     }
     void setDescription(const std::string& description) override
     {
+        auto old_value = getDescription();
+
         if (obj->setDescription(description))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onDescriptionChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -464,8 +488,16 @@ public:
 
     void setDescriptionLanguage(const std::string& code, const std::string& description) override
     {
+        std::string old_value = getDescriptionLanguage(code);
+
         if (obj->setLanguageDescription(code, description))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onLanguageDescriptionChanged(this, code, old_value);
+            }
+
             setDirty();
         }
     }
@@ -489,8 +521,16 @@ public:
     }
     void setTags(const std::string& tags) override
     {
+        std::string old_value = getTags();
+
         if (obj->setTags(tags))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onTagsChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -521,8 +561,16 @@ public:
     }
     void setOrder(const int32_t order) override
     {
+        int32_t old_value = getOrder();
+
         if (obj->setOrder(order))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onOrderChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -558,8 +606,16 @@ public:
     }
     void setUserdata(const std::vector<char> userdata) override
     {
+        auto old_value = getUserdata();
+
         if (obj->setUserData(userdata))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onUserdataChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -589,8 +645,16 @@ public:
     }
     void setUserid(const std::string& userid) override
     {
+        std::string old_value = getUserid();
+
         if (obj->setUserid(userid))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onUseridChanged(this, old_value);
+            }
+
             setDirty();
         }
     }
@@ -622,6 +686,12 @@ public:
     {
         if (obj->setReadonly(readonly))
         {
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onReadonlyChanged(this);
+            }
+
             setDirty();
         }
     }
@@ -730,8 +800,16 @@ protected:
     // IParameter
     void setDirty() override
     {
-        if (auto manager = obj->parameterManager.lock()) {
-            manager->setParameterDirty(shared_from_this());
+        if (auto manager = obj->parameterManager.lock())
+        {
+            if (manager->setParameterDirty(shared_from_this()))
+            {
+                // call listener
+                for (auto listener : obj->m_parameterListener)
+                {
+                    listener->onDirty(this);
+                }
+            }
         }
     }
 
@@ -1047,17 +1125,9 @@ private:
         {
             if (label != newLabel)
             {
-                std::string old_value = label;
-
                 label = newLabel;
                 hasLabel = true;
                 labelChanged = true;
-
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onLabelChanged(label, old_value);
-                }
 
                 return true;
             }
@@ -1080,12 +1150,6 @@ private:
                 languageLabel[lang] = newLabel;
                 labelChanged = true;
 
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onLanguageLabelChanged(lang, newLabel, old_value);
-                }
-
                 return true;
             }
 
@@ -1101,12 +1165,6 @@ private:
                 description = newDescription;
                 hasDescription = true;
                 descriptionChanged = true;
-
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onDescriptionChanged(description, old_value);
-                }
 
                 return true;
             }
@@ -1129,12 +1187,6 @@ private:
                 languageDescription[lang] = newDescription;
                 descriptionChanged = true;
 
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onLanguageDescriptionChanged(lang, newDescription, old_value);
-                }
-
                 return true;
             }
 
@@ -1143,84 +1195,33 @@ private:
 
         bool setTags(const std::string& newTags)
         {
-            std::string old_value = tags.value();
             tags = newTags;
-            if (tags.changed())
-            {
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onTagsChanged(tags.value(), old_value);
-                }
-            }
-
             return tags.changed();
         }
 
         bool setOrder(int32_t newOrder)
         {
-            int32_t old_value = order.value();
             order = newOrder;
-            if (order.changed())
-            {
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onOrderChanged(order.value(), old_value);
-                }
-            }
-
             return order.changed();
         }
 
         bool setUserData(const std::vector<char>& newUserdata)
         {
-            std::vector<char> old_value = userdata;
-
             // always changes
             userdata = newUserdata;
             userdataChanged = true;
-
-            // call listener
-            for (auto listener : m_parameterListener)
-            {
-                listener->onUserdataChanged(userdata, old_value);
-            }
-
             return true;
         }
 
         bool setUserid(const std::string& newUserid)
         {
-            std::string old_value = userid.value();
-
             userid = newUserid;
-
-            if (userid.changed())
-            {
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onUseridChanged(userid.value(), old_value);
-                }
-            }
-
             return userid.changed();
         }
 
         bool setReadonly(bool newReadonly)
         {
             readonly = newReadonly;
-
-            if (readonly.changed())
-            {
-                // call listener
-                for (auto listener : m_parameterListener)
-                {
-                    listener->onReadonlyChanged(readonly.value());
-                }
-            }
-
             return readonly.changed();
         }
 
@@ -1782,17 +1783,31 @@ void Parameter<TD>::update(const ParameterPtr& other)
         {
             for (std::string& l : o_lang)
             {
+                std::string old_value = getLanguageLabel(l);
                 if (obj->setLanguageLabel(l, other->getLanguageLabel(l)))
                 {
                     updated = true;
+
+                    // call listener
+                    for (auto listener : obj->m_parameterListener)
+                    {
+                        listener->onLanguageLabelChanged(this, l, old_value);
+                    }
                 }
             }
         }
 
         // default label
+        std::string old_value = getLabel();
         if (obj->setLabel(other->getLabel()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onLabelChanged(this, old_value);
+            }
         }
     }
 
@@ -1804,33 +1819,64 @@ void Parameter<TD>::update(const ParameterPtr& other)
         {
             for (std::string& l : o_lang)
             {
+                std::string old_value = getDescriptionLanguage(l);
                 if (obj->setLanguageDescription(l, other->getDescriptionLanguage(l)))
                 {
                     updated = true;
+
+                    // call listener
+                    for (auto listener : obj->m_parameterListener)
+                    {
+                        listener->onLanguageDescriptionChanged(this, l, old_value);
+                    }
                 }
             }
         }
 
         // default description
+        auto old_value = getDescription();
+
         if (obj->setDescription(other->getDescription()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onDescriptionChanged(this, old_value);
+            }
         }
     }
 
     if (other->hasTags())
     {
+        std::string old_value = getTags();
+
         if (obj->setTags(other->getTags()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onTagsChanged(this, old_value);
+            }
         }
     }
 
     if (other->hasOrder())
     {
+        auto old_value = getOrder();
+
         if (obj->setOrder(other->getOrder()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onOrderChanged(this, old_value);
+            }
         }
     }
 
@@ -1856,17 +1902,33 @@ void Parameter<TD>::update(const ParameterPtr& other)
 
     if (other->hasUserdata())
     {
+        auto old_value = getUserdata();
+
         if (obj->setUserData(other->getUserdata()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onUserdataChanged(this, old_value);
+            }
         }
     }
 
     if (other->hasUserid())
     {
+        std::string old_value = getUserid();
+
         if (obj->setUserid(other->getUserid()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onUseridChanged(this, old_value);
+            }
         }
     }
 
@@ -1875,6 +1937,12 @@ void Parameter<TD>::update(const ParameterPtr& other)
         if (obj->setReadonly(other->getReadonly()))
         {
             updated = true;
+
+            // call listener
+            for (auto listener : obj->m_parameterListener)
+            {
+                listener->onReadonlyChanged(this);
+            }
         }
     }
 
@@ -2010,7 +2078,7 @@ bool Parameter<TD>::setParentInternal(GroupParameterPtr parent)
     // call listener
     for (auto listener : obj->m_parameterListener)
     {
-        listener->onParentChanged(parent->getId(), old_value ? old_value->getId() : 0);
+        listener->onParentChanged(this, old_value ? old_value->getId() : 0);
     }
 
     return true;

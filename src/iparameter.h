@@ -26,10 +26,10 @@
 #include "writeable.h"
 #include "optionparser.h"
 #include "typedefinition.h"
-#include "parameter_listener.h"
 
 namespace rcp {
 
+class ParameterListener;
 class GroupParameter;
 class ITypeDefinition;
 class IParameter;

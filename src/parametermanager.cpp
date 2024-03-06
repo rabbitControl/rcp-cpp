@@ -400,12 +400,12 @@ void ParameterManager::_addParameterDirect(const std::string& label, ParameterPt
 }
 
 
-void ParameterManager::setParameterDirty(ParameterPtr parameter)
+bool ParameterManager::setParameterDirty(ParameterPtr parameter)
 {
     if (parameter->getId() == 0)
     {
         // root is never dirty
-        return;
+        return false;
     }
 
 #ifndef RCP_MANAGER_NO_LOCKING
@@ -417,10 +417,12 @@ void ParameterManager::setParameterDirty(ParameterPtr parameter)
     if (removedParameter.find(parameter->getId()) != removedParameter.end()) {
         // parameter is removed, don't add
         std::cout << "parameter going to be removed: " << parameter->getId() << "\n";
-        return;
+        return false;
     }
 
     dirtyParameter[parameter->getId()] = parameter;
+
+    return true;
 }
 
 bool ParameterManager::isParameterDirty(ParameterPtr parameter)

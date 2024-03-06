@@ -88,7 +88,7 @@ public:
 
 private:
     // IParameterManager
-    void setParameterDirty(ParameterPtr parameter) override;
+    bool setParameterDirty(ParameterPtr parameter) override;
     bool isParameterDirty(ParameterPtr parameter) override;
     void setParameterRemoved(ParameterPtr parameter) override;
     void addMissingParent(int16_t parentId, ParameterPtr child) override;

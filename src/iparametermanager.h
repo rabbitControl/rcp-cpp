@@ -35,7 +35,7 @@ public:
     virtual ParameterPtr getRootGroup() const = 0;
 
 private:
-    virtual void setParameterDirty(ParameterPtr parameter) = 0;
+    virtual bool setParameterDirty(ParameterPtr parameter) = 0;
     virtual bool isParameterDirty(ParameterPtr parameter) = 0;
     virtual void setParameterRemoved(ParameterPtr parameter) = 0;
     virtual void addMissingParent(int16_t parentId, ParameterPtr child) = 0;

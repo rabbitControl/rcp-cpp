@@ -21,23 +21,56 @@
 
 namespace rcp {
 
+
+size_t StringStreamWriter::getSize()
+{
+    return buffer.str().size();
+}
+
+std::stringstream& StringStreamWriter::getBuffer()
+{
+    buffer.seekg(0);
+    return buffer;
+}
+
+void StringStreamWriter::dump()
+{
+    buffer.seekg(0, buffer.end);
+    size_t len = size_t(buffer.tellg());
+    buffer.seekg(0, buffer.beg);
+
+    std::vector<char> data;
+    data.resize(len);
+
+    buffer.seekg(0);
+    buffer.read(data.data(), len);
+
+    std::cout << value_to_string(data) << "\n";
+}
+
+void StringStreamWriter::clear()
+{
+    buffer.str("");
+}
+
+
 void StringStreamWriter::write(const bool& c)
 {
-    buffer << static_cast<int8_t>(c);
+    buffer.write((const char*)&c, 1);
 }
 
 void StringStreamWriter::write(const char& c)
 {
-    buffer << static_cast<int8_t>(c);
+    buffer.write(&c, 1);
 }
 
 void StringStreamWriter::write(const uint8_t& c)
 {
-    buffer << c;
+    buffer.write((const char*)&c, 1);
 }
 void StringStreamWriter::write(const int8_t& c)
 {
-    buffer << c;
+    buffer.write((const char*)&c, 1);
 }
 
 
@@ -48,15 +81,12 @@ void StringStreamWriter::write(const uint16_t& v)
 
 void StringStreamWriter::write(const int16_t& v)
 {
-
 #if BYTE_ORDER == LITTLE_ENDIAN
-    buffer << static_cast<unsigned char>(v >> 8);
-    buffer << static_cast<unsigned char>(v);
+    buffer.write(((const char*)&v) + 1, 1);
+    buffer.write(((const char*)&v), 1);
 #else
-    buffer << static_cast<unsigned char>(v);
-    buffer << static_cast<unsigned char>(v >> 8);
+    buffer.write(((const char*)&v), sizeof(int16_t));
 #endif
-
 }
 
 
@@ -68,17 +98,13 @@ void StringStreamWriter::write(const uint32_t& v)
 void StringStreamWriter::write(const int32_t& v)
 {
 #if BYTE_ORDER == LITTLE_ENDIAN
-    buffer << static_cast<unsigned char>(v >> 24);
-    buffer << static_cast<unsigned char>(v >> 16);
-    buffer << static_cast<unsigned char>(v >> 8);
-    buffer << static_cast<unsigned char>(v);
+    buffer.write(((const char*)&v) + 3, 1);
+    buffer.write(((const char*)&v) + 2, 1);
+    buffer.write(((const char*)&v) + 1, 1);
+    buffer.write(((const char*)&v), 1);
 #else
-    buffer << static_cast<unsigned char>(v);
-    buffer << static_cast<unsigned char>(v >> 8);
-    buffer << static_cast<unsigned char>(v >> 16);
-    buffer << static_cast<unsigned char>(v >> 24);
+    buffer.write(((const char*)&v), sizeof(int32_t));
 #endif
-
 }
 
 
@@ -90,25 +116,17 @@ void StringStreamWriter::write(const uint64_t& v)
 void StringStreamWriter::write(const int64_t& v)
 {
 #if BYTE_ORDER == LITTLE_ENDIAN
-    buffer << static_cast<unsigned char>(v >> 56);
-    buffer << static_cast<unsigned char>(v >> 48);
-    buffer << static_cast<unsigned char>(v >> 40);
-    buffer << static_cast<unsigned char>(v >> 32);
+    buffer.write(((const char*)&v) + 7, 1);
+    buffer.write(((const char*)&v) + 6, 1);
+    buffer.write(((const char*)&v) + 5, 1);
+    buffer.write(((const char*)&v) + 4, 1);
 
-    buffer << static_cast<unsigned char>(v >> 24);
-    buffer << static_cast<unsigned char>(v >> 16);
-    buffer << static_cast<unsigned char>(v >> 8);
-    buffer << static_cast<unsigned char>(v);
+    buffer.write(((const char*)&v) + 3, 1);
+    buffer.write(((const char*)&v) + 2, 1);
+    buffer.write(((const char*)&v) + 1, 1);
+    buffer.write(((const char*)&v), 1);
 #else
-    buffer << static_cast<unsigned char>(v);
-    buffer << static_cast<unsigned char>(v >> 8);
-    buffer << static_cast<unsigned char>(v >> 16);
-    buffer << static_cast<unsigned char>(v >> 24);
-
-    buffer << static_cast<unsigned char>(v >> 32);
-    buffer << static_cast<unsigned char>(v >> 40);
-    buffer << static_cast<unsigned char>(v >> 48);
-    buffer << static_cast<unsigned char>(v >> 56);
+    buffer.write(((const char*)&v), sizeof(int64_t));
 #endif
 }
 
@@ -156,7 +174,7 @@ void StringStreamWriter::write(const rcp::IPv6& s)
 
 void StringStreamWriter::write(const char* data, size_t length)
 {
-    buffer.write(data, (std::streamsize)length);
+    buffer.write(data, length);
 }
 
 }

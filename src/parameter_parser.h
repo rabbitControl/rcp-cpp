@@ -42,6 +42,21 @@ public:
             return nullptr;
         }
 
+        if (type_id == DATATYPE_CUSTOMTYPE)
+        {
+            // read size from stream
+            uint32_t size = readFromStream(is, size);
+
+            CustomParameterPtr param = std::make_shared<CustomParameter>(parameter_id, size);
+            if (!param)
+            {
+                std::cerr << "could not create custom parameter\n";
+                return nullptr;
+            }
+
+            return ParameterFactory::readValue(param, is);
+        }
+
         return ParameterFactory::createParameterReadValue(parameter_id, type_id, is);
     }
 
@@ -77,7 +92,8 @@ public:
             datatype_t element_type_id = static_cast<datatype_t>(is.get());
 
             param = ParameterFactory::createRangeParameter(parameter_id, element_type_id);
-            if (!param) {
+            if (!param)
+            {
                 std::cerr << "could not create rangeparameter with element_type: " << element_type_id << "\n";
                 return nullptr;
             }
@@ -91,6 +107,21 @@ public:
         else if (type_id == DATATYPE_LIST)
         {
             // TODO
+        }
+        else if (type_id == DATATYPE_CUSTOMTYPE)
+        {
+            // read size from stream            
+            uint32_t size = readFromStream(is, size);
+
+            param = CustomParameter::create(parameter_id, size);
+
+            if (!param)
+            {
+                std::cerr << "could not create custom parameter\n";
+                return nullptr;
+            }
+
+            param->getTypeDefinition().parseOptions(is);
         }
         else
         {

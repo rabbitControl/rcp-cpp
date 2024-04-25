@@ -496,35 +496,6 @@ void testStringParameter() {
 }
 
 
-void testCustomParameter() {
-
-    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
-
-    char uuid[16];
-    for (char i=0; i<16; i++) {
-        uuid[int(i)] = i + 60;
-    }
-
-    std::vector<int8_t> config;
-    config.push_back(5);
-    config.push_back(6);
-    config.push_back(7);
-
-    CustomParameter<int> param(1);
-    param.setUuid(uuid, 16);
-    param.setConfig(config);
-
-    StringStreamWriter writer;
-    writer.clear();
-    param.write(writer, true);
-
-    std::cout << "CustomParameter:\n";
-    writer.dump();
-
-    std::cout << "\n\n";
-}
-
-
 void testUriParameter() {
 
     std::cout << "**** " << __FUNCTION__ << " ****\n\n";
@@ -547,7 +518,6 @@ void testUriParameter() {
 
     std::cout << "\n\n";
 }
-
 
 void _parseStream(std::istream& stream)
 {
@@ -707,6 +677,54 @@ void parseData(const std::string& filename)
 
     std::flush(std::cout);
     std::flush(std::cerr);
+}
+
+
+void testCustomParameter() {
+
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
+    char uuid[16];
+    for (char i=0; i<16; i++)
+    {
+        uuid[int(i)] = i + 65; // A
+    }
+
+    std::vector<char> config;
+    config.push_back(5);
+    config.push_back(6);
+    config.push_back(7);
+
+    uint32_t v = 10;
+    std::vector<char> value(sizeof(uint32_t));
+    memcpy(value.data(), &v, sizeof(uint32_t));
+
+    uint32_t dv = 5;
+    std::vector<char> default_value(sizeof(uint32_t));
+    memcpy(default_value.data(), &dv, sizeof(uint32_t));
+
+    CustomParameterPtr param = CustomParameter::create(1, sizeof(uint32_t));
+    param->getDefaultTypeDefinition().setUuid(uuid, 16);
+    param->setConfig(config);
+    param->setValue(value);
+    param->setDefault(default_value);
+
+    param->dump();
+
+    // serialize packet
+    Packet packet(COMMAND_UPDATE);
+    packet.setData(param);
+
+    StringStreamWriter writer;
+    packet.write(writer, true);
+
+    std::cout << "CustomParameter:\n";
+    writer.dump();
+
+    // parse packet
+    _parseStream(writer.getBuffer());
+
+    std::cout << "\n\n";
 }
 
 

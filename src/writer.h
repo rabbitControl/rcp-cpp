@@ -52,6 +52,9 @@ public:
     virtual void write(const rcp::IPv4& s) = 0;
     virtual void write(const rcp::IPv6& s) = 0;
     virtual void write(const char* data, size_t length) = 0;
+    virtual void write(std::vector<char> data) {
+        write(data.data(), data.size());
+    }
 
     template<typename T>
     void write(const Range<T>& c) {

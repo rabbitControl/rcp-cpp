@@ -28,16 +28,18 @@
 
 namespace rcp {
 
-template<typename T>
-class TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>
-    : public IDefaultDefinition<T>
+typedef TypeDefinition<std::vector<char>, DATATYPE_CUSTOMTYPE, td_custom > CustomTypeDefinition;
+
+template<>
+class TypeDefinition<std::vector<char>, DATATYPE_CUSTOMTYPE, td_custom>
+    : public IDefaultDefinition<std::vector<char>>
 {
 public:
-    TypeDefinition(TypeDefinition<std::string, DATATYPE_CUSTOMTYPE, td_custom>& v) :
+    TypeDefinition(TypeDefinition<std::vector<char>, DATATYPE_CUSTOMTYPE, td_custom>& v) :
         obj(v.obj)
     {}
 
-    TypeDefinition(const TypeDefinition<std::string, DATATYPE_CUSTOMTYPE, td_custom>& v) :
+    TypeDefinition(const TypeDefinition<std::vector<char>, DATATYPE_CUSTOMTYPE, td_custom>& v) :
         obj(v.obj)
     {}
 
@@ -45,7 +47,7 @@ public:
         obj(std::make_shared<Value>(param))
     {}
 
-    TypeDefinition(const std::string& d, IParameter& param) :
+    TypeDefinition(const std::vector<char>& d, IParameter& param) :
         obj(std::make_shared<Value>(d, param))
     {}
 
@@ -65,8 +67,9 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
-        while (!is.eof()) {
 
+        while (!is.eof())
+        {
             // read option prefix
             customtype_options_t opt = static_cast<customtype_options_t>(is.get());
 
@@ -79,42 +82,40 @@ public:
             }
 
             switch (opt) {
-            case CUSTOMTYPE_OPTIONS_DEFAULT: {
+            case CUSTOMTYPE_OPTIONS_DEFAULT:
+            {
+                std::vector<char> data;
+                data.resize(obj->size);
+                is.read(data.data(), obj->size);
 
-                T def = readFromStream(is, def);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->defaultValue = def;
+                obj->defaultValue = data;
+
                 break;
             }
-            case CUSTOMTYPE_OPTIONS_UUID: {
-
+            case CUSTOMTYPE_OPTIONS_UUID:
+            {
                 char uuid[16];
-                is.get(uuid, 16);
-                CHECK_STREAM
+                is.read(uuid, 16);
+                CHECK_STREAM;
 
-                        obj->hasUuid = true;
+                obj->hasUuid = true;
                 memcpy(obj->uuid, uuid, 16);
                 break;
             }
-            case CUSTOMTYPE_OPTIONS_CONFIG: {
-
+            case CUSTOMTYPE_OPTIONS_CONFIG:
+            {
                 uint32_t data_length = readFromStream(is, data_length);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                    char* data = new char[data_length];
-                if (data)
-                {
-                    is.get(data, static_cast<std::streamsize>(data_length));
-                    CHECK_STREAM
+                std::vector<char> data;
+                data.resize(data_length);
+                is.read(data.data(), data_length);
 
-                            //set
-                            obj->config.clear();
-                    obj->config.resize(data_length);
-                    memcpy(&obj->config[0], &data[0], data_length);
+                CHECK_STREAM;
 
-                    delete[] data;
-                }
+                obj->config = data;
 
                 break;
             }
@@ -133,7 +134,7 @@ public:
 
     bool anyOptionChanged() const override
     {
-        return obj->defaultValue.changed()
+        return obj->defaultValueChanged
                || obj->uuidChanged
                || obj->configChanged;
     }
@@ -147,16 +148,19 @@ public:
     {
         std::cout << "--- type custom ---\n";
 
-        if (hasDefault()) {
-            std::cout << "\tdefault: " << getDefault() << "\n";
+        if (hasDefault())
+        {
+            std::cout << "\tdefault: " << value_to_string(getDefault()) << "\n";
         }
 
-        if (hasUuid()) {
+        if (hasUuid())
+        {
             std::cout << "\tuuid: " << getUuid() << "\n";
         }
 
-        if (hasConfig()) {
-            std::cout << "\tconfig bytes: " << getConfig().size() << "\n";
+        if (hasConfig())
+        {
+            std::cout << "\tconfig: " << value_to_string(getConfig()) << "\n";
         }
     }
 
@@ -164,35 +168,35 @@ public:
     //------------------------------------
     // IDefaultDefinition<T>
 
-    T readValue(std::istream& is) override
+    std::vector<char> readValue(std::istream& is) override
     {
-        T value = readFromStream(is, value);
-        return value;
+        std::vector<char> data(obj->size);
+        is.read(data.data(), obj->size);
+        return data;
     }
 
     //--------
     // default
-    const T getDefault() const override
+    const std::vector<char> getDefault() const override
     {
-        return obj->defaultValue.value();
+        return obj->defaultValue;
     }
-    void setDefault(const T& defaultValue) override
+    void setDefault(const std::vector<char>& defaultValue) override
     {
         obj->defaultValue = defaultValue;
-        if (obj->defaultValue.changed())
-        {
-            setDirty();
-        }
+        obj->defaultValueChanged = true;
+        setDirty();
     }
     bool hasDefault() const override
     {
-        return obj->defaultValue.hasValue();
+        return !obj->defaultValue.empty();
     }
     void clearDefault() override
     {
-        obj->defaultValue.clearValue();
-        if (obj->defaultValue.changed())
+        if (!obj->defaultValue.empty())
         {
+            obj->defaultValue.clear();
+            obj->defaultValueChanged = true;
             setDirty();
         }
     }
@@ -201,14 +205,19 @@ public:
     //
 
     // uuid
-    bool hasUuid() const { return obj->hasUuid; }
-    void setUuid(const char* uuid, uint8_t length) {
+    bool hasUuid() const
+    {
+        return obj->hasUuid;
+    }
+    void setUuid(const char* uuid, uint8_t length)
+    {
         if (length != 16) {
             return;
         }
 
         obj->hasUuid = true;
-        if (memcmp(obj->uuid, uuid, 16) == 0) {
+        if (memcmp(obj->uuid, uuid, 16) == 0)
+        {
             return;
         }
 
@@ -216,10 +225,12 @@ public:
         obj->uuidChanged = true;
         setDirty();
     }
-    const char* getUuid() const {
+    const char* getUuid() const
+    {
         return obj->uuid;
     }
-    void clearUuid() {
+    void clearUuid()
+    {
         memset(obj->uuid, 0, 16);
         obj->hasUuid = false;
         obj->uuidChanged = true;
@@ -232,17 +243,18 @@ public:
     {
         return obj->config.size() > 0;
     }
-    std::vector<int8_t>& getConfig() const
+    std::vector<char>& getConfig() const
     {
         return obj->config;
     }
-    void setConfig(const std::vector<int8_t>& config)
+    void setConfig(const std::vector<char>& config)
     {
         obj->config = config;
         obj->configChanged = true;
         setDirty();
     }
-    void clearConfig() {
+    void clearConfig()
+    {
         obj->config.clear();
         obj->configChanged = true;
         setDirty();
@@ -250,9 +262,14 @@ public:
 
     void setAllUnchanged() override
     {
-        obj->defaultValue.setUnchanged();
+        obj->defaultValueChanged = false;
         obj->uuidChanged = false;
         obj->configChanged = false;
+    }
+
+    uint32_t getSize() const
+    {
+        return obj->size;
     }
 
 private:
@@ -260,9 +277,16 @@ private:
         obj->parameter.setDirty();
     }
 
+    friend class CustomParameter;
+    void setSize(uint32_t size)
+    {
+        obj->size = size;
+    }
+
     class Value {
     public:
-        Value(IParameter& param) : datatype(DATATYPE_CUSTOMTYPE)
+        Value(IParameter& param)
+            : datatype(DATATYPE_CUSTOMTYPE)
             , hasUuid(false)
             , uuidChanged(false)
             , configChanged(false)
@@ -271,7 +295,8 @@ private:
             memset(uuid, 0, 16);
         }
 
-        Value(const std::string& defaultValue, IParameter& param) : datatype(DATATYPE_CUSTOMTYPE)
+        Value(const std::vector<char>& defaultValue, IParameter& param)
+            : datatype(DATATYPE_CUSTOMTYPE)
             , defaultValue(defaultValue)
             , hasUuid(false)
             , uuidChanged(false)
@@ -283,7 +308,7 @@ private:
 
         void writeMandatory(Writer& out) {
             out.write(static_cast<char>(datatype));
-            out.write(static_cast<int32_t>(sizeof(T)));
+            out.write(static_cast<int32_t>(size));
         }
 
         void write(Writer& out, bool all) {
@@ -291,25 +316,22 @@ private:
             writeMandatory(out);
 
             // write default value
-            if (defaultValue.hasValue()) {
+            if (!defaultValue.empty()) {
 
-                if (all || defaultValue.changed()) {
+                if (all || defaultValueChanged) {
                     out.write(static_cast<char>(CUSTOMTYPE_OPTIONS_DEFAULT));
-                    out.write((char*)(&defaultValue), sizeof(T));
+                    out.write(defaultValue.data(), defaultValue.size());
 
                     if (!all) {
-                        defaultValue.setUnchanged();
+                        defaultValueChanged = false;
                     }
                 }
-            } else if (defaultValue.changed()) {
+            } else if (defaultValueChanged) {
 
                 out.write(static_cast<char>(CUSTOMTYPE_OPTIONS_DEFAULT));
+                out.write(static_cast<int32_t>(0));
 
-                T v;
-                memset(&v, 0, sizeof(T));
-                out.write((char*)(&v), sizeof(T));
-
-                defaultValue.setUnchanged();
+                defaultValueChanged = false;
             }
 
             // uuid
@@ -361,15 +383,17 @@ private:
 
         // mandatory
         datatype_t datatype;
+        uint32_t size;
 
         // options - base
-        Option<T> defaultValue;
+        std::vector<char> defaultValue;
+        bool defaultValueChanged;
 
         char uuid[16];
         bool hasUuid;
         bool uuidChanged;
 
-        std::vector<int8_t> config;
+        std::vector<char> config;
         bool configChanged;
 
         IParameter& parameter;

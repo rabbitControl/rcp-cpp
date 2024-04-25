@@ -17,6 +17,9 @@
 
 #include "stream_tools.h"
 
+#include <sstream>
+#include <iomanip>
+
 namespace rcp {
 
 //---------------------------------------------------
@@ -73,6 +76,17 @@ std::string value_to_string(std::string value)
 std::string value_to_string(TinyString value)
 {
     return value;
+}
+
+std::string value_to_string(std::vector<char> value)
+{
+    std::stringstream ss;
+    ss << std::hex;
+    for (auto i : value)
+    {
+        ss << "0x" << std::setw(2) << std::setfill('0') << (int)i << " ";
+    }
+    return ss.str();
 }
 
 }

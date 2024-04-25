@@ -22,43 +22,54 @@
 
 namespace rcp {
 
-template <typename T>
+class CustomParameter;
+typedef std::shared_ptr<CustomParameter> CustomParameterPtr;
+
 class CustomParameter
-    : public ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE>
+    : public ValueParameter<std::vector<char>, CustomTypeDefinition, DATATYPE_CUSTOMTYPE>
 {
-
 public:
-    typedef TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom> _CustomType;
-    typedef ValueParameter<T, TypeDefinition<T, DATATYPE_CUSTOMTYPE, td_custom>, DATATYPE_CUSTOMTYPE> _CustomParameter;
-
-public:
-    static ParameterPtr create(int16_t id)
+    static CustomParameterPtr create(int16_t id, uint32_t size)
     {
-        return std::make_shared<CustomParameter<T> >(id);
+        return std::make_shared<CustomParameter>(id, size);
     }
 
 public:
-    CustomParameter(int16_t id)
-        : _CustomParameter(id)
-    {}
+    CustomParameter(int16_t id, uint32_t size)
+        : ValueParameter(id)
+    {
+        getDefaultTypeDefinition().setSize(size);
+    }
 
     ~CustomParameter()
     {}
 
     // convenience
-    void setDefault(const T& v)
+    void setDefault(const std::vector<char>& value)
     {
-        _CustomParameter::getDefaultTypeDefinition().setDefault(v);
+        // only allow same size
+        if (value.size() == getRealTypeDef().getSize())
+        {
+            getDefaultTypeDefinition().setDefault(value);
+        }
     }
 
-    void setUuid(char* uuid, uint8_t length)
+    void setConfig(const std::vector<char>& config)
     {
-        _CustomParameter::getDefaultTypeDefinition().setUuid(uuid, length);
+        getDefaultTypeDefinition().setConfig(config);
     }
 
-    void setConfig(const std::vector<int8_t>& config)
+public:
+    // ValueParameter
+    bool setValue(const std::vector<char>& value) override
     {
-        _CustomParameter::getDefaultTypeDefinition().setConfig(config);
+        // only allow same size
+        if (value.size() == getRealTypeDef().getSize())
+        {
+            return ValueParameter::setValue(value);
+        }
+
+        return false;
     }
 };
 

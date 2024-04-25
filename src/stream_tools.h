@@ -139,6 +139,7 @@ std::string readLongString(std::istream& is);
 //
 std::string value_to_string(std::string value);
 std::string value_to_string(TinyString value);
+std::string value_to_string(std::vector<char> value);
 
 } // namespace rcp
 

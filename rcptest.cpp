@@ -37,6 +37,7 @@
 #include <istream>
 #include <strstream>
 #include <cassert>
+#include <thread>
 
 #include "src/parameterclient.h"
 
@@ -974,10 +975,55 @@ void testVector4fParameter()
 }
 
 
+// test threading
+static inline std::string nowString()
+{
+    std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::string now = std::ctime(&end_time);
+    std::replace(now.begin(), now.end(), '\n', ' ');
+
+    return now;
+}
+
+void _threaded_func(Float32Parameter param)
+{
+    std::cout << nowString() << "_threaded_func - on thread:" << std::this_thread::get_id() << " - label: " << param.getLabel() << "\n";
+
+    param.setValue(13);
+    param.setMaximum(10);
+
+    std::cout << nowString() << "_threaded_func on thread done:\n";
+}
+
+
+void testThreading()
+{
+    std::cout << nowString() << "testThreading - on thread:" << std::this_thread::get_id() << "\n";
+
+    Float32ParameterPtr param = Float32Parameter::create(1);
+
+    // start thread
+    // copy param to make sure we use the same mutex
+    std::thread t(_threaded_func, *param.get());
+
+    param->setLabel("test");
+
+    t.join();
+
+    std::cout << nowString() << "testThreading done\n";
+}
+
+
 //-------------------------------
 //-------------------------------
 int main(int /*argc*/, char const */*argv*/[])
 {
+    testThreading();
+    return 0;
+
+    testCustomParameter();
+    return 0;
+
     testVector2f();
     testVector2fParameter();
     testVector2iParameter();

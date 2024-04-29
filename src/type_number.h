@@ -91,6 +91,10 @@ public:
     // Writeable
     void write(Writer& out, bool all) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->write(out, all);
 
         // terminator
@@ -101,6 +105,9 @@ public:
     // ITypeDefinition
     void writeMandatory(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->writeMandatory(out);
     }
 
@@ -111,6 +118,10 @@ public:
 
     bool anyOptionChanged() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         return obj->defaultValue.changed()
                || obj->minimum.changed()
                || obj->maximum.changed()
@@ -121,6 +132,10 @@ public:
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         std::cout << "--- type number ---\n";
 
         if (hasDefault()) {
@@ -152,6 +167,10 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         while (!is.eof()) {
 
             // read option prefix
@@ -230,6 +249,10 @@ public:
     // default value
     const T getDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (obj->defaultValue.hasValue())
         {
             return obj->defaultValue.value();
@@ -238,6 +261,10 @@ public:
     }
     void setDefault(const T& defaultValue) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue = defaultValue;
         if (obj->defaultValue.changed())
         {
@@ -246,10 +273,17 @@ public:
     }
     bool hasDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.hasValue();
     }
     void clearDefault() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.clearValue();
         if (obj->defaultValue.changed())
         {
@@ -264,6 +298,10 @@ public:
     // minimum
     T getMinimum() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (obj->minimum.hasValue())
         {
             return obj->minimum.value();
@@ -272,6 +310,10 @@ public:
     }
     void setMinimum(const T& val) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->minimum = val;
         if (obj->minimum.changed())
         {
@@ -280,10 +322,16 @@ public:
     }
     bool hasMinimum() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->minimum.hasValue();
     }
     void clearMinimum() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->minimum.clearValue();
         if (obj->minimum.changed())
         {
@@ -295,6 +343,10 @@ public:
     // maximum
     T getMaximum() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (obj->maximum.hasValue())
         {
             return obj->maximum.value();
@@ -303,6 +355,10 @@ public:
     }
     void setMaximum(const T& val) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->maximum = val;
         if (obj->maximum.changed())
         {
@@ -311,10 +367,17 @@ public:
     }
     bool hasMaximum() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->maximum.hasValue();
     }
     void clearMaximum() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->maximum.clearValue();
         if (obj->maximum.changed())
         {
@@ -326,6 +389,10 @@ public:
     // multiple of
     T getMultipleof() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (obj->multipleof.hasValue())
         {
             return obj->multipleof.value();
@@ -334,6 +401,10 @@ public:
     }
     void setMultipleof(const T& val) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->multipleof = val;
         if (obj->multipleof.changed())
         {
@@ -342,10 +413,17 @@ public:
     }
     bool hasMultipleof() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->multipleof.hasValue();
     }
     void clearMultipleof() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->multipleof.clearValue();
         if (obj->multipleof.changed())
         {
@@ -357,6 +435,10 @@ public:
     // scale
     number_scale_t getScale() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (obj->scale.hasValue())
         {
             return obj->scale.value();
@@ -365,6 +447,10 @@ public:
     }
     void setScale(const number_scale_t& val) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->scale = val;
         if (obj->scale.changed())
         {
@@ -373,10 +459,17 @@ public:
     }
     bool hasScale() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->scale.hasValue();
     }
     void clearScale() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->scale.clearValue();
         if (obj->scale.changed())
         {
@@ -388,10 +481,17 @@ public:
     // unit
     std::string getUnit() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->unit.value();
     }
     void setUnit(const std::string& val) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->unit = val;
         if (obj->unit.changed())
         {
@@ -400,10 +500,17 @@ public:
     }
     bool hasUnit() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->unit.hasValue();
     }
     void clearUnit() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->unit.clearValue();
         if (obj->unit.changed())
         {
@@ -414,6 +521,10 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.setUnchanged();
         obj->minimum.setUnchanged();
         obj->maximum.setUnchanged();

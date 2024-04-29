@@ -53,6 +53,10 @@ public:
     // Writeable
     void write(Writer& out, bool all) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->write(out, all);
 
         // terminator
@@ -63,6 +67,10 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         while (!is.eof()) {
 
             // read option prefix
@@ -102,22 +110,36 @@ public:
     // ITypeDefinition
     datatype_t getDatatype() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->datatype;
     }
 
     void writeMandatory(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->writeMandatory(out);
     }
 
     bool anyOptionChanged() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         return obj->defaultValue.changed()
                || obj->regex.changed();
     }
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         std::cout << "--- type string ---\n";
 
         if (hasDefault()) {
@@ -141,10 +163,17 @@ public:
     // default
     const std::string getDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.value();
     }
     void setDefault(const std::string& defaultValue) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue = defaultValue;
         if (obj->defaultValue.changed())
         {
@@ -153,10 +182,17 @@ public:
     }
     bool hasDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.hasValue();
     }
     void clearDefault() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.clearValue();
         if (obj->defaultValue.changed())
         {
@@ -170,10 +206,17 @@ public:
     // regex
     virtual const std::string& getRegex() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->regex.value();
     }
     virtual void setRegex(const std::string& value)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->regex = value;
         if (obj->regex.changed())
         {
@@ -182,10 +225,17 @@ public:
     }
     virtual bool hasRegex() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->regex.hasValue();
     }
     virtual void clearRegex()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->regex.clearValue();
         if (obj->regex.changed())
         {
@@ -196,6 +246,10 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.setUnchanged();
         obj->regex.setUnchanged();
     }

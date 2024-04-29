@@ -56,6 +56,10 @@ public:
     // Writeable
     void write(Writer& out, bool all) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->write(out, all);
 
         // terminator
@@ -67,6 +71,9 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
 
         while (!is.eof())
         {
@@ -129,11 +136,18 @@ public:
 
     datatype_t getDatatype() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->datatype;
     }
 
     bool anyOptionChanged() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         return obj->defaultValueChanged
                || obj->uuidChanged
                || obj->configChanged;
@@ -141,11 +155,18 @@ public:
 
     void writeMandatory(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->writeMandatory(out);
     }
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         std::cout << "--- type custom ---\n";
 
         if (hasDefault())
@@ -179,20 +200,34 @@ public:
     // default
     const std::vector<char> getDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue;
     }
     void setDefault(const std::vector<char>& defaultValue) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue = defaultValue;
         obj->defaultValueChanged = true;
         setDirty();
     }
     bool hasDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return !obj->defaultValue.empty();
     }
     void clearDefault() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (!obj->defaultValue.empty())
         {
             obj->defaultValue.clear();
@@ -207,10 +242,17 @@ public:
     // uuid
     bool hasUuid() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->hasUuid;
     }
     void setUuid(const char* uuid, uint8_t length)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         if (length != 16) {
             return;
         }
@@ -227,10 +269,17 @@ public:
     }
     const char* getUuid() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->uuid;
     }
     void clearUuid()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         memset(obj->uuid, 0, 16);
         obj->hasUuid = false;
         obj->uuidChanged = true;
@@ -241,20 +290,34 @@ public:
     // config
     bool hasConfig() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->config.size() > 0;
     }
     std::vector<char>& getConfig() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->config;
     }
     void setConfig(const std::vector<char>& config)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->config = config;
         obj->configChanged = true;
         setDirty();
     }
     void clearConfig()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->config.clear();
         obj->configChanged = true;
         setDirty();
@@ -262,6 +325,10 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValueChanged = false;
         obj->uuidChanged = false;
         obj->configChanged = false;

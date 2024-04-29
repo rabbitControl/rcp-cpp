@@ -55,16 +55,26 @@ public:
     // ITypeDefinition
     datatype_t getDatatype() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->datatype;
     }
 
     bool anyOptionChanged() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.changed();
     }
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         std::cout << "--- type default ---\n";
 
         if (hasDefault()) {
@@ -74,6 +84,9 @@ public:
 
     void writeMandatory(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->writeMandatory(out);
     }
 
@@ -91,10 +104,17 @@ public:
     // default
     const T getDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.value();
     }
     void setDefault(const T& defaultValue) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue = defaultValue;
         if (obj->defaultValue.changed())
         {
@@ -103,10 +123,17 @@ public:
     }
     bool hasDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.hasValue();
     }
     void clearDefault() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.clearValue();
         if (obj->defaultValue.changed())
         {
@@ -119,6 +146,10 @@ public:
     // Writeable
     void write(Writer& out, bool all) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->write(out, all);
 
         // terminator
@@ -130,6 +161,10 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         while (!is.eof()) {
 
             // read option prefix
@@ -159,6 +194,9 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->defaultValue.setUnchanged();
     }
 

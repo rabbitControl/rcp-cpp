@@ -56,16 +56,26 @@ public:
     // ITypeDefinition
     datatype_t getDatatype() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->datatype;
     }
 
     void writeMandatory(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         obj->writeMandatory(out);
     }
 
     bool anyOptionChanged() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         return obj->defaultValue.changed()
                || obj->filter.changed()
                || obj->schemaChanged;
@@ -73,6 +83,10 @@ public:
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         std::cout << "--- type uri ---\n";
 
         if (hasDefault()) {
@@ -99,10 +113,17 @@ public:
 
     const std::string getDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.value();
     }
     void setDefault(const std::string& defaultValue) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue = defaultValue;
         if (obj->defaultValue.changed())
         {
@@ -111,10 +132,17 @@ public:
     }
     bool hasDefault() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->defaultValue.hasValue();
     }
     void clearDefault() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.clearValue();
         if (obj->defaultValue.changed())
         {
@@ -126,14 +154,24 @@ public:
     // options - filter
     std::string getFilter() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->filter.value();
     }
     bool hasFilter() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->filter.hasValue();
     }
     void setFilter(const std::string& filter)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->filter = filter;
         if (obj->filter.changed())
         {
@@ -142,6 +180,10 @@ public:
     }
     void clearFilter()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->filter.clearValue();
         if (obj->filter.changed())
         {
@@ -153,10 +195,16 @@ public:
     // options - schemas
     std::vector<std::string> getSchemas() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
         return obj->schemas;
     }
     void addSchema(const std::string& schema)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
 
         if (std::find(obj->schemas.begin(), obj->schemas.end(), schema) != obj->schemas.end())
         {
@@ -169,12 +217,20 @@ public:
     }
     void setSchemas(const std::vector<std::string>& schemas)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->schemas = schemas;
         obj->schemaChanged = true;
         setDirty();
     }
     void clearSchemas()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->schemaChanged = !obj->schemas.empty();
         obj->schemas.clear();
         if (obj->schemaChanged)
@@ -189,6 +245,10 @@ public:
     // Writeable
     void write(Writer& out, bool all) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->write(out, all);
 
         // terminator
@@ -199,6 +259,9 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
 
         while (!is.eof())
         {
@@ -250,6 +313,10 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
+#endif
+
         obj->defaultValue.setUnchanged();
         obj->filter.setUnchanged();
         obj->schemaChanged = false;;

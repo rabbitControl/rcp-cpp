@@ -23,6 +23,7 @@
 #include <istream>
 #include <string>
 #include <map>
+#include <thread>
 #include <vector>
 #include <functional>
 
@@ -41,6 +42,13 @@
 #include "type_array.h"
 #include "tinystring.h"
 #include "parameter_listener.h"
+
+
+//#define RCP_PARAMETER_NO_LOCKING
+
+#ifndef RCP_PARAMETER_NO_LOCKING
+#include <mutex>
+#endif
 
 
 namespace rcp {
@@ -114,6 +122,10 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
+        // NOTE: no need to lock here
+        // parsing options always into a newly created parameter
+        // locking is necessary in update()
+
         while (!is.eof()) {
 
             // read option prefix
@@ -327,6 +339,11 @@ public:
     //------------------------------------
     // implement IParameter
 
+    std::recursive_mutex& mutex() const override
+    {
+        return obj->m_mutex;
+    }
+
     ParameterPtr getShared() override
     {
         return shared_from_this();
@@ -339,26 +356,42 @@ public:
 
     int16_t getId() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->parameter_id;
     }
 
     ITypeDefinition& getTypeDefinition() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->typeDefinition;
     }
 
     datatype_t getDatatype() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return getTypeDefinition().getDatatype();
     }
 
     // optional
     std::string getLabel() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->label;
     }
     void setLabel(const std::string& label) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::string old_value = obj->label;
 
         if (obj->setLabel(label))
@@ -374,10 +407,16 @@ public:
     }
     bool hasLabel() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->hasLabel;
     }
     void clearLabel() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         obj->hasLabel = false;
         setDirty();
     }
@@ -385,6 +424,10 @@ public:
     // label languages
     std::vector<std::string> getLabelLanguages() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::vector<std::string> keys;
         for(auto it = obj->languageLabel.begin(); it != obj->languageLabel.end(); ++it) {
             keys.push_back(it->first);
@@ -395,6 +438,10 @@ public:
 
     std::string getLanguageLabel(const std::string& code) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::map<std::string, std::string>::iterator it = obj->languageLabel.find(code);
         if (it != obj->languageLabel.end()) {
             return it->second;
@@ -405,6 +452,10 @@ public:
 
     void clearLanguageLabel() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->languageLabel.clear();
         obj->labelChanged = true;
         setDirty();
@@ -412,6 +463,10 @@ public:
 
     void setLanguageLabel(const std::string& code, const std::string& label) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::string old_value = getLanguageLabel(code);
         if (obj->setLanguageLabel(code, label))
         {
@@ -427,6 +482,10 @@ public:
 
     void removeLanguageLabel(const std::string& code) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         auto it = obj->languageLabel.find(code);
         if (it != obj->languageLabel.end()) {
             obj->languageLabel.erase(it);
@@ -438,10 +497,17 @@ public:
 
     std::string getDescription() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->description;
     }
     void setDescription(const std::string& description) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         auto old_value = getDescription();
 
         if (obj->setDescription(description))
@@ -457,10 +523,17 @@ public:
     }
     bool hasDescription() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->hasDescription;
     }
     void clearDescription() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->hasDescription = false;
         setDirty();
     }
@@ -468,6 +541,10 @@ public:
     // description languages
     std::vector<std::string> getDescriptionLanguages() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::vector<std::string> keys;
         for(auto it = obj->languageDescription.begin(); it != obj->languageDescription.end(); ++it) {
             keys.push_back(it->first);
@@ -478,6 +555,10 @@ public:
 
     std::string getDescriptionLanguage(const std::string& code) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::map<std::string, std::string>::iterator it = obj->languageDescription.find(code);
         if (it != obj->languageDescription.end()) {
             return it->second;
@@ -488,6 +569,10 @@ public:
 
     void clearDescriptionLanguage() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->languageDescription.clear();
         obj->descriptionChanged = true;
         setDirty();
@@ -495,6 +580,10 @@ public:
 
     void setDescriptionLanguage(const std::string& code, const std::string& description) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::string old_value = getDescriptionLanguage(code);
 
         if (obj->setLanguageDescription(code, description))
@@ -511,6 +600,10 @@ public:
 
     void removeDescriptionLanguage(const std::string& code) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         auto it = obj->languageDescription.find(code);
         if (it != obj->languageDescription.end()) {
             obj->languageDescription.erase(it);
@@ -524,10 +617,17 @@ public:
     // tags
     std::string getTags() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->tags.value();
     }
     void setTags(const std::string& tags) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::string old_value = getTags();
 
         if (obj->setTags(tags))
@@ -543,10 +643,17 @@ public:
     }
     bool hasTags() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->tags.hasValue();
     }
     void clearTags() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->tags.clearValue();
         if (obj->tags.changed())
         {
@@ -559,6 +666,10 @@ public:
     // order
     int32_t getOrder() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         if (obj->order.hasValue())
         {
             return obj->order.value();
@@ -568,6 +679,10 @@ public:
     }
     void setOrder(const int32_t order) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         int32_t old_value = getOrder();
 
         if (obj->setOrder(order))
@@ -583,10 +698,17 @@ public:
     }
     bool hasOrder() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->order.hasValue();
     }
     void clearOrder() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->order.clearValue();
         if (obj->order.changed())
         {
@@ -599,6 +721,9 @@ public:
     virtual std::weak_ptr<GroupParameter>& getParent() const override;
     bool hasParent() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->parent.lock() != nullptr;
     }
 
@@ -609,10 +734,17 @@ public:
     // userdata
     std::vector<char> getUserdata() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->userdata;
     }
     void setUserdata(const std::vector<char> userdata) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         auto old_value = getUserdata();
 
         if (obj->setUserData(userdata))
@@ -628,10 +760,17 @@ public:
     }
     bool hasUserdata() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return !obj->userdata.empty();
     }
     void clearUserdata() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         if (!obj->userdata.empty())
         {
             obj->userdata.clear();
@@ -648,10 +787,17 @@ public:
     // userid
     std::string getUserid() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->userid.value();
     }
     void setUserid(const std::string& userid) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         std::string old_value = getUserid();
 
         if (obj->setUserid(userid))
@@ -667,10 +813,17 @@ public:
     }
     bool hasUserid() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->userid.hasValue();
     }
     void clearUserid() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->userid.clearValue();
         if (obj->userid.changed())
         {
@@ -682,6 +835,10 @@ public:
     // readonly
     bool getReadonly() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         if (obj->readonly.hasValue())
         {
             return obj->readonly.value();
@@ -691,6 +848,10 @@ public:
     };
     void setReadonly(const bool readonly) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         if (obj->setReadonly(readonly))
         {
             // call listener
@@ -704,10 +865,17 @@ public:
     }
     bool hasReadonly() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->readonly.hasValue();
     };
     void clearReadonly() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->readonly.clearValue();
         if (obj->readonly.changed())
         {
@@ -720,6 +888,10 @@ public:
 
     virtual bool hasAnyOption() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         return obj->hasLabel ||
                obj->hasDescription ||
                obj->tags.hasValue() ||
@@ -739,6 +911,10 @@ public:
     // update callbacks
     const std::function< void() >& addUpdatedCb(std::function< void() >& func) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         for(auto& f : obj->updatedCallbacks)
         {
             if (&func == &f->callback) {
@@ -754,6 +930,10 @@ public:
 
     const std::function< void() >& addUpdatedCb(std::function< void() >&& func) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         for(auto& f : obj->updatedCallbacks)
         {
             if (&func == &f->callback) {
@@ -769,6 +949,10 @@ public:
 
     void removeUpdatedCb(const std::function< void() >& func) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         for(auto it = obj->updatedCallbacks.begin(); it != obj->updatedCallbacks.end(); it++ )
         {
             if (&func == &(it->get()->callback)) {
@@ -780,6 +964,9 @@ public:
 
     void clearUpdatedCb() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         obj->updatedCallbacks.clear();
     }
 
@@ -788,6 +975,10 @@ public:
 
     void addUpdateListener(ParameterListener* listener) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         if (std::find(obj->m_parameterListener.begin(), obj->m_parameterListener.end(), listener) == obj->m_parameterListener.end())
         {
             obj->m_parameterListener.push_back(listener);
@@ -796,14 +987,16 @@ public:
 
     void removeUpdateListener(ParameterListener* listener) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         auto it = std::find(obj->m_parameterListener.begin(), obj->m_parameterListener.end(), listener);
         if (it != obj->m_parameterListener.end())
         {
             obj->m_parameterListener.erase(it);
         }
     }
-
-
 
     friend class ParameterManager;
     friend class GroupParameter;
@@ -817,16 +1010,24 @@ protected:
 
     TD& getRealTypeDef()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->typeDefinition;
     }
     const TD& getRealTypeDef() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         return obj->typeDefinition;
     }
 
     // IParameter
     void setDirty() override
     {
+        // NOTE: setDirty is usually called from locked setters
+        // no lock here
         if (auto manager = obj->parameterManager.lock())
         {
             if (manager->setParameterDirty(shared_from_this()))
@@ -847,6 +1048,10 @@ protected:
 
     bool anyOptionChanged() const
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         return obj->labelChanged
                || obj->descriptionChanged
                || obj->tags.changed()
@@ -859,6 +1064,10 @@ protected:
 
     void writeOptions(Writer& out, bool all)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         // writing options
         obj->write(out, all);
     }
@@ -869,18 +1078,29 @@ private:
     virtual void setParent(GroupParameterPtr parent) override;
     virtual void clearParentInternal() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->parent.reset();
         obj->parentChanged = true;
         m_waitForParent = false;
     }
     virtual void clearParent() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         clearParentInternal();
         setDirty();
     }
 
     void setManager(std::shared_ptr<IParameterManager> manager) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         obj->parameterManager = manager;
     }
 
@@ -895,6 +1115,10 @@ private:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
         obj->labelChanged = false;
         obj->descriptionChanged = false;
         obj->tags.setUnchanged();
@@ -908,6 +1132,9 @@ private:
 
     void setParentUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
         obj->parentChanged = false;
     }
 
@@ -1293,6 +1520,8 @@ private:
         std::vector< std::shared_ptr<UpdateEventHolder> > updatedCallbacks;
         std::weak_ptr<IParameterManager> parameterManager;
         std::vector<ParameterListener*> m_parameterListener;
+
+        mutable std::recursive_mutex m_mutex;
     };
 
     std::shared_ptr<Value> obj;
@@ -1373,6 +1602,10 @@ public:
         out.write(Parameter<TD>::getId());
         getDefaultTypeDefinition().write(out, all);
 
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         obj->write(out, all);
 
         Parameter<TD>::writeOptions(out, all);
@@ -1385,12 +1618,20 @@ public:
     // iParameter
     void writeUpdateValue(Writer& out) const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         Parameter<TD>::writeUpdateValue(out);
         obj->writeValue(out);
     }
 
     void dump() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         Parameter<TD>::dump();
 
         if (hasValue()) {
@@ -1405,11 +1646,18 @@ public:
 
     virtual bool hasAnyOption() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         return Parameter<TD>::hasAnyOption() || obj->value.hasValue();
     }
 
     virtual bool handleOption(const parameter_options_t& opt, std::istream& is) override
     {
+        // NOTE: locking is not necessary
+        // parsing options (handleOption()) always uses newly created parameter
+        // locking is necessary in update()
         if (opt == PARAMETER_OPTIONS_VALUE) {
 
             // read options
@@ -1426,6 +1674,10 @@ public:
 
     void setAllUnchanged() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         Parameter<TD>::setAllUnchanged();
         obj->value.setUnchanged();
     }
@@ -1435,10 +1687,17 @@ public:
     // IValueParameter
     T getValue() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
         return obj->value.value();
     }
     bool setValue(const T& value) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         obj->value = value;
         if (obj->value.changed())
         {
@@ -1448,10 +1707,17 @@ public:
     }
     bool hasValue() const override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
         return obj->value.hasValue();
     }
     void clearValue() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         obj->value.clearValue();
         if (obj->value.changed())
         {
@@ -1565,6 +1831,10 @@ public:
 
     virtual void update(const ParameterPtr& other) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         if (other.get() == this) {
             //c'mon, it's me!
             return;
@@ -1596,6 +1866,10 @@ public:
 
     const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         for(auto& f : obj->valueUpdatedCallbacks)
         {
             if (&func == &f->callback)
@@ -1612,6 +1886,10 @@ public:
 
     const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
         for(auto& f : obj->valueUpdatedCallbacks)
         {
             if (&func == &f->callback)
@@ -1628,6 +1906,9 @@ public:
 
     void removeValueUpdatedCb(const std::function< void(T&) >& func) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
 
         for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )
         {
@@ -1641,6 +1922,9 @@ public:
 
     void clearValueUpdatedCb() override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
         obj->valueUpdatedCallbacks.clear();
     }
 
@@ -1794,6 +2078,10 @@ private:
 template <typename TD>
 void Parameter<TD>::update(const ParameterPtr& other)
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
     if (other.get() == this)
     {
         // c'mon, it's me!
@@ -1988,6 +2276,9 @@ void Parameter<TD>::update(const ParameterPtr& other)
 template <typename TD>
 void Parameter<TD>::dump()
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
 
     std::cout << "parameter id: " << getId() << "\n";
     if (auto manager = obj->parameterManager.lock())
@@ -2070,12 +2361,19 @@ void Parameter<TD>::dump()
 template <typename TD>
 std::weak_ptr<GroupParameter>& Parameter<TD>::getParent() const
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
     return obj->parent;
 }
 
 template <typename TD>
 void Parameter<TD>::removeFromParent()
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
     // move to root-group
     if (auto manager = obj->parameterManager.lock())
     {
@@ -2090,6 +2388,10 @@ void Parameter<TD>::removeFromParent()
 template <typename TD>
 bool Parameter<TD>::setParentInternal(GroupParameterPtr parent)
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(Parameter<TD>::mutex());
+#endif
+
     auto old_value = obj->parent.lock();
 
     if (old_value)
@@ -2121,6 +2423,10 @@ bool Parameter<TD>::setParentInternal(GroupParameterPtr parent)
 template <typename TD>
 void Parameter<TD>::setParent(GroupParameterPtr parent)
 {
+#ifndef RCP_PARAMETER_NO_LOCKING
+    std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);
+#endif
+
     if (setParentInternal(parent))
     {
         setDirty();
@@ -2146,6 +2452,10 @@ public:
 
     void update(const ParameterPtr& other) override
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(mutex());
+#endif
+
         if (other.get() == this) {
             return;
         }
@@ -2169,11 +2479,17 @@ public:
 
     void bang()
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(mutex());
+#endif
         setDirty();
     }
 
     void setFunction(const std::function<void()>&& cb)
     {
+#ifndef RCP_PARAMETER_NO_LOCKING
+        std::lock_guard<std::recursive_mutex> locker(mutex());
+#endif
         m_cb = cb;
     }
 

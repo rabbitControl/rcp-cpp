@@ -141,11 +141,11 @@ public:
 
                 // read 2 values of elementtype
                 ElementType v1 = readFromStream(is, v1);
-                CHECK_STREAM
-                    ElementType v2 = readFromStream(is, v2);
-                CHECK_STREAM
+                CHECK_STREAM;
+                ElementType v2 = readFromStream(is, v2);
+                CHECK_STREAM;
 
-                        obj->defaultValue = Range<ElementType>(v1, v2);
+                obj->defaultValue = Range<ElementType>(v1, v2);
                 break;
             }
 
@@ -192,23 +192,29 @@ public:
 
     //------------------------------------
     //
-    TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>& getElementType() {
+    TypeDefinition<ElementType, convertDatatype<ElementType>::value, td_num>& getElementType()
+    {
         return obj->element_type;
     }
 
-    void setMinimum(const ElementType& v) {
+    void setMinimum(const ElementType& v)
+    {
         obj->element_type.setMinimum(v);
     }
-    void setMaximum(const ElementType& v) {
+    void setMaximum(const ElementType& v)
+    {
         obj->element_type.setMaximum(v);
     }
-    void setMultipleof(const ElementType& v) {
+    void setMultipleof(const ElementType& v)
+    {
         obj->element_type.setMultipleof(v);
     }
-    void setScale(const number_scale_t& v) {
+    void setScale(const number_scale_t& v)
+    {
         obj->element_type.setScale(v);
     }
-    void setUnit(const std::string& v) {
+    void setUnit(const std::string& v)
+    {
         obj->element_type.setUnit(v);
     }
 

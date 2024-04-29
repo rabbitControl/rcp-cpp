@@ -100,11 +100,13 @@ public:
 
     //------------------------------------
     // ITypeDefinition
-    datatype_t getDatatype() const override {
+    datatype_t getDatatype() const override
+    {
         return obj->datatype;
     }
 
-    void writeMandatory(Writer& out) const override {
+    void writeMandatory(Writer& out) const override
+    {
         obj->writeMandatory(out);
     }
 
@@ -166,20 +168,24 @@ public:
 
     //----------------------
     // regex
-    virtual const std::string& getRegex() const {
+    virtual const std::string& getRegex() const
+    {
         return obj->regex.value();
     }
-    virtual void setRegex(const std::string& value) {
+    virtual void setRegex(const std::string& value)
+    {
         obj->regex = value;
         if (obj->regex.changed())
         {
             setDirty();
         }
     }
-    virtual bool hasRegex() const {
+    virtual bool hasRegex() const
+    {
         return obj->regex.hasValue();
     }
-    virtual void clearRegex() {
+    virtual void clearRegex()
+    {
         obj->regex.clearValue();
         if (obj->regex.changed())
         {

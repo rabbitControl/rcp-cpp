@@ -127,8 +127,12 @@ public:
 
     //--------
     // options
-    std::vector<std::string>& getOptions() const { return obj->options; }
-    const std::string& getOption(const std::string& selection) const {
+    std::vector<std::string>& getOptions() const
+    {
+        return obj->options;
+    }
+    const std::string& getOption(const std::string& selection) const
+    {
 
         auto it = std::find(obj->options.begin(), obj->options.end(), selection);
         if (it != obj->options.end()) {
@@ -142,13 +146,18 @@ public:
         obj->optionsChanged = true;
         setDirty();
     }
-    void setOptions(const std::vector<std::string>& options) {
+    void setOptions(const std::vector<std::string>& options)
+    {
         obj->options = options;
         obj->optionsChanged = true;
         setDirty();
     }
-    bool hasOptions() const { return obj->options.size() > 0; }
-    void clearOptions() {
+    bool hasOptions() const
+    {
+        return obj->options.size() > 0;
+    }
+    void clearOptions()
+    {
         obj->options.clear();
         obj->optionsChanged = true;
         setDirty();
@@ -156,24 +165,28 @@ public:
 
     //------------
     // multiselect
-    bool getMultiselect() const {
+    bool getMultiselect() const
+    {
         if (obj->multiselect.hasValue())
         {
             return obj->multiselect.value();
         }
         return false;
     }
-    bool hasMultiselect() const {
+    bool hasMultiselect() const
+    {
         return obj->multiselect.hasValue();
     }
-    void setMultiselect(bool value) {
+    void setMultiselect(bool value)
+    {
         obj->multiselect = value;
         if (obj->multiselect.changed())
         {
             setDirty();
         }
     }
-    void clearMultiselect() {
+    void clearMultiselect()
+    {
         obj->multiselect.clearValue();
         if (obj->multiselect.changed())
         {
@@ -197,8 +210,9 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
-        while (!is.eof()) {
 
+        while (!is.eof())
+        {
             // read option prefix
             enum_options_t opt = static_cast<enum_options_t>(is.get());
 

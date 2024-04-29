@@ -124,20 +124,24 @@ public:
 
     //----------------------
     // options - filter
-    std::string getFilter() const {
+    std::string getFilter() const
+    {
         return obj->filter.value();
     }
-    bool hasFilter() const {
+    bool hasFilter() const
+    {
         return obj->filter.hasValue();
     }
-    void setFilter(const std::string& filter) {
+    void setFilter(const std::string& filter)
+    {
         obj->filter = filter;
         if (obj->filter.changed())
         {
             setDirty();
         }
     }
-    void clearFilter() {
+    void clearFilter()
+    {
         obj->filter.clearValue();
         if (obj->filter.changed())
         {
@@ -147,10 +151,12 @@ public:
 
     //----------------------
     // options - schemas
-    std::vector<std::string> getSchemas() const {
+    std::vector<std::string> getSchemas() const
+    {
         return obj->schemas;
     }
-    void addSchema(const std::string& schema) {
+    void addSchema(const std::string& schema)
+    {
 
         if (std::find(obj->schemas.begin(), obj->schemas.end(), schema) != obj->schemas.end())
         {
@@ -161,12 +167,14 @@ public:
         obj->schemaChanged = true;
         setDirty();
     }
-    void setSchemas(const std::vector<std::string>& schemas) {
+    void setSchemas(const std::vector<std::string>& schemas)
+    {
         obj->schemas = schemas;
         obj->schemaChanged = true;
         setDirty();
     }
-    void clearSchemas() {
+    void clearSchemas()
+    {
         obj->schemaChanged = !obj->schemas.empty();
         obj->schemas.clear();
         if (obj->schemaChanged)
@@ -191,8 +199,9 @@ public:
     // IOptionparser
     void parseOptions(std::istream& is) override
     {
-        while (!is.eof()) {
 
+        while (!is.eof())
+        {
             // read option prefix
             uri_options_t opt = static_cast<uri_options_t>(is.get());
 

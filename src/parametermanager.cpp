@@ -341,12 +341,8 @@ void ParameterManager::_addParameter(ParameterPtr& parameter)
             for (ParameterPtr& child : missing_it->second)
             {
                 // avoid child getting dirty when setting parent
-                //                    child->setManager(nullptr);
-
                 group_parameter->addChildInternal(child);
                 child->setParentUnchanged();
-
-                //                    child->setManager(shared_from_this());
             }
 
             missingParents.erase(missing_it);

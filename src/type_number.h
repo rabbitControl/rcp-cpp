@@ -168,49 +168,49 @@ public:
 
                 // read options
                 T def = readFromStream(is, def);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->defaultValue = def;
+                obj->defaultValue = def;
                 break;
             }
             case NUMBER_OPTIONS_MINIMUM: {
 
                 T min = readFromStream(is, min);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->minimum = min;
+                obj->minimum = min;
                 break;
             }
             case NUMBER_OPTIONS_MAXIMUM: {
 
                 T max = readFromStream(is, max);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->maximum = max;
+                obj->maximum = max;
                 break;
             }
             case NUMBER_OPTIONS_MULTIPLEOF: {
 
                 T mult = readFromStream(is, mult);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->multipleof = mult;
+                obj->multipleof = mult;
                 break;
             }
             case NUMBER_OPTIONS_SCALE: {
 
                 number_scale_t scale = static_cast<number_scale_t>(is.get());
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->scale = scale;
+                obj->scale = scale;
                 break;
             }
             case NUMBER_OPTIONS_UNIT: {
 
                 std::string unit = readTinyString(is);
-                CHECK_STREAM
+                CHECK_STREAM;
 
-                        obj->unit = unit;
+                obj->unit = unit;
                 break;
             }
             }
@@ -423,7 +423,8 @@ public:
     }
 
 private:
-    void setDirty() {
+    void setDirty()
+    {
         obj->parameter.setDirty();
     }
 

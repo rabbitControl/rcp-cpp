@@ -134,23 +134,26 @@ public:
                 int peek = is.peek();
                 CHECK_STREAM
 
-                    char code[4];
+                char code[4];
                 code[3] = 0;
-                while (peek > 0) {
-
+                while (peek > 0)
+                {
                     is.read(code, 3);
 
                     CHECK_STREAM
 
-                            std::string code_str(code);
+                    std::string code_str(code);
                     std::string label = readTinyString(is);
 
                     CHECK_STREAM
 
-                        if (code_str == language_string_any) {
+                    if (code_str == language_string_any)
+                    {
                         obj->hasLabel = true;
                         obj->label = label;
-                    } else {
+                    }
+                    else
+                    {
                         obj->languageLabel[code_str] = label;
                     }
 
@@ -160,8 +163,8 @@ public:
 
                 CHECK_STREAM
 
-                        // read 0-byte off the stream
-                        is.get();
+                // read 0-byte off the stream
+                is.get();
                 break;
             }
             case PARAMETER_OPTIONS_DESCRIPTION: {
@@ -170,23 +173,26 @@ public:
                 int peek = is.peek();
                 CHECK_STREAM
 
-                    char code[4];
+                char code[4];
                 code[3] = 0;
-                while (peek > 0) {
-
+                while (peek > 0)
+                {
                     is.read(code, 3);
 
                     CHECK_STREAM
 
-                            std::string code_str(code);
+                    std::string code_str(code);
                     std::string description = readShortString(is);
 
                     CHECK_STREAM
 
-                        if (code_str == language_string_any) {
+                    if (code_str == language_string_any)
+                    {
                         obj->hasDescription = true;
                         obj->description = description;
-                    } else {
+                    }
+                    else
+                    {
                         obj->languageDescription[code_str] = description;
                     }
 
@@ -195,23 +201,24 @@ public:
                 }
 
                 CHECK_STREAM
-                    // read 0-byte off the stream
-                    is.get();
+
+                // read 0-byte off the stream
+                is.get();
                 break;
             }
             case PARAMETER_OPTIONS_TAGS: {
                 std::string st = readTinyString(is);
                 CHECK_STREAM
 
-                        obj->tags = st;
+                obj->tags = st;
                 break;
             }
             case PARAMETER_OPTIONS_ORDER: {
 
-                int32_t val = readFromStream(is, obj->order.value());
+                int32_t val = readFromStream(is, val);
                 CHECK_STREAM
 
-                        obj->order = val;
+                obj->order = val;
                 break;
             }
             case PARAMETER_OPTIONS_PARENTID: {
@@ -279,7 +286,7 @@ public:
                 break;
             case PARAMETER_OPTIONS_USERDATA:
             {
-                std::uint32_t size = readFromStream(is, size);
+                uint32_t size = readFromStream(is, size);
                 std::vector<char> data;
                 obj->userdata.resize(size);
                 is.read(obj->userdata.data(), size);
@@ -290,7 +297,7 @@ public:
                 std::string st = readTinyString(is);
                 CHECK_STREAM
 
-                        obj->userid = st;
+                obj->userid = st;
                 break;
             }
 
@@ -299,14 +306,14 @@ public:
                 bool readonly = readFromStream(is, readonly);
                 CHECK_STREAM
 
-                        obj->readonly = readonly;
+                obj->readonly = readonly;
                 break;
             }
 
-                // handle all other cases in "handleOption"
-                //                case PARAMETER_OPTIONS_VALUE:
             default:
-                if (!handleOption(opt, is)) {
+                // handle all other options in "handleOption"
+                if (!handleOption(opt, is))
+                {
                     // error!
                     return;
                 }
@@ -794,8 +801,14 @@ protected:
         return false;
     }
 
-    TD& getRealTypeDef() { return obj->typeDefinition; }
-    const TD& getRealTypeDef() const { return obj->typeDefinition; }
+    TD& getRealTypeDef()
+    {
+        return obj->typeDefinition;
+    }
+    const TD& getRealTypeDef() const
+    {
+        return obj->typeDefinition;
+    }
 
     // IParameter
     void setDirty() override
@@ -818,7 +831,8 @@ protected:
         return !anyOptionChanged() && !getTypeDefinition().anyOptionChanged();
     }
 
-    bool anyOptionChanged() const {
+    bool anyOptionChanged() const
+    {
         return obj->labelChanged
                || obj->descriptionChanged
                || obj->tags.changed()
@@ -829,7 +843,8 @@ protected:
                || obj->readonly.changed();
     }
 
-    void writeOptions(Writer& out, bool all) {
+    void writeOptions(Writer& out, bool all)
+    {
         // writing options
         obj->write(out, all);
     }
@@ -1456,45 +1471,39 @@ public:
     typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type
     getMinimum() const
     {
-        const TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        return d.getMinimum();
+        return Parameter<TD>::getRealTypeDef().getMinimum();
     }
 
     template<class Q = T>
     void setMinimum(const typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type& value)
     {
-        TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        d.setMinimum(value);
+        Parameter<TD>::getRealTypeDef().setMinimum(value);
     }
 
     template<class Q = T>
     typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type
     getMaximum() const
     {
-        const TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        return d.getMaximum();
+        return Parameter<TD>::getRealTypeDef().getMaximum();
     }
 
     template<class Q = T>
     void setMaximum(const typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type& value)
     {
-        TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        d.setMaximum(value);
+        Parameter<TD>::getRealTypeDef().setMaximum(value);
     }
 
     template<class Q = T>
     typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type
     getMultipleof() const
     {
-        const TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        return d.getMultipleof();
+        return Parameter<TD>::getRealTypeDef().getMultipleof();
     }
 
     template<class Q = T>
     void setMultipleof(const typename std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value, T>::type& value)
     {
-        TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        d.setMultipleof(value);
+        Parameter<TD>::getRealTypeDef().setMultipleof(value);
     }
 
 
@@ -1502,32 +1511,28 @@ public:
              typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
     void setScale(const number_scale_t& scale)
     {
-        TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        d.setScale(scale);
+        Parameter<TD>::getRealTypeDef().setScale(scale);
     }
 
     template<class Q = T,
              typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
     number_scale_t getScale() const
     {
-        const TypeDefinition<T, type_id, td_num >& d = Parameter<TD>::getRealTypeDef();
-        return d.getScale();
+        return Parameter<TD>::getRealTypeDef().getScale();
     }
 
     template<class Q = T,
              typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
     void setUnit(const std::string& unit)
     {
-        auto& d = Parameter<TD>::getRealTypeDef();
-        d.setUnit(unit);
+        Parameter<TD>::getRealTypeDef().setUnit(unit);
     }
 
     template<class Q = T,
              typename = std::enable_if<std::is_arithmetic<Q>::value && !std::is_same<Q, bool>::value > >
     std::string getUnit() const
     {
-        auto& d = Parameter<TD>::getRealTypeDef();
-        return d.getUnit();
+        return Parameter<TD>::getRealTypeDef().getUnit();
     }
 
 
@@ -1572,8 +1577,10 @@ public:
 
     const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) override
     {
-        for(auto& f : obj->valueUpdatedCallbacks) {
-            if (&func == &f->callback) {
+        for(auto& f : obj->valueUpdatedCallbacks)
+        {
+            if (&func == &f->callback)
+            {
                 // already contained
                 return f->callback;
             }
@@ -1586,8 +1593,10 @@ public:
 
     const std::function< void(T&) >& addValueUpdatedCb(std::function< void(T&) >&& func)
     {
-        for(auto& f : obj->valueUpdatedCallbacks) {
-            if (&func == &f->callback) {
+        for(auto& f : obj->valueUpdatedCallbacks)
+        {
+            if (&func == &f->callback)
+            {
                 // already contained
                 return f->callback;
             }
@@ -1600,9 +1609,11 @@ public:
 
     void removeValueUpdatedCb(const std::function< void(T&) >& func) override
     {
-        for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ ) {
 
-            if (&func == &(it->get()->callback)) {
+        for(auto it = obj->valueUpdatedCallbacks.begin(); it != obj->valueUpdatedCallbacks.end(); it++ )
+        {
+            if (&func == &(it->get()->callback))
+            {
                 obj->valueUpdatedCallbacks.erase(it);
                 break;
             }
@@ -1644,22 +1655,25 @@ private:
         {}
 
         // writing options
-        void write(Writer& out, bool all) {
-
+        void write(Writer& out, bool all)
+        {
             // value
-            if (value.hasValue()) {
-
-                if (all || value.changed()) {
+            if (value.hasValue())
+            {
+                if (all || value.changed())
+                {
                     out.write(static_cast<char>(PARAMETER_OPTIONS_VALUE));
                     out.write(value.value());
 
-                    if (!all) {
+                    if (!all)
+                    {
                         value.setUnchanged();
                     }
                 }
-            } else if (value.changed()) {
+            }
+            else if (value.changed())
+            {
                 out.write(static_cast<char>(PARAMETER_OPTIONS_VALUE));
-
                 writeValue(out);
             }
         }
@@ -1953,7 +1967,8 @@ void Parameter<TD>::update(const ParameterPtr& other)
 }
 
 template <typename TD>
-void Parameter<TD>::dump() {
+void Parameter<TD>::dump()
+{
 
     std::cout << "parameter id: " << getId() << "\n";
     if (auto manager = obj->parameterManager.lock())

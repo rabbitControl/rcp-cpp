@@ -100,9 +100,13 @@ void testHierarchy() {
 class ParameterUpdateListener : public rcp::ParameterListener
 {
 public:
-    void onParentChanged(const int16_t parentId, const int16_t oldParentId)
+    // rcp::ParameterListener
+    void onParentChanged(IParameter* parent, const int16_t oldParentId) override
     {
-        std::cout << "---- parent changed: " << oldParentId << " -> " << parentId << "\n";
+        if (parent)
+        {
+            std::cout << "---- parent changed: " << oldParentId << " -> " << parent->getId() << "\n";
+        }
     }
 };
 

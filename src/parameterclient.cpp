@@ -105,7 +105,7 @@ void ParameterClient::disconnected()
     m_initializeSent = false;
 
     // clear manager
-    m_parameterManager->clear();
+    m_parameterManager->_clear();
 }
 
 void ParameterClient::received(std::istream& data)
@@ -284,7 +284,7 @@ void ParameterClient::_remove(Packet& packet)
             }
 
             // remove it (direct)
-            m_parameterManager->removeParameterDirect(cached_param);
+            m_parameterManager->_removeParameterDirect(cached_param);
         }
         else
         {

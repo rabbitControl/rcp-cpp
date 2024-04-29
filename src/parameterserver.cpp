@@ -50,7 +50,7 @@ void ParameterServer::dispose()
 
 void ParameterServer::clear()
 {
-    m_parameterManager->clear();
+    m_parameterManager->_clear();
 }
 
 

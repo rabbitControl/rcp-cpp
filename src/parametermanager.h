@@ -94,11 +94,11 @@ private:
     void addMissingParent(int16_t parentId, ParameterPtr child) override;
 
 private:
-    int16_t getNextId();
+    int16_t _getNextId();
     void _addParameter(ParameterPtr& parameter);
     void _addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group);
-    void removeParameterDirect(ParameterPtr& parameter);
-    void clear();
+    void _removeParameterDirect(ParameterPtr& parameter);
+    void _clear();
 
     //--------
     std::unordered_set<int16_t> ids;

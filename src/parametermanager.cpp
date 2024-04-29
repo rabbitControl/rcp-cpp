@@ -48,12 +48,16 @@ void ParameterManager::removeParameter(int16_t id)
     // add it to removed
     setParameterRemoved(params[id]);
 
-    removeParameterDirect(params[id]);
+    _removeParameterDirect(params[id]);
 }
 
-void ParameterManager::removeParameterDirect(ParameterPtr& parameter) {
+void ParameterManager::_removeParameterDirect(ParameterPtr& parameter)
+{
+    if (!isValid(*parameter))
+    {
+        return;
+    }
 
-    if (!isValid(*parameter)) return;
 
     // erase from available ids
     auto id_it = std::find(ids.begin(), ids.end(), parameter->getId());
@@ -72,7 +76,7 @@ void ParameterManager::removeParameterDirect(ParameterPtr& parameter) {
     if (parameter->getTypeDefinition().getDatatype() == DATATYPE_GROUP) {
         GroupParameterPtr gp = std::dynamic_pointer_cast<GroupParameter>(parameter);
         for (auto& child : gp->children()) {
-            removeParameterDirect(child.second);
+            _removeParameterDirect(child.second);
         }
     }
 }
@@ -85,7 +89,7 @@ void ParameterManager::removeParameterDirect(ParameterPtr& parameter) {
 //--------------------------------------------
 BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         BooleanParameterPtr p = std::make_shared<BooleanParameter>(id, false);
@@ -100,7 +104,7 @@ BooleanParameterPtr ParameterManager::createBooleanParameter(const std::string& 
 
 Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Int8ParameterPtr p = std::make_shared<Int8Parameter>(id, 0);
@@ -115,7 +119,7 @@ Int8ParameterPtr ParameterManager::createInt8Parameter(const std::string& label,
 
 Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Int16ParameterPtr p = std::make_shared<Int16Parameter>(id, 0);
@@ -130,7 +134,7 @@ Int16ParameterPtr ParameterManager::createInt16Parameter(const std::string& labe
 
 Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Int32ParameterPtr p = std::make_shared<Int32Parameter>(id, 0);
@@ -145,7 +149,7 @@ Int32ParameterPtr ParameterManager::createInt32Parameter(const std::string& labe
 
 Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Int64ParameterPtr p = std::make_shared<Int64Parameter>(id, 0);
@@ -160,7 +164,7 @@ Int64ParameterPtr ParameterManager::createInt64Parameter(const std::string& labe
 
 Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Float32ParameterPtr p = std::make_shared<Float32Parameter>(id, 0.0f);
@@ -175,7 +179,7 @@ Float32ParameterPtr ParameterManager::createFloat32Parameter(const std::string& 
 
 Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         Float64ParameterPtr p = std::make_shared<Float64Parameter>(id, 0.0);
@@ -191,7 +195,7 @@ Float64ParameterPtr ParameterManager::createFloat64Parameter(const std::string& 
 
 StringParameterPtr ParameterManager::createStringParameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         StringParameterPtr p = std::make_shared<StringParameter>(id);
@@ -206,7 +210,7 @@ StringParameterPtr ParameterManager::createStringParameter(const std::string& la
 
 RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         RGBAParameterPtr p = std::make_shared<RGBAParameter>(id);
@@ -221,7 +225,7 @@ RGBAParameterPtr ParameterManager::createRGBAParameter(const std::string& label,
 
 BangParameterPtr ParameterManager::createBangParameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         BangParameterPtr p = std::make_shared<BangParameter>(id);
@@ -236,7 +240,7 @@ BangParameterPtr ParameterManager::createBangParameter(const std::string& label,
 
 GroupParameterPtr ParameterManager::createGroupParameter(const std::string& label, GroupParameterPtr group)
 {
-    int16_t id = getNextId();
+    int16_t id = _getNextId();
     if (id != 0)
     {
         GroupParameterPtr p = std::make_shared<GroupParameter>(id);
@@ -267,7 +271,7 @@ ParameterPtr ParameterManager::getParameter(const int16_t id) const
 // private functions
 
 
-int16_t ParameterManager::getNextId()
+int16_t ParameterManager::_getNextId()
 {
     for (unsigned short i=1; i<USHRT_MAX; i++)
     {
@@ -371,7 +375,8 @@ void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
      * @param parameter
      * @param group
      */
-void ParameterManager::_addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group) {
+void ParameterManager::_addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group)
+{
 
     parameter->setManager(shared_from_this());
     parameter->setLabel(label);
@@ -448,7 +453,7 @@ void ParameterManager::setParameterRemoved(ParameterPtr parameter)
     removedParameter[parameter->getId()] = parameter;
 }
 
-void ParameterManager::clear()
+void ParameterManager::_clear()
 {
 #ifndef RCP_MANAGER_NO_LOCKING
     // protect lists to be used from multiple threads

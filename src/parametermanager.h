@@ -114,7 +114,7 @@ private:
     void lock();
     void unlock();
 #ifndef RCP_MANAGER_NO_LOCKING
-    std::mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
 #endif
 };
 

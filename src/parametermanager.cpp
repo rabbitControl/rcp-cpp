@@ -39,6 +39,11 @@ void ParameterManager::removeParameter(int16_t id)
         return;
     }
 
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
+
     auto it = params.find(id);
     if (it == params.end())
     {
@@ -58,6 +63,10 @@ void ParameterManager::_removeParameterDirect(ParameterPtr& parameter)
         return;
     }
 
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
 
     // erase from available ids
     auto id_it = std::find(ids.begin(), ids.end(), parameter->getId());
@@ -257,6 +266,11 @@ GroupParameterPtr ParameterManager::createGroupParameter(const std::string& labe
 
 ParameterPtr ParameterManager::getParameter(const int16_t id) const
 {
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
+
     auto it = params.find(id);
 
     if (it != params.end())
@@ -273,6 +287,11 @@ ParameterPtr ParameterManager::getParameter(const int16_t id) const
 
 int16_t ParameterManager::_getNextId()
 {
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
+
     for (unsigned short i=1; i<USHRT_MAX; i++)
     {
         if (ids.find(static_cast<int16_t>(i)) == ids.end())
@@ -297,6 +316,11 @@ void ParameterManager::_addParameter(ParameterPtr& parameter)
 {
     // NOTE: this is called from a client
     // make sure parameters are clean by default
+
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
 
     // check if already in map
     if (params.find(parameter->getId()) != params.end())
@@ -359,6 +383,11 @@ void ParameterManager::_addParameter(ParameterPtr& parameter)
 
 void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
 {
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
+
     if (missingParents.find(parentId) == missingParents.end())
     {
         // add new list
@@ -377,6 +406,10 @@ void ParameterManager::addMissingParent(int16_t parentId, ParameterPtr child)
      */
 void ParameterManager::_addParameterDirect(const std::string& label, ParameterPtr& parameter, GroupParameterPtr& group)
 {
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
 
     parameter->setManager(shared_from_this());
     parameter->setLabel(label);
@@ -411,7 +444,7 @@ bool ParameterManager::setParameterDirty(ParameterPtr parameter)
 
 #ifndef RCP_MANAGER_NO_LOCKING
     // protect lists to be used from multiple threads
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 #endif
 
     // only add if not already removed
@@ -430,7 +463,7 @@ bool ParameterManager::isParameterDirty(ParameterPtr parameter)
 {
 #ifndef RCP_MANAGER_NO_LOCKING
     // protect lists to be used from multiple threads
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 #endif
 
     return dirtyParameter.find(parameter->getId()) != dirtyParameter.end();
@@ -440,7 +473,7 @@ void ParameterManager::setParameterRemoved(ParameterPtr parameter)
 {
 #ifndef RCP_MANAGER_NO_LOCKING
     // protect lists to be used from multiple threads
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 #endif
 
     // check if parameter is dirty...
@@ -457,7 +490,7 @@ void ParameterManager::_clear()
 {
 #ifndef RCP_MANAGER_NO_LOCKING
     // protect lists to be used from multiple threads
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 #endif
 
     ids.clear();
@@ -495,6 +528,11 @@ ParameterPtr ParameterManager::getRootGroup() const
 
 void ParameterManager::dumpHierarchy() const
 {
+#ifndef RCP_MANAGER_NO_LOCKING
+    // protect lists to be used from multiple threads
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+#endif
+
     m_rootGroup->dumpChildren(0);
     std::flush(std::cout);
 }

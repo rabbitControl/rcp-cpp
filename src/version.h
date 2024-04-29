@@ -20,6 +20,6 @@
 
 #define RCP_SPECIFICATION_VERSION "0.1.0"
 
-#define RCP_CPP_LIB_VERSION "0.2.0"
+#define RCP_CPP_LIB_VERSION "0.2.1"
 
 #endif // VERSION_H

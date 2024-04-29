@@ -130,6 +130,7 @@ public:
 
     //
     virtual bool isValueParameter() const { return false; }
+    virtual bool hasAnyOption() const = 0;
 
     template<typename, datatype_t, td_types> friend class TypeDefinition;
     friend class GroupParameter;

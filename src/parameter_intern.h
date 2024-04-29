@@ -717,6 +717,20 @@ public:
 
     //----------------------
     //
+
+    virtual bool hasAnyOption() const override
+    {
+        return obj->hasLabel ||
+               obj->hasDescription ||
+               obj->tags.hasValue() ||
+               obj->order.hasValue() ||
+               obj->parent.lock() != nullptr ||
+               !obj->userdata.empty() ||
+               obj->userid.hasValue() ||
+               obj->readonly.hasValue();
+
+    }
+
     void dump() override;
 
     // update from proxy-parameter
@@ -1387,6 +1401,11 @@ public:
     bool isValueParameter() const override
     {
         return true;
+    }
+
+    virtual bool hasAnyOption() const override
+    {
+        return Parameter<TD>::hasAnyOption() || obj->value.hasValue();
     }
 
     virtual bool handleOption(const parameter_options_t& opt, std::istream& is) override
@@ -2136,14 +2155,7 @@ public:
             return;
         }
 
-        if (!other->hasLabel() &&
-            !other->hasDescription() &&
-            !other->hasOrder() &&
-            !other->hasParent() &&
-            !other->hasReadonly() &&
-            !other->hasTags() &&
-            !other->hasUserdata() &&
-            !other->hasUserid())
+        if (!other->hasAnyOption())
         {
             // empty other
             // call calback

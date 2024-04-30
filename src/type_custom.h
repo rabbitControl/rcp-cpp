@@ -295,7 +295,7 @@ public:
 #endif
         return obj->config.size() > 0;
     }
-    std::vector<char>& getConfig() const
+    const std::vector<char>& getConfig() const
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());

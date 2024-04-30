@@ -45,6 +45,11 @@ public:
     {}
 
     // convenience
+    uint32_t getSize() const
+    {
+        return getDefaultTypeDefinition().getSize();
+    }
+
     void setDefault(const std::vector<char>& value)
     {
         // only allow same size
@@ -54,9 +59,29 @@ public:
         }
     }
 
+    std::vector<char> getDefault() const
+    {
+        return getDefaultTypeDefinition().getDefault();
+    }
+
+    void setUuid(const char* uuid, uint8_t length)
+    {
+        getDefaultTypeDefinition().setUuid(uuid, length);
+    }
+
+    const char* getUuid() const
+    {
+        return getDefaultTypeDefinition().getUuid();
+    }
+
     void setConfig(const std::vector<char>& config)
     {
         getDefaultTypeDefinition().setConfig(config);
+    }
+
+    const std::vector<char>& getConfig() const
+    {
+        return getDefaultTypeDefinition().getConfig();
     }
 
 public:

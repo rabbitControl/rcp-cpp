@@ -94,7 +94,7 @@ public:
     virtual void removeFromParent() = 0;
 
     virtual std::vector<char> getUserdata() const = 0;
-    virtual void setUserdata(const std::vector<char> userdata) = 0;
+    virtual void setUserdata(const std::vector<char>& userdata) = 0;
     virtual bool hasUserdata() const = 0;
     virtual void clearUserdata() = 0;
 

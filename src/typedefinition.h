@@ -56,28 +56,29 @@ public:
 };
 
 
-template<typename T>
+template<typename T,
+         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
 class INumberDefinition
     : public IDefaultDefinition<T>
 {
 public:
     virtual T getMinimum() const = 0;
-    virtual void setMinimum(const T& min) = 0;
+    virtual void setMinimum(const T min) = 0;
     virtual bool hasMinimum() const = 0;
     virtual void clearMinimum() = 0;
 
     virtual T getMaximum() const = 0;
-    virtual void setMaximum(const T& min) = 0;
+    virtual void setMaximum(const T max) = 0;
     virtual bool hasMaximum() const = 0;
     virtual void clearMaximum() = 0;
 
     virtual T getMultipleof() const = 0;
-    virtual void setMultipleof(const T& min) = 0;
+    virtual void setMultipleof(const T multiple) = 0;
     virtual bool hasMultipleof() const = 0;
     virtual void clearMultipleof() = 0;
 
     virtual number_scale_t getScale() const = 0;
-    virtual void setScale(const number_scale_t& scale) = 0;
+    virtual void setScale(const number_scale_t scale) = 0;
     virtual bool hasScale() const = 0;
     virtual void clearScale() = 0;
 

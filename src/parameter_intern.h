@@ -739,7 +739,7 @@ public:
 #endif
         return obj->userdata;
     }
-    void setUserdata(const std::vector<char> userdata) override
+    void setUserdata(const std::vector<char>& userdata) override
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->m_mutex);

@@ -308,7 +308,7 @@ public:
         }
         return type_zero(obj->minimum.value());
     }
-    void setMinimum(const T& val) override
+    void setMinimum(const T val) override
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
@@ -353,7 +353,7 @@ public:
         }
         return type_zero(obj->maximum.value());
     }
-    void setMaximum(const T& val) override
+    void setMaximum(const T val) override
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
@@ -399,7 +399,7 @@ public:
         }
         return type_zero(obj->multipleof.value());
     }
-    void setMultipleof(const T& val) override
+    void setMultipleof(const T val) override
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());
@@ -445,7 +445,7 @@ public:
         }
         return NUMBER_SCALE_LINEAR;
     }
-    void setScale(const number_scale_t& val) override
+    void setScale(const number_scale_t val) override
     {
 #ifndef RCP_PARAMETER_NO_LOCKING
         std::lock_guard<std::recursive_mutex> locker(obj->parameter.mutex());

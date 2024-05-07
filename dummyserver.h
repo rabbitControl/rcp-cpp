@@ -37,55 +37,44 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include "src/servertransporter.h"
+#include "src/stream_tools.h"
 
 class DummyServerTransporter : public rcp::ServerTransporter
 {
 public:
-    DummyServerTransporter() : connections(0) {}
-    ~DummyServerTransporter() {}
-
-    virtual void bind(int port) {
-        std::cout << "bind" << port << "\n";
-    }
-    virtual void unbind() {
-        std::cout << "ubind\n";
-    }
-
-    virtual void sendToOne(std::istream& data, void*id) {
-        std::cout << "send to one\n";
-    }
-    virtual void sendToAll(std::istream& data, void* excludeId)  {
-
+    static void logStream(std::istream& data, const std::string& prefix = "")
+    {
         data.seekg (0, data.end);
         size_t length = size_t(data.tellg()); // std::streampos vs. size_t
         data.seekg (0, data.beg);
 
-        char *d = new char[length];
-        if (d)
-        {
-            data.read(d, length);
+        std::vector<char> data_vec;
+        data_vec.resize(length);
 
-            std::cout << "send to all: ";
-            for (size_t i=0; i<length; i++) {
-                std::cout << int(d[i]) << " ";
-            }
-            std::cout << "\n";
+        data.seekg(0);
+        data.read(data_vec.data(), length);
 
-            delete[] d;
-        }
+        std::cout << prefix << rcp::value_to_string(data_vec) << "\n";
     }
 
-    virtual int getConnectionCount() {
-        return connections;
-    }
+public:
+    DummyServerTransporter() : connections(0) {}
+    ~DummyServerTransporter() {}
 
     void addConnection() {
         connections++;
     }
     void clearConnection() {
         connections = 0;
+    }
+
+    void testcallall(std::istream& data) {
+        for (const auto& kv : receive_cb) {
+            (kv.first->*kv.second)(data, *this, nullptr);
+        }
     }
 
     void testcallall(const std::string& data) {
@@ -98,6 +87,31 @@ public:
         std::cout << "--------\n";
     }
 
+public:
+    // rcp::ServerTransporter
+    virtual void bind(int port) override
+    {
+        std::cout << "bind" << port << "\n";
+    }
+    virtual void unbind() override
+    {
+        std::cout << "ubind\n";
+    }
+
+    virtual void sendToOne(std::istream& data, void* /*id*/) override
+    {
+        logStream(data, "send to one: ");
+    }
+    virtual void sendToAll(std::istream& data, void* /*excludeId*/) override
+    {
+        logStream(data, "send to all: ");
+    }
+
+    virtual int getConnectionCount() override
+    {
+        return connections;
+    }
+
 private:
     int connections;
 };
@@ -108,33 +122,24 @@ private:
 class ServerUser : public rcp::ServerTransporterReceiver
 {
 public:
-    ServerUser(DummyServerTransporter& s, const std::string& n) : server(s), name(n) {
+    ServerUser(DummyServerTransporter& s, const std::string& n) : server(s), name(n)
+    {
         server.addReceivedCb(this, &ServerTransporterReceiver::received);
     }
-    ~ServerUser() {
+    ~ServerUser()
+    {
         removeCb();
-    }
-
-    void received(std::istream& data, rcp::ServerTransporter& transporter, void* id) {
-
-        data.seekg (0, data.end);
-        size_t length = size_t(data.tellg()); // std::streampos vs size_t
-        data.seekg (0, data.beg);
-
-        char *d = new char[length + 1];
-        if (d)
-        {
-            data.read(d, length);
-            d[length] = 0;
-
-            std::cout << "myCallback: " << name << " : " << d << "\n";
-
-            delete[] d;
-        }
     }
 
     void removeCb() {
         server.removeReceivedCb(this);
+    }
+
+public:
+    // rcp::ServerTransporterReceiver
+    void received(std::istream& data, rcp::ServerTransporter& /*transporter*/, void* /*id*/) override
+    {
+        DummyServerTransporter::logStream(data, "dummy server received:");
     }
 
 private:

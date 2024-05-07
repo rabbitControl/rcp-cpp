@@ -422,6 +422,30 @@ void testUpdate() {
 }
 
 
+void testInit()
+{
+    std::cout << "**** " << __FUNCTION__ << " ****\n\n";
+
+    ParameterServer server;
+    DummyServerTransporter serverTransporter;
+
+    server.addTransporter(serverTransporter);
+
+    auto sp = server.createInt8Parameter("i8");
+    auto bang = server.createBangParameter("bang");
+
+
+    // trigger init
+    rcp::Packet packet(COMMAND_INITIALIZE);
+    StringStreamWriter aWriter;
+    packet.write(aWriter, true);
+
+    serverTransporter.testcallall(aWriter.getBuffer());
+
+    std::cout << "\n\n";
+}
+
+
 void testInt8Parameter() {
 
     std::cout << "**** " << __FUNCTION__ << " ****\n\n";
@@ -1018,6 +1042,9 @@ void testThreading()
 //-------------------------------
 int main(int /*argc*/, char const */*argv*/[])
 {
+    testInit();
+    return 0;
+
     testThreading();
     return 0;
 

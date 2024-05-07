@@ -77,6 +77,8 @@ void ParameterServer::received(std::istream& data, ServerTransporter& transporte
                 // send data to all clients
                 for (auto& transporter : transporterList)
                 {
+                    // rewind data
+                    data.seekg(0, data.beg);
                     transporter.get().sendToAll(data, id);
                 }
             }

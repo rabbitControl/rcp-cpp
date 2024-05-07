@@ -118,8 +118,11 @@ void ParameterClient::received(std::istream& data)
         switch (the_packet.getCommand())
         {
         case COMMAND_INITIALIZE:
-            // error
-//            std::cerr << "invalid command 'initialize' on client\n";
+            // NOTE: marks the end of init parameters from server
+            for (ParameterClientListener* listener : m_listener)
+            {
+                listener->initializeDone();
+            }
             break;
 
         case COMMAND_UPDATE:
@@ -150,7 +153,7 @@ void ParameterClient::received(std::istream& data)
     {
         // parsing error??
 
-        for (auto listener : m_listener)
+        for (ParameterClientListener* listener : m_listener)
         {
             listener->parsingError();
         }
@@ -172,7 +175,7 @@ void ParameterClient::_version(Packet& packet) {
             m_serverApplicationId = info_data->getApplicationId();
             m_serverVersion = info_data->getVersion();
 
-            for (auto listener : m_listener)
+            for (ParameterClientListener* listener : m_listener)
             {
                 listener->serverInfoReceived(m_serverApplicationId, m_serverVersion);
             }

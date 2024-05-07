@@ -28,9 +28,10 @@ namespace rcp {
 class ParameterClientListener
 {
 public:
-    virtual void serverInfoReceived(const std::string& /*applicationId*/, const std::string& /*version*/) {};
-    virtual void parameterAdded(ParameterPtr /*parameter*/) {};
-    virtual void parameterRemoved(ParameterPtr /*parameter*/) {};
+    virtual void serverInfoReceived(const std::string& /*applicationId*/, const std::string& /*version*/) {}
+    virtual void parameterAdded(ParameterPtr /*parameter*/) {}
+    virtual void parameterRemoved(ParameterPtr /*parameter*/) {}
+    virtual void initializeDone() {}
     virtual void parsingError() {}
 };
 

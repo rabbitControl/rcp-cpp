@@ -273,9 +273,16 @@ void ParameterServer::_init(ServerTransporter& transporter, void *id)
     {
         _sendParameterFull(child.second, transporter, id);
     }
+
+    // send initialize to mark end of init
+    Packet packet(COMMAND_INITIALIZE);
+    StringStreamWriter aWriter;
+    packet.write(aWriter, true);
+
+    transporter.sendToOne(aWriter.getBuffer(), id);
 }
 
-bool ParameterServer::_update(Packet& packet, ServerTransporter& transporter, void *id)
+bool ParameterServer::_update(Packet& packet, ServerTransporter& /*transporter*/, void* /*id*/)
 {
     if (!packet.hasData())
     {

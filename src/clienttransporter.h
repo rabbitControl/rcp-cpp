@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,10 +15,11 @@
 *********************************************************************
 */
 
-#ifndef CLIENTTRANSPORTER_H
-#define CLIENTTRANSPORTER_H
+#ifndef RCP_CLIENTTRANSPORTER_H
+#define RCP_CLIENTTRANSPORTER_H
 
 #include <map>
+#include <istream>
 
 namespace rcp {
 
@@ -41,6 +42,8 @@ public:
 
     virtual void send(std::istream& data) = 0;
     virtual void send(char* data, size_t size) = 0;
+
+
 
     void addConnectedCb(ClientTransporterListener* c, void(ClientTransporterListener::* func)()) {
         connected_cb[c] = func;

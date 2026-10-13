@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,7 +19,6 @@
 #define RCP_IP_H
 
 #include <ostream>
-#include <inttypes.h>
 
 namespace rcp {
 
@@ -35,16 +34,21 @@ public:
         m_ip = ip;
     }
 
-    void setAddress(const uint32_t& ip) {
+    void setAddress(const uint32_t& ip)
+    {
         m_ip = ip;
     }
-    uint32_t getAddress() const { return m_ip; }
 
-    bool operator==(const IPv4& other) {
+    uint32_t getAddress() const
+    {
+        return m_ip;
+    }
+
+    bool operator==(const IPv4& other) const {
         return m_ip == other.getAddress();
     }
 
-    bool operator!=(const IPv4& other) {
+    bool operator!=(const IPv4& other) const {
         return m_ip != other.getAddress();
     }
 
@@ -77,21 +81,24 @@ public:
         m_ip[2] = v3;
         m_ip[3] = v4;
     }
-    uint32_t getAddress(const int index) const {
-        if (index < 0 || index > 3) {
+    uint32_t getAddress(const int index) const
+    {
+        if (index < 0 || index > 3)
+        {
             return 0;
         }
+
         return m_ip[index];
     }
 
-    bool operator==(const IPv6& other) {
+    bool operator==(const IPv6& other) const {
         return m_ip[0] == other.getAddress(0) &&
                m_ip[1] == other.getAddress(1) &&
                m_ip[2] == other.getAddress(2) &&
                m_ip[3] == other.getAddress(3);
     }
 
-    bool operator!=(const IPv6& other) {
+    bool operator!=(const IPv6& other) const {
         return m_ip[0] != other.getAddress(0) ||
                m_ip[1] != other.getAddress(1) ||
                m_ip[2] != other.getAddress(2) ||
@@ -113,6 +120,9 @@ IPv6& swap_endian(const IPv6 &u);
 
 IPv4 readFromStream(std::istream& is, const IPv4& i);
 IPv6 readFromStream(std::istream& is, const IPv6& i);
+
+IPv4 type_zero(const IPv4 &);
+IPv6 type_zero(const IPv6 &);
 
 }
 

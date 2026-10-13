@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,25 +15,26 @@
 *********************************************************************
 */
 
-#ifndef PARAMETERCLIENT_H
-#define PARAMETERCLIENT_H
+#ifndef RCP_PARAMETERCLIENT_H
+#define RCP_PARAMETERCLIENT_H
 
-#include "packet.h"
-#include "clienttransporter.h"
-#include "parametermanager.h"
-#include "rcp_error_listener.h"
+#include "ClientTransporter.h"
+#include "ParameterManager.h"
+#include "StringStreamWriter.h"
 
 namespace rcp {
+
 
 class ParameterClientListener
 {
 public:
-    virtual void serverInfoReceived(const std::string& /*applicationId*/, const std::string& /*version*/) {}
-    virtual void parameterAdded(ParameterPtr /*parameter*/) {}
-    virtual void parameterRemoved(ParameterPtr /*parameter*/) {}
+    virtual void serverInfoReceived(const std::string& /*version*/, const std::string& /*applicationId*/, const std::string& applicationVersion = "") {}
+    virtual void parameterAdded(IParameterPtr parameter) {}
+    virtual void parameterRemoved(IParameterPtr parameter) {}
     virtual void initializeDone() {}
     virtual void parsingError() {}
 };
+
 
 
 class ParameterClient
@@ -43,75 +44,88 @@ public:
     ParameterClient(ClientTransporter& transporter);
     virtual ~ParameterClient();
 
+
+    void setApplicationId(const std::string& appid);
+    std::string getApplicationId();
+
+    virtual void update() = 0;
+
     void dispose();
     void connect(const std::string& host, const int port);
     void disconnect();
 
-    void initialize(); // tries to send an init-command
-    void update(); // update all changes
-
-    // listener
     void addListener(ParameterClientListener* listener);
     void removeListener(ParameterClientListener* listener);
 
-//    [[deprecated("use ParameterClientListener instead")]]
-    // error events
-    void addParsingErrorCb(ParsingErrorListener* c, void(ParsingErrorListener::* func)()) {
-        parsing_error_cb[c] = func;
-    }
-    void removeParsingErrorCb(ParsingErrorListener* c) {
-        parsing_error_cb.erase(c);
-    }
+    rcp::IGroupParameterPtr getRootGroup() const;
 
-
-    void setApplicationId(const std::string& appid) {
-        m_applicationId = appid;
-    }
-    std::string getApplicationId() {
-        return m_applicationId;
-    }
-
-    GroupParameterPtr rootGroup() const {
-        return m_parameterManager->rootGroup();
-    }
-
-    std::string getServerVersion() const
-    {
-        return m_serverVersion;
-    }
-    std::string getServerApplicationId() const
-    {
-        return m_serverApplicationId;
-    }
-
-    void dump() {
-        m_parameterManager->dumpHierarchy();
-    }
-
-public:
+// private:
     // ClientTransporterListener
-    virtual void connected();
-    virtual void disconnected();
-    virtual void received(std::istream& data);
+    virtual void connected() override;
+    virtual void disconnected() override;
+    // virtual void received(std::istream& data) override;
+
+
+    void setDontDisconnectOnDestruct(bool newDontDisconnectOnDestruct);
 
 protected:
-    std::shared_ptr<ParameterManager> m_parameterManager;
+    void sendData(StringStreamWriter& writer);
+
+    bool _update(const IParameterPtr &param)
+    {
+        if (param)
+        {
+            auto chached_param = m_manager->getParameter(param->getId());
+
+            if (chached_param)
+            {
+                // got it... update it
+                chached_param->update(param);
+
+                // call updateParameter callbacks
+            }
+            else
+            {
+                // parameter not in cache, add it
+                // this sets the parent
+                m_manager->_addParameter(param);
+
+                // NOTE: parameters might not have a parent by now,
+                // if waitForParent == true
+
+                // at the client new parameters are all unchanged when added
+                param->setAllUnchanged();
+
+                // call parameter added callbacks
+                for (auto listener : m_listener)
+                {
+                    listener->parameterAdded(param);
+                }
+            }
+
+            return true;
+
+        }
+        else
+        {
+            // no parameter?
+        }
+
+        return false;
+    }
+
+
+protected:
     ClientTransporter& m_transporter;
 
-private:
-    void _update(Packet& packet);
-    void _remove(Packet& packet);
-    void _version(Packet& packet);
-
-    std::map<ParsingErrorListener*, void(ParsingErrorListener::*)()> parsing_error_cb;
+    std::shared_ptr<ParameterClient> m_realClient{nullptr};
     std::vector<ParameterClientListener*> m_listener;
 
     std::string m_applicationId;
-    bool m_initializeSent{false};
 
-    // server
-    std::string m_serverApplicationId;
-    std::string m_serverVersion;
+    ParameterManagerPtr m_manager;
+
+    bool m_dontDisconnectOnDestruct{false};
 };
 
 }

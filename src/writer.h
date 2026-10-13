@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,25 +15,25 @@
 *********************************************************************
 */
 
-#ifndef WRITER_H
-#define WRITER_H
+#ifndef RCP_WRITER_H
+#define RCP_WRITER_H
 
-#include <inttypes.h>
 
-#include "color.h"
-#include "range.h"
-#include "ip.h"
-#include "tinystring.h"
-#include "vector2.h"
-#include "vector3.h"
-#include "vector4.h"
+#include "Color.h"
+#include "Range.h"
+#include "Ip.h"
+#include "Vector2.h"
+#include "Vector3.h"
+#include "Vector4.h"
+#include "ColorFloat.h"
 
 namespace rcp {
 
 class Writer
 {
 public:
-    virtual ~Writer();
+    virtual ~Writer()
+    {}
 
     virtual void write(const bool& c) = 0;
     virtual void write(const char& c) = 0;
@@ -47,11 +47,13 @@ public:
     virtual void write(const int64_t& c) = 0;
     virtual void write(const float& c) = 0;
     virtual void write(const double& c) = 0;
-    virtual void write(const std::string& s, bool prefix = true) = 0;
+    virtual void write(const std::string& s, bool prefix = true) = 0;    
+    virtual void write(const char* data, size_t length) = 0;
+
     virtual void write(const rcp::Color& s) = 0;
     virtual void write(const rcp::IPv4& s) = 0;
     virtual void write(const rcp::IPv6& s) = 0;
-    virtual void write(const char* data, size_t length) = 0;
+
     virtual void write(std::vector<char> data) {
         write(data.data(), data.size());
     }
@@ -83,36 +85,17 @@ public:
         write(c.w());
     }
 
-    void write(const TinyString& s) {
-        writeTinyString(s);
+    void write(const ColorFloatRGB& c) {
+        write(c.r());
+        write(c.g());
+        write(c.b());
     }
 
-    void writeTinyString(const std::string& s) {
-        if (s.length() >= UINT8_MAX) {
-            write(UINT8_MAX);
-            write(s.substr(0, UINT8_MAX), false); // write without length-prefix
-        } else {
-            write(static_cast<uint8_t>(s.length()));
-            write(s, false); // write without length-prefix
-        }
-    }
-    void writeShortString(const std::string& s) {
-        if (s.length() >= UINT16_MAX) {
-            write(UINT16_MAX);
-            write(s.substr(0, UINT16_MAX), false); // write without length-prefix
-        } else {
-            write(static_cast<uint16_t>(s.length()));
-            write(s, false); // write without length-prefix
-        }
-    }
-    void writeString(const std::string& s) {
-        if (s.length() >= UINT32_MAX) {
-            write(UINT32_MAX);
-            write(s.substr(0, UINT32_MAX), false); // write without length-prefix
-        } else {
-            write(static_cast<uint32_t>(s.length()));
-            write(s, false); // write without length-prefix
-        }
+    void write(const ColorFloatRGBA& c) {
+        write(c.r());
+        write(c.g());
+        write(c.b());
+        write(c.a());
     }
 };
 

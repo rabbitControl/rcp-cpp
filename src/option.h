@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,8 +17,6 @@
 
 #ifndef RCP_OPTION_H
 #define RCP_OPTION_H
-
-#include "specializetypes.h"
 
 namespace rcp {
 
@@ -64,18 +62,24 @@ public:
         m_changed = false;
     }
 
-    T& value()
+    T value() const
     {
         return m_value;
     }
 
-    const T& value() const
+    T valueOr(const T& defaultValue) const
     {
-        return m_value;
+        if (m_hasValue)
+        {
+            return m_value;
+        }
+
+        return defaultValue;
     }
 
     void clearValue()
     {
+        m_value = {};
         // prevent to clear m_changed if calling this more than once
         if (!m_changed)
         {
@@ -97,10 +101,21 @@ public:
         return *this;
     }
 
+    Option& operator=(const Option<T>& other)
+    {
+        if (other.hasValue())
+        {
+            setValue(other.m_value);
+        }
+        return *this;
+    }
+
+
+
 private:
-    T m_value;
-    bool m_hasValue;
-    bool m_changed;
+    T m_value{};
+    bool m_hasValue{false};
+    bool m_changed{false};
 };
 
 }

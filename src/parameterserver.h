@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,19 +15,14 @@
 *********************************************************************
 */
 
-#ifndef RCPSERVER_H
-#define RCPSERVER_H
+#ifndef RCP_PARAMETERSERVER_H
+#define RCP_PARAMETERSERVER_H
 
-#include <set>
-
-#include "servertransporter.h"
-#include "parametermanager.h"
-#include "rcp_error_listener.h"
+#include "ParameterManager.h"
+#include "ServerTransporter.h"
+#include "StringStreamWriter.h"
 
 namespace rcp {
-
-class Packet;
-
 
 class ParameterServerListener
 {
@@ -37,16 +32,13 @@ public:
 
 
 class ParameterServer
-    : public ServerTransporterReceiver
+    : public ServerTransporterListener
 {
 public:
-    ParameterServer();
-    ParameterServer(ServerTransporter& transporter);
+    ParameterServer(const IGroupParameterPtr& root = nullptr);
+    ParameterServer(ServerTransporter& transporter, const IGroupParameterPtr& root = nullptr);
     ~ParameterServer();
 
-public:
-    void dispose();
-    void clear();
 
     bool addTransporter(ServerTransporter& transporter);
     bool removeTransporter(ServerTransporter& transporter);
@@ -56,147 +48,59 @@ public:
     void addListener(ParameterServerListener* listener);
     void removeListener(ParameterServerListener* listener);
 
-    virtual bool update();
 
-public:
-    // ServerTransporterReceiver
-    void received(std::istream& data, ServerTransporter& transporter, void* id);
-
-public:
-    GroupParameterPtr getRoot() const { return m_parameterManager->rootGroup(); }
-
-    ParameterPtr getParameter(const int16_t id) {
-        return m_parameterManager->getParameter(id);
-    }
-
-    //
-    void removeParameter(ParameterPtr parameter) {
-        m_parameterManager->removeParameter(parameter);
-    }
-    void removeParameter(int16_t id) {
-        m_parameterManager->removeParameter(id);
-    }
-
-    // parameter creation
-    BooleanParameterPtr createBooleanParameter(const std::string& label) {
-        return m_parameterManager->createBooleanParameter(label);
-    }
-    BooleanParameterPtr createBooleanParameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createBooleanParameter(label, group);
-    }
-
-    Int8ParameterPtr createInt8Parameter(const std::string& label) {
-        return m_parameterManager->createInt8Parameter(label, nullptr);
-    }
-    Int8ParameterPtr createInt8Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createInt8Parameter(label, group);
-    }
-
-    Int16ParameterPtr createInt16Parameter(const std::string& label) {
-        return m_parameterManager->createInt16Parameter(label, nullptr);
-    }
-    Int16ParameterPtr createInt16Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createInt16Parameter(label, group);
-    }
-
-    Int32ParameterPtr createInt32Parameter(const std::string& label) {
-        return m_parameterManager->createInt32Parameter(label, nullptr);
-    }
-    Int32ParameterPtr createInt32Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createInt32Parameter(label, group);
-    }
-
-    Int64ParameterPtr createInt64Parameter(const std::string& label) {
-        return m_parameterManager->createInt64Parameter(label, nullptr);
-    }
-    Int64ParameterPtr createInt64Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createInt64Parameter(label, group);
-    }
-
-    Float32ParameterPtr createFloat32Parameter(const std::string& label) {
-        return m_parameterManager->createFloat32Parameter(label, nullptr);
-    }
-    Float32ParameterPtr createFloat32Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createFloat32Parameter(label, group);
-    }
-
-    Float64ParameterPtr createFloat64Parameter(const std::string& label) {
-        return m_parameterManager->createFloat64Parameter(label, nullptr);
-    }
-    Float64ParameterPtr createFloat64Parameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createFloat64Parameter(label, group);
-    }
+    virtual bool update() = 0;
+    void sendData(StringStreamWriter& writer);
 
 
-    StringParameterPtr createStringParameter(const std::string& label) {
-        return m_parameterManager->createStringParameter(label, nullptr);
-    }
-    StringParameterPtr createStringParameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createStringParameter(label, group);
-    }
+    void setApplicationId(const std::string& appid);
+    std::string getApplicationId();
 
+    virtual void clientConnected(void* client) {}
+    virtual void clientDisconnected(void* client) {}
 
-    RGBAParameterPtr createRGBAParameter(const std::string& label) {
-        return m_parameterManager->createRGBAParameter(label, nullptr);
-    }
-    RGBAParameterPtr createRGBAParameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createRGBAParameter(label, group);
-    }
-
-
-
-    BangParameterPtr createBangParameter(const std::string& label) {
-        return m_parameterManager->createBangParameter(label, nullptr);
-    }
-    BangParameterPtr createBangParameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createBangParameter(label, group);
-    }
-
-    GroupParameterPtr createGroupParameter(const std::string& label) {
-        return m_parameterManager->createGroupParameter(label, nullptr);
-    }
-    GroupParameterPtr createGroupParameter(const std::string& label, GroupParameterPtr& group) {
-        return m_parameterManager->createGroupParameter(label, group);
-    }
-
-    void addParsingErrorCb(ParsingErrorListener* c, void(ParsingErrorListener::* func)()) {
-        parsing_error_cb[c] = func;
-    }
-    void removeParsingErrorCb(ParsingErrorListener* c) {
-        parsing_error_cb.erase(c);
-    }
-
-
-    void dumpHierarchy() const {
-        m_parameterManager->dumpHierarchy();
-    }
-
-    void setApplicationId(const std::string& appid) {
-        m_applicationId = appid;
-    }
-
-    std::string getApplicationId() {
-        return m_applicationId;
-    }
 
 protected:
-    std::shared_ptr<ParameterManager> m_parameterManager;
-    std::vector<std::reference_wrapper<ServerTransporter> > transporterList;
+    bool _update(const IParameterPtr &param)
+    {
+        if (param)
+        {
+            auto chached_param = m_manager->getParameter(param->getId());
 
-private:
-    void _init(ServerTransporter& transporter, void *id);
-    bool _update(Packet& Packet, ServerTransporter& transporter, void *id);
-    void _version(Packet& packet, ServerTransporter& transporter, void *id);
-    void _sendParameterFull(ParameterPtr& parameter, ServerTransporter& transporter, void *id);
-    void sendPacket(Packet& packet, void *id=nullptr);
+            if (chached_param)
+            {
+                // got it... update it
+                chached_param->update(param);
 
+                // call updateParameter callbacks
+            }
+            else
+            {
+                // nope - we don't add parameter on a server
+            }
+
+            return true;
+
+        }
+        else
+        {
+            // no parameter?
+        }
+
+        return false;
+    }
+
+
+protected:
     std::string m_applicationId;
-    //    Events:
-    std::map<ParsingErrorListener*, void(ParsingErrorListener::*)()> parsing_error_cb;
-    //    onError(Exception ex);
 
+    std::vector<std::reference_wrapper<ServerTransporter> > transporterList;
     std::vector<ParameterServerListener*> m_listener;
+
+    ParameterManagerPtr m_manager;
 };
 
+
 }
-#endif // RCPSERVER_H
+
+#endif // PARAMETERSERVER_H

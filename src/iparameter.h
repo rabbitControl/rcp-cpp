@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,44 +15,47 @@
 *********************************************************************
 */
 
-#ifndef IPARAMETER_H
-#define IPARAMETER_H
+#ifndef RCP_IPARAMETER_H
+#define RCP_IPARAMETER_H
 
-#include <vector>
-#include <string>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <set>
 #include <functional>
 #include <mutex>
 
-#include "types.h"
-#include "writeable.h"
-#include "optionparser.h"
-#include "typedefinition.h"
+#include "0.1.0/ParameterParser.h"
+#include "0.1.0/ParameterWriter.h"
+
+#include "1.0/ParameterParser.h"
+#include "1.0/ParameterWriter.h"
+
+#include "MemoryTools.h"
+#include "Option.h"
+#include "Writer.h"
 
 namespace rcp {
 
-class ParameterListener;
-class GroupParameter;
-class ITypeDefinition;
-class IParameter;
-class IParameterManager;
+using IdType = int32_t; // internal parameter it type
 
-typedef std::shared_ptr<IParameter> ParameterPtr;
+class IGroupParameter;
+using IGroupParameterPtr = std::shared_ptr<IGroupParameter>;
+
+
+class IParameter;
+using IParameterPtr = std::shared_ptr<IParameter>;
+
+class ParameterManager;
+using ParameterManagerPtr = std::shared_ptr<ParameterManager>;
+
 
 class IParameter
-    : public Writeable
-    , public IOptionparser
+    // : public Writeable
 {
-
 public:
-    virtual ~IParameter();
-
-    //--------------------------------
-    // mandatory
-    virtual int16_t getId() const = 0;
-    virtual ITypeDefinition& getTypeDefinition() const = 0;
-    virtual datatype_t getDatatype() const = 0;
-
-    virtual void writeUpdateValue(Writer& out) const = 0;
+    virtual IdType getId() const = 0;
+    virtual uint8_t getDatatype() const = 0;
 
     //--------------------------------
     // optional
@@ -90,7 +93,9 @@ public:
     virtual bool hasOrder() const = 0;
     virtual void clearOrder() = 0;
 
-    virtual std::weak_ptr<GroupParameter>& getParent() const = 0;
+    virtual std::weak_ptr<IGroupParameter> getParent() const = 0;
+    virtual IdType getParentId() const = 0;
+    virtual void setParent(IGroupParameterPtr) = 0;
     virtual bool hasParent() const = 0;
     virtual void removeFromParent() = 0;
 
@@ -99,90 +104,127 @@ public:
     virtual bool hasUserdata() const = 0;
     virtual void clearUserdata() = 0;
 
-    // user id
     virtual std::string getUserid() const = 0;
     virtual void setUserid(const std::string& userid) = 0;
     virtual bool hasUserid() const = 0;
     virtual void clearUserid() = 0;
 
-    // readonly
     virtual bool getReadonly() const = 0;
-    virtual void setReadonly(const bool userid) = 0;
+    virtual void setReadonly(const bool readonly) = 0;
     virtual bool hasReadonly() const = 0;
     virtual void clearReadonly() = 0;
 
-    // update parameter from other parameter
-    virtual void update(const ParameterPtr& other) = 0;
-    virtual ParameterPtr getShared() = 0;
 
-    // listener
-    virtual void addUpdateListener(ParameterListener* listener) = 0;
-    virtual void removeUpdateListener(ParameterListener* listener) = 0;
+    // enabled - v1.0 feature here?
+    // no maybe not
 
-    // update callbacks
-    virtual const std::function< void() >& addUpdatedCb(std::function< void() >& func) = 0;
-    virtual const std::function< void() >& addUpdatedCb(std::function< void() >&& func) = 0;
-    virtual void removeUpdatedCb(const std::function< void() >& func) = 0;
-    virtual void clearUpdatedCb() = 0;
 
-    //
-    virtual void dump() = 0;
-    virtual bool waitForParent() const = 0;
 
-    //
+    virtual bool isGroup() const { return false; }
     virtual bool isValueParameter() const { return false; }
-    virtual bool hasAnyOption() const = 0;
+
+    virtual void setManager(ParameterManagerPtr manager) = 0;
+    virtual void setDirty() = 0;    
+
+
+    virtual void parseTypeOptions(std::istream& is) = 0;
+    virtual void parseElementTypeOptions(std::istream& is) = 0;
+    virtual bool handleOption(uint8_t option, std::istream& is) { return false; }
+
+    virtual void writeTypeDefinition(Writer &out, bool all) = 0;
+    virtual void writeTypeMandatory(Writer &out) = 0;
+
+    virtual void writeValue(Writer &out) {}
+    virtual void writeValueOption(Writer &out, bool all, uint8_t id) {}
+    virtual bool hasValueOption() { return false; }
+
+    // virtual void writeOtherOptions(Writer &out, bool all) {}
+
+    virtual void update(IParameterPtr other) = 0;
+
+
+
+    virtual bool anyOptionChanged() = 0;
+    virtual void setAllUnchanged() = 0;
+    virtual bool onlyValueChanged() = 0;
 
     virtual std::recursive_mutex& mutex() const = 0;
 
-    template<typename, datatype_t, td_types> friend class TypeDefinition;
-    friend class GroupParameter;
-    friend class ParameterManager;
-    friend class ParameterParser;
-    friend class ParameterClient;
-    friend class ParameterServer;
+    virtual void addUpdatedCb(void* obj, const std::function<void()>& fn) = 0;
+    virtual void removeUpdatedCb(void* obj) = 0;
+    virtual void clearUpdatedCb() = 0;
+
 
 protected:
-    virtual void setDirty() = 0;
-    virtual bool onlyValueChanged() const = 0;
-
-private:
-    virtual bool setParentInternal(std::shared_ptr<GroupParameter> parent) = 0;
-    virtual void setParent(std::shared_ptr<GroupParameter> parent) = 0;
+    virtual bool setParentInternal(IGroupParameterPtr) = 0;
     virtual void clearParentInternal() = 0;
-    virtual void clearParent() = 0;
-    virtual void setManager(std::shared_ptr<IParameterManager> manager) = 0;
-    virtual void setAllUnchanged() = 0;
-    virtual void setParentUnchanged() = 0;
-};
 
 
-template <typename T,
-         typename TD>
-class IValueParameter
-{
+
 public:
-    // mandatory
-    virtual TD& getDefaultTypeDefinition() = 0;
-    virtual const TD& getDefaultTypeDefinition() const = 0;
+    // IParameter()
+    // {}
 
-    // optional
-    virtual T getValue() const = 0;
-    virtual bool setValue(const T& value) = 0;
-    virtual bool hasValue() const = 0;
-    virtual void clearValue() = 0;
+    IParameter(IdType id, const std::string& lbl = "")
+        : m_id(id)
+        , label(lbl)
+    {
+#ifdef DO_MEMORY_TEST
+        MemoryTools::countUp();
+#endif
+    }
 
-    // update callbacks
-    virtual const std::function< void ( T& )>& addValueUpdatedCb(std::function< void(T&) >& func) = 0;
-    virtual void removeValueUpdatedCb(const std::function< void(T&) >& func) = 0;
-    virtual void clearValueUpdatedCb() = 0;
+#ifdef DO_MEMORY_TEST
+    ~IParameter()
+    {
+        MemoryTools::countDown();
+    }
+#endif
+
+    friend class v010::ParameterParser;
+    friend class v010::ParameterWriter;
+    friend class v10::ParameterParser;
+    friend class v10::ParameterWriter;
+    friend class GroupParameter;
+
+
+
+
+
+    IdType m_id{0};
+
+    // optional fields
+    std::string label{};
+    std::map<std::string, std::string> languageLabel;
+    bool m_hasLabel{false};
+    bool labelChanged{false};
+
+    std::string description{};
+    std::map<std::string, std::string> languageDescription;
+    bool m_hasDescription{false};
+    bool descriptionChanged{false};
+
+    Option<std::string> tags{};
+    Option<int32_t> order{};
+
+    std::weak_ptr<IGroupParameter> m_parent;
+    bool parentChanged{false};
+
+    //TODO: PARAMETER_WIDGET
+
+    std::vector<char> m_userdata;
+    bool userdataChanged{false};
+
+    Option<std::string> m_userid{};
+    Option<bool> readonly{};
+
+
+    std::set<uint8_t> m_changed;
 };
 
-class IElementParameter
-{
-public:
-    virtual datatype_t getElementType() = 0;
-};
+
+
+
 }
 
 #endif // IPARAMETER_H

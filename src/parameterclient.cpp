@@ -1,323 +1,222 @@
-/*
-********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
-*
-* https://rabbitcontrol.cc
-* https://github.com/rabbitControl/rcp-cpp
-*
-* This file is part of rabbitcontrol for c++.
-*
-* Written by Ingo Randolf, 2018-2024
-*
-* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*********************************************************************
-*/
-#include "parameterclient.h"
+#include "ParameterClient.h"
 
-#include "stringstreamwriter.h"
-#include "version.h"
+#include "0.1.0/ParameterClient.h"
+#include "0.1.0/types.h"
+
+#include "1.0/ParameterClient.h"
+#include "1.0/types.h"
 
 namespace rcp {
 
 ParameterClient::ParameterClient(ClientTransporter& transporter)
-    : m_parameterManager(std::make_shared<rcp::ParameterManager>())
-    , m_transporter(transporter)
+    : m_transporter(transporter)
 {
     transporter.addConnectedCb(this, &ClientTransporterListener::connected);
     transporter.addDisconnectedCb(this, &ClientTransporterListener::disconnected);
     transporter.addReceivedCb(this, &ClientTransporterListener::received);
 }
 
-ParameterClient::~ParameterClient() {
-    dispose();
-}
-
-void ParameterClient::dispose() {
-    disconnect();
-}
-
-void ParameterClient::connect(const std::string& host, const int port) {
-    m_transporter.connect(host, port);
-}
-
-void ParameterClient::disconnect() {
-    m_transporter.disconnect();
-}
-
-void ParameterClient::initialize() {
-
-    char data[2];
-    data[0] = 0x02;
-    data[1] = 0x00;
-    m_transporter.send(data, 2);
-}
-
-// sending all dirty parameter to server!
-void ParameterClient::update()
+ParameterClient::~ParameterClient()
 {
-    if (!m_transporter.isConnected())
+    m_transporter.removeConnectedCb(this);
+    m_transporter.removeDisconnectedCb(this);
+    m_transporter.removeReceivedCb(this);
+
+    if (m_realClient)
     {
-        return;
+        m_realClient.reset();
     }
 
-    // protect lists to be used from multiple threads
-    m_parameterManager->lock();
-
-    // send updates
-    for (auto& p : m_parameterManager->dirtyParameter) {
-
-        command_t cmd = COMMAND_UPDATE;
-
-        if (p.second->onlyValueChanged())
-        {
-            cmd = COMMAND_UPDATEVALUE;
-        }
-
-        Packet packet(cmd, p.second);
-
-        // serialize
-        StringStreamWriter writer;
-        packet.write(writer, false);
-
-        m_transporter.send(writer.getBuffer());
-    }
-    m_parameterManager->dirtyParameter.clear();
-
-    m_parameterManager->unlock();
-}
-
-// interface ClientTransporterListener
-void ParameterClient::connected()
-{
-    m_initializeSent = false;
-
-    // request version
-    char data[2];
-    data[0] = 0x01;
-    data[1] = 0x00;
-    m_transporter.send(data, 2);
-}
-
-void ParameterClient::disconnected()
-{
-    m_initializeSent = false;
-
-    // clear manager
-    m_parameterManager->_clear();
-}
-
-void ParameterClient::received(std::istream& data)
-{
-    auto packet = rcp::Packet::parse(data, m_parameterManager);
-
-    if (packet.hasValue())
+    if (!m_dontDisconnectOnDestruct)
     {
-        rcp::Packet& the_packet = packet.value();
-        switch (the_packet.getCommand())
-        {
-        case COMMAND_INITIALIZE:
-            // NOTE: marks the end of init parameters from server
-            for (ParameterClientListener* listener : m_listener)
-            {
-                listener->initializeDone();
-            }
-            break;
+        disconnect();
+    }
+}
 
-        case COMMAND_UPDATE:
-        case COMMAND_UPDATEVALUE:
-            _update(the_packet);
-            break;
+void ParameterClient::setApplicationId(const std::string &appid)
+{
+    m_applicationId = appid;
+}
 
-        case COMMAND_INFO:
-            _version(the_packet);
-            break;
+std::string ParameterClient::getApplicationId()
+{
+    return m_applicationId;
+}
 
-        case COMMAND_DISCOVER:
-            // not implemented
-//            std::cerr << "invalid command 'discover' on client\n";
-            break;
-
-        case COMMAND_REMOVE:
-            _remove(the_packet);
-            break;
-
-        case COMMAND_INVALID:
-        case COMMAND_MAX_:
-//            std::cerr << "got invalid command!\n";
-            break;
-        }
+void ParameterClient::dispose()
+{
+    if (m_realClient)
+    {
+        m_realClient->disconnect();
+        m_realClient.reset();
     }
     else
     {
-        // parsing error??
-
-        for (ParameterClientListener* listener : m_listener)
-        {
-            listener->parsingError();
-        }
-
-        for (const auto& kv : parsing_error_cb)
-        {
-            (kv.first->*kv.second)();
-        }
+        disconnect();
     }
 }
 
-void ParameterClient::_version(Packet& packet) {
-
-    if (packet.hasData()) {
-        // log info data
-        InfoDataPtr info_data = std::dynamic_pointer_cast<InfoData>(packet.getData());
-        if (info_data)
-        {
-            m_serverApplicationId = info_data->getApplicationId();
-            m_serverVersion = info_data->getVersion();
-
-            for (ParameterClientListener* listener : m_listener)
-            {
-                listener->serverInfoReceived(m_serverApplicationId, m_serverVersion);
-            }
-
-            // TODO: compare RCP version
-            // only send initialize after compatibility-check
-            bool version_ok = true;
-
-            if (!version_ok)
-            {
-                // TODO: disconnect from server
-            }
-
-            if (!m_initializeSent &&
-                version_ok)
-            {
-                initialize();
-
-                // only send initialize once
-                m_initializeSent = true;
-            }
-        }
-    }
-    else
-    {
-        // no data, respond with version
-        WriteablePtr version = InfoData::create(RCP_SPECIFICATION_VERSION, m_applicationId);
-        Packet resp_packet(COMMAND_INFO, version);
-        StringStreamWriter writer;
-        resp_packet.write(writer, false);
-        m_transporter.send(writer.getBuffer());
-    }
-}
-
-
-// private functions
-// receiving dirty parameter from server
-void ParameterClient::_update(rcp::Packet& packet)
+void ParameterClient::connect(const std::string& host, const int port)
 {
-    if (!packet.hasData())
+    if (m_realClient)
     {
-//        std::cerr << "_update: packet has no data\n";
-        return;
-    }
-
-    // assume this is a parameter
-    rcp::ParameterPtr param = std::dynamic_pointer_cast<rcp::IParameter>(packet.getData());
-    if (param)
-    {
-        rcp::ParameterPtr chached_param = m_parameterManager->getParameter(param->getId());
-
-        if (chached_param)
-        {
-            // got it... update it
-            chached_param->update(param);
-
-        }
-        else
-        {
-            // parameter not in cache, add it
-            // this sets the parent
-            m_parameterManager->_addParameter(param);
-
-            // NOTE: parameters might not have a parent by now,
-            // if waitForParent == true
-
-            // at the client new parameters are all unchanged when added
-            param->setAllUnchanged();
-
-            // call parameter added callbacks
-            for (ParameterClientListener* listener : m_listener)
-            {
-                listener->parameterAdded(param);
-            }
-        }
-
-        return;
+        m_realClient->connect(host, port);
     }
     else
     {
-//        std::cerr << "data not a parameter\n";
+        m_transporter.connect(host, port);
     }
-
 }
 
-void ParameterClient::_remove(Packet& packet)
+void ParameterClient::disconnect()
 {
-    if (!packet.hasData())
+    if (m_realClient)
     {
-        return;
-    }
-
-    // assume this is id-data (rcp > 0.0.0)
-    IdDataPtr id_data = std::dynamic_pointer_cast<IdData>(packet.getData());
-    if (id_data)
-    {
-//        std::cout << "remove param: " << id_data->getId() << "\n";
-
-        rcp::ParameterPtr cached_param = m_parameterManager->getParameter(id_data->getId());
-        if (cached_param)
-        {
-            // parameter is in list, remove it
-//            std::cout << "removing exisiting parameter: " << id_data->getId() << "\n";
-
-            // call parameter removed callbacks
-            for (ParameterClientListener* listener : m_listener)
-            {
-                listener->parameterRemoved(cached_param);
-            }
-
-            // remove it (direct)
-            m_parameterManager->_removeParameterDirect(cached_param);
-        }
-        else
-        {
-//            std::cout << "parameter not in list!: " << id_data->getId() << "\n";
-        }
+        m_realClient->disconnect();
     }
     else
     {
-//        std::cerr << "data not a parameter\n";
+        m_transporter.disconnect();
     }
 }
 
-void ParameterClient::addListener(ParameterClientListener* listener)
+void ParameterClient::addListener(ParameterClientListener *listener)
 {
     if (std::find(m_listener.begin(), m_listener.end(), listener) == m_listener.end())
     {
-        // not found - add it to list
         m_listener.push_back(listener);
     }
 }
 
-void ParameterClient::removeListener(ParameterClientListener* listener)
+void ParameterClient::removeListener(ParameterClientListener *listener)
 {
     auto it = std::find(m_listener.begin(), m_listener.end(), listener);
     if (it != m_listener.end())
     {
-        // rmove listener
         m_listener.erase(it);
     }
 }
 
-} // namespace rcp
+IGroupParameterPtr ParameterClient::getRootGroup() const
+{
+    if (m_manager)
+    {
+        return m_manager->getRootGroup();
+    }
+
+    return nullptr;
+}
+
+
+// ClientTransporterListener
+
+void ParameterClient::connected()
+{
+    if (m_realClient == nullptr)
+    {
+        // request version
+        char data[2];
+        data[0] = 0x01;
+        data[1] = 0x00;
+        m_transporter.send(data, 2);
+    }
+}
+
+void ParameterClient::disconnected()
+{
+    m_manager->_clear();
+}
+
+// NOTE: create "real" client if we know which server version we are talking to
+// void ParameterClient::received(std::istream& is)
+// {
+//     if (m_realClient)
+//     {
+//         std::cerr << "received with real client in place!\n";
+//         // error!
+//         return;
+//     }
+
+//     int result = is.peek();
+
+//     if (result == std::char_traits<char>::eof())
+//     {
+//         std::cerr << "invalid stream!\n";
+//         // throw std::runtime_error("ParameterClient EOF");
+//         // disconnect();
+//         return;
+//     }
+
+//     // mask command with v10 packet-type size 00011111
+//     char packet_type_command = result & 0x1F;
+
+//     // v010: commands from 1..6
+//     // v10: packet type > 6
+
+//     if (packet_type_command < v010::COMMAND_MAX_)
+//     {
+//         // v010 packet
+
+//         if (packet_type_command == v010::COMMAND_INFO)
+//         {
+//             std::cout << "received v010 Info - create real client!\n";
+
+//             m_transporter.removeConnectedCb(this);
+//             m_transporter.removeDisconnectedCb(this);
+//             m_transporter.removeReceivedCb(this);
+
+//             // create v010 client and pass on data
+//             m_realClient = std::make_shared<v010::ParameterClient>(m_transporter);
+//             m_realClient->setApplicationId(m_applicationId);
+
+//             //
+//             m_realClient->received(is);
+//         }
+//         else
+//         {
+//             // this should not happen!
+//             throw std::runtime_error("ParameterClient invalid v010 command");
+//         }
+//     }
+//     else
+//     {
+//         // v10 packet
+
+//         if (packet_type_command == v10::PACKET_TYPES_INFO)
+//         {
+//             std::cout << "received v10 Info - create real client!\n";
+
+//             m_transporter.removeConnectedCb(this);
+//             m_transporter.removeDisconnectedCb(this);
+//             m_transporter.removeReceivedCb(this);
+
+//             // create v010 client and pass on data
+//             m_realClient = std::make_shared<v10::ParameterClient>(m_transporter);
+//             m_realClient->setApplicationId(m_applicationId);
+//             m_realClient->setApplicationVersion(m_applicationVersion);
+
+//             //
+//             m_realClient->connected();
+//             // m_realClient->received(is);
+//         }
+//         else
+//         {
+//             throw std::runtime_error("ParameterClient invalid v10 command");
+//         }
+
+//     }
+// }
+
+
+void rcp::ParameterClient::sendData(StringStreamWriter &writer)
+{
+    m_transporter.send(writer.getBuffer());
+}
+
+void ParameterClient::setDontDisconnectOnDestruct(bool newDontDisconnectOnDestruct)
+{
+    m_dontDisconnectOnDestruct = newDontDisconnectOnDestruct;
+}
+
+}
 

@@ -1,13 +1,13 @@
 /*
 ********************************************************************
-* rabbitcontrol - a protocol and data-format for remote control.
+* RabbitControl - a protocol and data-format for remote control.
 *
 * https://rabbitcontrol.cc
 * https://github.com/rabbitControl/rcp-cpp
 *
-* This file is part of rabbitcontrol for c++.
+* This file is part of RabbitControl for c++.
 *
-* Written by Ingo Randolf, 2018-2024
+* Written by Ingo Randolf, 2018-2026
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,18 +15,19 @@
 *********************************************************************
 */
 
-#ifndef VECTOR3_H
-#define VECTOR3_H
+#ifndef RCP_VECTOR3_H
+#define RCP_VECTOR3_H
 
 #include <type_traits>
 #include <ostream>
 
-#include "stream_tools.h"
+#include "StreamTools.h"
+#include "TypeHelper.h"
 
 namespace rcp {
 
 template <class T,
-         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 class Vector3
 {
 
@@ -83,33 +84,33 @@ public:
     }
 
     //
-    bool operator==(const Vector3<T>& other) {
+    bool operator==(const Vector3<T>& other) const {
         return std::memcmp(m_value, other.m_value, 3 * sizeof(T)) == 0;
     }
 
-    bool operator!=(const Vector3<T>& other) {
+    bool operator!=(const Vector3<T>& other) const {
         return std::memcmp(m_value, other.m_value, 3 * sizeof(T)) != 0;
     }
 
-    bool operator<(const Vector3<T>& other) {
+    bool operator<(const Vector3<T>& other) const {
         return m_value[0] < other.m_value[0] &&
                m_value[1] < other.m_value[1] &&
                m_value[2] < other.m_value[2];
     }
 
-    bool operator<=(const Vector3<T>& other) {
+    bool operator<=(const Vector3<T>& other) const {
         return m_value[0] <= other.m_value[0] &&
                m_value[1] <= other.m_value[1] &&
                m_value[2] <= other.m_value[2];
     }
 
-    bool operator>(const Vector3<T>& other) {
+    bool operator>(const Vector3<T>& other) const {
         return m_value[0] > other.m_value[0] &&
                m_value[1] > other.m_value[1] &&
                m_value[2] > other.m_value[2];
     }
 
-    bool operator>=(const Vector3<T>& other) {
+    bool operator>=(const Vector3<T>& other) const {
         return m_value[0] >= other.m_value[0] &&
                m_value[1] >= other.m_value[1] &&
                m_value[2] >= other.m_value[2];
@@ -125,12 +126,12 @@ private:
 };
 
 
-typedef Vector3<float> Vector3f;
-typedef Vector3<int> Vector3i;
+using Vector3f = Vector3<float>;
+using Vector3i = Vector3<int>;
 
 
-template <class T,
-         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+template <typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 Vector3<T>& swap_endian(Vector3<T>& u)
 {
     u.setX(swap_endian(u.x()));
@@ -139,8 +140,8 @@ Vector3<T>& swap_endian(Vector3<T>& u)
     return u;
 }
 
-template <class T,
-         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+template <typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 Vector3<T> readFromStream(std::istream& is, const Vector3<T>& /*i*/)
 {
     T x = readFromStream(is, x);
@@ -150,8 +151,8 @@ Vector3<T> readFromStream(std::istream& is, const Vector3<T>& /*i*/)
     return Vector3<T>(x, y, z);
 }
 
-template <class T,
-         typename = std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, bool>::value > >
+template <typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 std::ostream& operator<<(std::ostream& out, const Vector3<T>& v)
 {
     out << v.x();
@@ -162,7 +163,8 @@ std::ostream& operator<<(std::ostream& out, const Vector3<T>& v)
 
 
 
-template<typename T>
+template<typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 Vector3<T> type_min(Vector3<T>)
 {
     return Vector3<T>(std::numeric_limits<T>::min(),
@@ -170,7 +172,8 @@ Vector3<T> type_min(Vector3<T>)
                       std::numeric_limits<T>::min());
 }
 
-template<typename T>
+template<typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 Vector3<T> type_max(Vector3<T>)
 {
     return Vector3<T>(std::numeric_limits<T>::max(),
@@ -178,13 +181,15 @@ Vector3<T> type_max(Vector3<T>)
                       std::numeric_limits<T>::max());
 }
 
-template<typename T>
+template<typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 Vector3<T> type_zero(Vector3<T>)
 {
     return Vector3<T>();
 }
 
-template<typename T>
+template<typename T,
+         typename = std::enable_if_t<is_scalar_element_v<T>> >
 std::string value_to_string(Vector3<T> value)
 {
     return std::to_string(value.x()) + "," +

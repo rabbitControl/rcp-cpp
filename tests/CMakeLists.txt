@@ -10,6 +10,7 @@ add_executable(RcpTests
   Utils.h
   Utils.cpp
   1.0/Helper.h
+  0.1.0/Helper.h
 
   ParsingTest.cpp
   v010ParameterTest.cpp

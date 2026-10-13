@@ -1,5 +1,7 @@
-#include "src/0.1.0/ParameterDefinitions.h"
 #include <catch2/catch_test_macros.hpp>
+
+#include "0.1.0/Helper.h"
+#include "src/0.1.0/ParameterDefinitions.h"
 
 namespace rcp {
 namespace v010 {
@@ -112,6 +114,24 @@ TEST_CASE("Boolean 010", "0.1.0")
     bool_param->typeDefinition().setDefaultValue(true);
 }
 
+
+
+TEST_CASE("Enum 010", "0.1.0")
+{
+    auto param = EnumParameter::create(2);
+    param->typeDefinition().addOption("test 1");
+    param->typeDefinition().addOption("test 2");
+    param->typeDefinition().addOption("test 3");
+    param->setValue("test 1");
+
+    write(param, true);
+
+    auto pp = reparse<EnumParameter>(param);
+
+    REQUIRE(pp);
+    REQUIRE(pp->getValue() == param->getValue());
+    REQUIRE(pp->typeDefinition().getOptions() == param->typeDefinition().getOptions());
+}
 
 
 }

@@ -2,6 +2,7 @@
 #define RCP_TESTS_V10_HELPER_H
 
 #include "src/1.0/ParameterWriter.h"
+#include "src/1.0/ParameterParser.h"
 #include "src/ParameterManager.h"
 #include "src/StringStreamWriter.h"
 

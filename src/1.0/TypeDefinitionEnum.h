@@ -242,6 +242,37 @@ public:
 
 
 
+    // any value
+    std::vector<std::string> getStringValues(const std::vector<uint32_t>& ids) const
+    {
+        auto options = getAnyOptions();
+        std::vector<std::string> result;
+
+        for (uint32_t i : ids)
+        {
+            if (i < options.size())
+            {
+                result.push_back(options[i]);
+            }
+        }
+
+        return result;
+    }
+
+
+    // any value
+    std::vector<std::string> getStringDefault() const
+    {
+        if (m_defaultValue.hasValue())
+        {
+            return getStringValues(m_defaultValue.value());
+        }
+
+        return {};
+    }
+
+
+
     //--------
     // m_entries
     std::vector<std::string> getLanguageOptions(const std::string& code) const

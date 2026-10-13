@@ -120,6 +120,7 @@ set(LIB_HEADERS
   1.0/ParameterClientState.h
   1.0/Version.h
   1.0/PacketWriter.h
+  1.0/EnumParameter.h
 )
 
 

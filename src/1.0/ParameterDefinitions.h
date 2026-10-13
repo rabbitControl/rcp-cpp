@@ -26,13 +26,13 @@
 #include "TypeDefinitionIPv6.h"
 #include "TypeDefinitionURI.h"
 #include "TypeDefinitionRGB.h"
-#include "TypeDefinitionEnum.h"
 #include "TypeDefinitionRGBFloat.h"
 
 #include "ValueParameter.h"
 #include "BangParameter.h"
 #include "CustomParameter.h"
 #include "GroupParameter.h"
+#include "EnumParameter.h"
 
 
 namespace rcp {
@@ -46,7 +46,6 @@ namespace v10 {
 
 VALUEPARAMDEF(Boolean, bool);
 VALUEPARAMDEF(String, std::string);
-VALUEPARAMDEF(Enum, std::vector<uint32_t>)
 VALUEPARAMDEF(URI, std::string)
 VALUEPARAMDEF(RGB, Color)
 VALUEPARAMDEF(RGBA, Color)

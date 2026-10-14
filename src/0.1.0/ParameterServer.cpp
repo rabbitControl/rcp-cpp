@@ -1,12 +1,13 @@
 #include "ParameterServer.h"
 
-#include "0.1.0/InfoData.h"
-#include "0.1.0/Version.h"
+#include "../StringStreamWriter.h"
+
+#include "InfoData.h"
+#include "Version.h"
 #include "IdData.h"
 #include "PacketWriter.h"
 #include "PacketParser.h"
 #include "ParameterParser.h"
-#include "StringStreamWriter.h"
 
 namespace rcp {
 namespace v010 {

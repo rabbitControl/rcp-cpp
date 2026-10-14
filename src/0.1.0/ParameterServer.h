@@ -22,10 +22,10 @@
 
 #include "../ParameterServer.h"
 
-#include "0.1.0/GroupParameter.h"
-#include "0.1.0/IdData.h"
-#include "0.1.0/InfoData.h"
-#include "0.1.0/ParameterDefinitions.h"
+#include "GroupParameter.h"
+#include "IdData.h"
+#include "InfoData.h"
+#include "ParameterDefinitions.h"
 
 namespace rcp {
 namespace v010 {

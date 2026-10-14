@@ -1,11 +1,11 @@
-#include "0.1.0/IdData.h"
-#include "0.1.0/InfoData.h"
-#include "0.1.0/ParameterClient.h"
+#include "IdData.h"
+#include "InfoData.h"
+#include "ParameterClient.h"
 #include "GroupParameter.h"
 #include "PacketWriter.h"
 #include "PacketParser.h"
 #include "types.h"
-#include "0.1.0/Version.h"
+#include "Version.h"
 
 
 namespace rcp {

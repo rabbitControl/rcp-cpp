@@ -166,29 +166,37 @@ set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 if(BUILD_SHARED)
   add_library(${RCPLIB_NAME} SHARED $<TARGET_OBJECTS:objlib>)
   target_compile_definitions(${RCPLIB_NAME} PRIVATE RCP_CPP_LIBRARY)
+
+  set_target_properties(${RCPLIB_NAME} PROPERTIES
+    # "current version" in semantic format in Mach-O binary file
+    VERSION 1.0.0
+    # "compatibility version" in semantic format in Mach-O binary file
+    SOVERSION 1.0.0
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    PUBLIC_HEADER "${LIB_HEADERS}"
+  )
+
+  install(TARGETS ${RCPLIB_NAME}
+    LIBRARY DESTINATION ${CMAKE_BINARY_DIR}
+    ARCHIVE DESTINATION ${CMAKE_BINARY_DIR}
+    FRAMEWORK DESTINATION ${CMAKE_BINARY_DIR}
+    # PUBLIC_HEADER DESTINATION ${CMAKE_BINARY_DIR}/include
+  )
+
 endif()
 
 if(BUILD_STATIC)
   add_library(${RCPLIB_NAME}Static STATIC $<TARGET_OBJECTS:objlib>)
   target_compile_definitions(${RCPLIB_NAME}Static PRIVATE RCP_CPP_LIBRARY)
+
+  install(TARGETS ${RCPLIB_NAME}Static
+    LIBRARY DESTINATION ${CMAKE_BINARY_DIR}
+    ARCHIVE DESTINATION ${CMAKE_BINARY_DIR}
+    FRAMEWORK DESTINATION ${CMAKE_BINARY_DIR}
+    # PUBLIC_HEADER DESTINATION ${CMAKE_BINARY_DIR}/include
+  )
 endif()
 
-
-set_target_properties(${RCPLIB_NAME} PROPERTIES
-  # "current version" in semantic format in Mach-O binary file
-  VERSION 1.0.0
-  # "compatibility version" in semantic format in Mach-O binary file
-  SOVERSION 1.0.0
-  DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
-  PUBLIC_HEADER "${LIB_HEADERS}"
-)
-
-install(TARGETS ${RCPLIB_NAME}
-  LIBRARY DESTINATION ${CMAKE_BINARY_DIR}
-  ARCHIVE DESTINATION ${CMAKE_BINARY_DIR}
-  FRAMEWORK DESTINATION ${CMAKE_BINARY_DIR}
-  # PUBLIC_HEADER DESTINATION ${CMAKE_BINARY_DIR}/include
-)
 
 # install public header
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/include/"

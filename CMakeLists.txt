@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # no compiler extensions like gnu++11
 
-option(BUILD_TESTS "Build test programs" OFF)
+option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_SHARED "Build shared library" ON)
-option(BUILD_STATIC "Build shared library" OFF)
+option(BUILD_STATIC "Build static library" OFF)
 
 include_directories(.)
 

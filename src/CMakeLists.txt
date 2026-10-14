@@ -124,22 +124,17 @@ set(LIB_HEADERS
 )
 
 
-add_library(RabbitControl SHARED
-
-  rcp-cpp_global.h
-
-  ${LIB_HEADERS}
-
-  StreamTools.cpp  
+set(LIB_SOURCES
+  StreamTools.cpp
   Color.cpp
   Ip.cpp
   StreamWriter.cpp
-  StringStreamWriter.cpp  
+  StringStreamWriter.cpp
   Writeable.cpp
-  Writer.cpp  
+  Writer.cpp
   ParameterServer.cpp
-  ParameterClient.cpp  
-  ColorFloat.cpp  
+  ParameterClient.cpp
+  ColorFloat.cpp
   MemoryTools.cpp
 
   0.1.0/ParameterParser.cpp
@@ -159,8 +154,23 @@ add_library(RabbitControl SHARED
   1.0/ParameterClientState.cpp
 )
 
-target_include_directories(${RCPLIB_NAME} PRIVATE .)
-target_compile_definitions(${RCPLIB_NAME} PRIVATE RCP_CPP_LIBRARY)
+
+
+add_library(objlib OBJECT ${LIB_SOURCES})
+set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+
+
+if(BUILD_SHARED)
+  add_library(${RCPLIB_NAME} SHARED $<TARGET_OBJECTS:objlib>)
+  target_compile_definitions(${RCPLIB_NAME} PRIVATE RCP_CPP_LIBRARY)
+endif()
+
+if(BUILD_STATIC)
+  add_library(${RCPLIB_NAME}Static STATIC $<TARGET_OBJECTS:objlib>)
+  target_compile_definitions(${RCPLIB_NAME}Static PRIVATE RCP_CPP_LIBRARY)
+endif()
+
 
 set_target_properties(${RCPLIB_NAME} PROPERTIES
   # "current version" in semantic format in Mach-O binary file

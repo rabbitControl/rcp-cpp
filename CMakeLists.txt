@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # no compiler extensions like gnu++11
 
 option(BUILD_TESTS "Build test programs" OFF)
+option(BUILD_SHARED "Build shared library" ON)
+option(BUILD_STATIC "Build shared library" OFF)
 
 include_directories(.)
 
@@ -14,4 +16,4 @@ add_subdirectory(src)
 
 if(BUILD_TESTS)
     add_subdirectory(tests)
-endif(BUILD_TESTS)
+endif()

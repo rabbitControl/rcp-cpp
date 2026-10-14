@@ -1,8 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "src/1.0/ParameterDefinitions.h"
-#include "src/1.0/GroupParameter.h"
-#include "tests/1.0/Helper.h"
+#include <rcp/1.0/ParameterDefinitions.h>
+#include <rcp/1.0/GroupParameter.h>
+
+#include "1.0/Helper.h"
 
 
 

@@ -1,9 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "src/1.0/ParameterWriter.h"
-#include "src/1.0/ParameterDefinitions.h"
-#include "src/StringStreamWriter.h"
-#include "tests/1.0/Helper.h"
+#include <rcp/StringStreamWriter.h>
+#include <rcp/1.0/ParameterWriter.h>
+#include <rcp/1.0/ParameterDefinitions.h>
+
+#include "1.0/Helper.h"
 
 namespace rcp {
 namespace v10 {

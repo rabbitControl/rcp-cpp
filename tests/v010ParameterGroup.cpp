@@ -1,8 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "src/0.1.0/ParameterDefinitions.h"
-#include "src/0.1.0/GroupParameter.h"
-
+#include <rcp/0.1.0/ParameterDefinitions.h>
+#include <rcp/0.1.0/GroupParameter.h>
 
 
 namespace rcp {

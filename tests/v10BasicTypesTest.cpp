@@ -1,11 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "src/1.0/InfoData.h"
-#include "src/1.0/RcpVersion.h"
-#include "src/StringStreamWriter.h"
-#include "src/1.0/RcpInt.h"
-#include "src/1.0/RcpString.h"
-#include "src/1.0/RcpLanguageString.h"
+#include <rcp/StringStreamWriter.h>
+#include <rcp/1.0/InfoData.h>
+#include <rcp/1.0/RcpVersion.h>
+#include <rcp/1.0/RcpInt.h>
+#include <rcp/1.0/RcpString.h>
+#include <rcp/1.0/RcpLanguageString.h>
 
 namespace rcp {
 namespace v10 {

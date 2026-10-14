@@ -1,10 +1,10 @@
 #ifndef RCP_TESTS_V10_HELPER_H
 #define RCP_TESTS_V10_HELPER_H
 
-#include "src/0.1.0/ParameterWriter.h"
-#include "src/0.1.0/ParameterParser.h"
-#include "src/ParameterManager.h"
-#include "src/StringStreamWriter.h"
+#include <rcp/ParameterManager.h>
+#include <rcp/StringStreamWriter.h>
+#include <rcp/0.1.0/ParameterWriter.h>
+#include <rcp/0.1.0/ParameterParser.h>
 
 namespace rcp {
 namespace v010 {

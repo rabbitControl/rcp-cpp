@@ -15,10 +15,11 @@
 *********************************************************************
 */
 
+#include "rcp/StringStreamWriter.h"
+
 #include <iostream>
 
-#include "StringStreamWriter.h"
-#include "StreamTools.h"
+#include "rcp/StreamTools.h"
 
 namespace rcp {
 

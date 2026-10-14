@@ -1,8 +1,8 @@
-#include "ParameterFactory.h"
+#include "rcp/1.0/ParameterFactory.h"
 
 
-#include "ParameterDefinitions.h"
-#include "GroupParameter.h"
+#include "rcp/1.0/ParameterDefinitions.h"
+#include "rcp/1.0/GroupParameter.h"
 
 namespace rcp {
 namespace v10 {

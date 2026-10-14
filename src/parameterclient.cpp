@@ -1,10 +1,10 @@
-#include "ParameterClient.h"
+#include "rcp/ParameterClient.h"
 
-#include "0.1.0/ParameterClient.h"
-#include "0.1.0/types.h"
+#include "rcp/0.1.0/ParameterClient.h"
+#include "rcp/0.1.0/types.h"
 
-#include "1.0/ParameterClient.h"
-#include "1.0/types.h"
+#include "rcp/1.0/ParameterClient.h"
+#include "rcp/1.0/types.h"
 
 namespace rcp {
 

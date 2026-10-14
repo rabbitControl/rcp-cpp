@@ -1,4 +1,4 @@
-#include "RcpVersion.h"
+#include "rcp/1.0/RcpVersion.h"
 
 namespace rcp {
 namespace v10 {

@@ -8,9 +8,9 @@
 #include <nlohmann/json.hpp>
 #include <strstream>
 
-#include "src/1.0/IParameter.h"
-#include "src/1.0/PacketParser.h"
-#include "src/1.0/ParameterDefinitions.h"
+#include <rcp/1.0/IParameter.h>
+#include <rcp/1.0/PacketParser.h>
+#include <rcp/1.0/ParameterDefinitions.h>
 
 using namespace nlohmann;
 

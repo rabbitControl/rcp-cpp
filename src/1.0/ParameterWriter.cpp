@@ -1,11 +1,11 @@
-#include "ParameterWriter.h"
+#include "rcp/1.0/ParameterWriter.h"
 
-#include "IParameter.h"
+#include "rcp/1.0/IParameter.h"
 
-#include "GroupParameter.h"
-#include "RcpInt.h"
-#include "RcpLanguageString.h"
-#include "types.h"
+#include "rcp/1.0/GroupParameter.h"
+#include "rcp/1.0/RcpInt.h"
+#include "rcp/1.0/RcpLanguageString.h"
+#include "rcp/1.0/types.h"
 
 namespace rcp {
 namespace v10 {

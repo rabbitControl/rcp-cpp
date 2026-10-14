@@ -1,15 +1,15 @@
-#include "ParameterParser.h"
+#include "rcp/1.0/ParameterParser.h"
 
-#include "../ParameterManager.h"
-#include "../StreamTools.h"
+#include "rcp/ParameterManager.h"
+#include "rcp/StreamTools.h"
 
-#include "BangParameter.h"
-#include "CustomParameter.h"
-#include "ParameterFactory.h"
-#include "RcpInt.h"
-#include "RcpLanguageString.h"
-#include "RcpString.h"
-#include "types.h"
+#include "rcp/1.0/BangParameter.h"
+#include "rcp/1.0/CustomParameter.h"
+#include "rcp/1.0/ParameterFactory.h"
+#include "rcp/1.0/RcpInt.h"
+#include "rcp/1.0/RcpLanguageString.h"
+#include "rcp/1.0/RcpString.h"
+#include "rcp/1.0/types.h"
 
 namespace rcp {
 namespace v10 {

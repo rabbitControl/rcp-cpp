@@ -1,10 +1,10 @@
-#include "InfoData.h"
-#include "ParameterClient.h"
-#include "PacketParser.h"
-#include "types.h"
-#include "IParameter.h"
-#include "GroupParameter.h"
-#include "PacketWriter.h"
+#include "rcp/1.0/InfoData.h"
+#include "rcp/1.0/ParameterClient.h"
+#include "rcp/1.0/PacketParser.h"
+#include "rcp/1.0/types.h"
+#include "rcp/1.0/IParameter.h"
+#include "rcp/1.0/GroupParameter.h"
+#include "rcp/1.0/PacketWriter.h"
 
 
 namespace rcp {

@@ -1,8 +1,8 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
+#include <rcp/MemoryTools.h>
 
-#include "src/MemoryTools.h"
 
 #ifdef DO_MEMORY_TEST
 

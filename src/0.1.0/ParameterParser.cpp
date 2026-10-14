@@ -1,11 +1,11 @@
-#include "ParameterParser.h"
+#include "rcp/0.1.0/ParameterParser.h"
 
-#include "ParameterFactory.h"
-#include "types.h"
+#include "rcp/0.1.0/ParameterFactory.h"
+#include "rcp/0.1.0/types.h"
 
-#include "CustomParameter.h"
-#include "BangParameter.h"
-#include "v010StreamTools.h"
+#include "rcp/0.1.0/CustomParameter.h"
+#include "rcp/0.1.0/BangParameter.h"
+#include "rcp/0.1.0/v010StreamTools.h"
 
 namespace rcp {
 namespace v010 {

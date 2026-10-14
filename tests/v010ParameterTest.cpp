@@ -1,7 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <rcp/0.1.0/ParameterDefinitions.h>
+
 #include "0.1.0/Helper.h"
-#include "src/0.1.0/ParameterDefinitions.h"
 
 namespace rcp {
 namespace v010 {

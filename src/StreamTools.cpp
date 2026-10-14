@@ -15,12 +15,12 @@
 *********************************************************************
 */
 
-#include "StreamTools.h"
+#include "rcp/StreamTools.h"
 
 #include <sstream>
 #include <iomanip>
 
-#include "TypeDefinition.h"
+#include "rcp/TypeDefinition.h"
 
 namespace rcp {
 

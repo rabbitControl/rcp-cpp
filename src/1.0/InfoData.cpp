@@ -1,4 +1,4 @@
-#include "InfoData.h"
+#include "rcp/1.0/InfoData.h"
 
 namespace rcp {
 namespace v10 {

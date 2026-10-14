@@ -15,8 +15,8 @@
 *********************************************************************
 */
 
-#include "Color.h"
-#include "StreamTools.h"
+#include "rcp/Color.h"
+#include "rcp/StreamTools.h"
 
 namespace rcp {
 

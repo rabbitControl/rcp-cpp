@@ -15,7 +15,7 @@
 *********************************************************************
 */
 
-#include "Writeable.h"
+#include "rcp/Writeable.h"
 
 namespace rcp {
 

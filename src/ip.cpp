@@ -15,8 +15,8 @@
 *********************************************************************
 */
 
-#include "Ip.h"
-#include "StreamTools.h"
+#include "rcp/Ip.h"
+#include "rcp/StreamTools.h"
 
 namespace rcp {
 

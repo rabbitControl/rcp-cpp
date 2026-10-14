@@ -1,18 +1,20 @@
 cmake_minimum_required(VERSION 3.23)
 
+include_directories(../src/include)
 include_directories(libs)
 
 enable_testing()
 
 add_executable(RcpTests
-  # main.cpp
   Reporter.cpp
   Utils.h
   Utils.cpp
   1.0/Helper.h
   0.1.0/Helper.h
 
-  ParsingTest.cpp
+  # NOTE: needs RCP test-data to be in place
+  # ParsingTest.cpp
+
   v010ParameterTest.cpp
   v010ParameterGroup.cpp
 

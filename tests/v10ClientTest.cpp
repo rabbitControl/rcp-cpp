@@ -4,18 +4,15 @@
 #include <chrono>
 #include <string>
 
-#include "src/0.1.0/ParameterClient.h"
-#include "src/1.0/ParameterClient.h"
+#include <rcp/ParameterClient.h>
+#include <rcp/0.1.0/ParameterClient.h>
+#include <rcp/0.1.0/types.h>
+#include <rcp/0.1.0/InfoData.h>
 
-
-#include "src/ParameterClient.h"
-
-#include "src/0.1.0/types.h"
-#include "src/0.1.0/InfoData.h"
-
-#include "src/1.0/types.h"
-#include "src/1.0/InfoData.h"
-#include "src/1.0/ParameterServer.h"
+#include <rcp/1.0/ParameterClient.h>
+#include <rcp/1.0/types.h>
+#include <rcp/1.0/InfoData.h>
+#include <rcp/1.0/ParameterServer.h>
 
 namespace rcp {
 

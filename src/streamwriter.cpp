@@ -15,7 +15,7 @@
 *********************************************************************
 */
 
-#include "StreamWriter.h"
+#include "rcp/StreamWriter.h"
 
 namespace rcp {
 

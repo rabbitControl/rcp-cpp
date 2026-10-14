@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 
-#include "src/StringStreamWriter.h"
-#include "src/1.0/RcpInt.h"
+#include <rcp/StringStreamWriter.h>
+#include <rcp/1.0/RcpInt.h>
 
 
 namespace rcp {

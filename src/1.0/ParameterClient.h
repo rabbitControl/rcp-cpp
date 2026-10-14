@@ -71,8 +71,8 @@ private:
 
     ClientState m_state{ClientState::Unknown};
 
-    RcpVersion m_rcpVersion{1, 0};
-    RcpVersion m_handshakeVersion{1, 0};
+    RcpVersion m_rcpVersion;
+    RcpVersion m_handshakeVersion;
 
     uint32_t m_expectedParameterCount{0};
 };

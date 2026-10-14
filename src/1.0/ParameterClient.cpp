@@ -13,6 +13,8 @@ namespace v10 {
 
 ParameterClient::ParameterClient(ClientTransporter& transporter)
     : rcp::ParameterClient(transporter)
+    , m_rcpVersion{0, 9}
+    , m_handshakeVersion{0, 9}
 {
     m_manager = ParameterManager::create(std::make_shared<GroupParameter>(0, "root"));
 }

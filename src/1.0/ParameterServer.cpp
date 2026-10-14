@@ -9,12 +9,16 @@ namespace v10 {
 
 ParameterServer::ParameterServer()
     : rcp::ParameterServer(std::make_shared<GroupParameter>(0, "root"))
+    , m_rcpVersion{0, 9}
+    , m_handshakeVersion{0, 9}
 {
 }
 
 
 ParameterServer::ParameterServer(ServerTransporter& transporter)
     : rcp::ParameterServer(transporter, std::make_shared<GroupParameter>(0, "root"))
+    , m_rcpVersion{0, 9}
+    , m_handshakeVersion{0, 9}
 {    
 }
 

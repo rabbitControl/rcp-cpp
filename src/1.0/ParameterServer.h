@@ -124,9 +124,9 @@ private:
 
     std::unordered_set<uint32_t> ids;
 
-    RcpVersion m_rcpVersion{1, 0};
-    RcpVersion m_handshakeVersion{1, 0};
-    bool m_isStrict{false};
+    RcpVersion m_rcpVersion;
+    RcpVersion m_handshakeVersion;
+    bool m_isStrict{true};
 
     std::map<void*, ClientState> m_clientStates;
 

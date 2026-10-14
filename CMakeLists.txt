@@ -10,6 +10,9 @@ option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_SHARED "Build shared library" ON)
 option(BUILD_STATIC "Build static library" OFF)
 
+option(WITH_V010 "Build with RCP 0.1.0" OFF)
+
+
 include_directories(.)
 
 add_subdirectory(src)

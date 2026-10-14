@@ -5,11 +5,7 @@ include_directories(libs)
 
 enable_testing()
 
-add_executable(RcpTests
-  Reporter.cpp
-  Utils.h
-  Utils.cpp
-  1.0/Helper.h
+set(V010_FILES
   0.1.0/Helper.h
 
   # NOTE: needs RCP test-data to be in place
@@ -17,15 +13,26 @@ add_executable(RcpTests
 
   v010ParameterTest.cpp
   v010ParameterGroup.cpp
+  ClientTest.cpp
+)
+
+add_executable(RcpTests
+  Reporter.cpp
+  Utils.h
+  Utils.cpp
+  1.0/Helper.h  
 
   v10BasicTypesTest.cpp
   v10TestFiles.cpp
   v10Benchmarks.cpp
   v10ParameterTest.cpp
   v10EnumTest.cpp
-  v10ParameterGroup.cpp
-  v10ClientTest.cpp
+  v10ParameterGroup.cpp  
 )
+
+if(WITH_V010)
+  target_sources(RcpTests PRIVATE ${V010_FILES})
+endif()
 
 target_link_libraries(RcpTests PRIVATE RabbitControl)
 target_link_libraries(RcpTests PRIVATE Catch2::Catch2WithMain)

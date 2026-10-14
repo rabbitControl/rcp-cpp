@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 set(RCPLIB_NAME RabbitControl)
 
 # to compile universal binary on macos
@@ -13,41 +15,7 @@ if (WIN32)
 endif()
 
 
-set(LIB_HEADERS
-
-  include/rcp/TypeDefinition.h
-  include/rcp/Parameter.h
-  include/rcp/TypeDefinitionString.h
-  include/rcp/TypeDefinitionDefault.h
-  include/rcp/GroupParameter.h
-  include/rcp/ValueParameter.h
-  include/rcp/IGroupParameter.h
-  include/rcp/IParameter.h
-  include/rcp/StreamTools.h
-  include/rcp/Option.h
-  include/rcp/ParameterListener.h
-  include/rcp/TypeDefinitionNumber.h
-  include/rcp/TypeDefinitionURI.h
-  include/rcp/ClientTransporter.h
-  include/rcp/Color.h
-  include/rcp/Ip.h
-  include/rcp/ServerTransporter.h
-  include/rcp/StreamWriter.h
-  include/rcp/StringStreamWriter.h
-  include/rcp/Vector2.h
-  include/rcp/Vector3.h
-  include/rcp/Vector4.h
-  include/rcp/Writeable.h
-  include/rcp/Writer.h
-  include/rcp/Range.h
-  include/rcp/ParameterManager.h
-  include/rcp/ParameterServer.h
-  include/rcp/ParameterClient.h
-  include/rcp/TypeHelper.h
-  include/rcp/Version.h
-  include/rcp/ColorFloat.h
-  include/rcp/MemoryTools.h
-
+set(V010_HEADERS
   include/rcp/0.1.0/types.h
   include/rcp/0.1.0/TypeDefinitions.h
   include/rcp/0.1.0/ParameterDefinitions.h
@@ -82,6 +50,51 @@ set(LIB_HEADERS
   include/rcp/0.1.0/BangParameter.h
   include/rcp/0.1.0/TypeDefinitionDefault.h
   include/rcp/0.1.0/PacketWriter.h
+)
+
+set(V010_SOURCES
+  0.1.0/ParameterParser.cpp
+  0.1.0/ParameterFactory.cpp
+  0.1.0/ParameterWriter.cpp
+  0.1.0/ParameterServer.cpp
+  0.1.0/ParameterClient.cpp
+  0.1.0/ParameterDumper.cpp
+)
+
+
+set(LIB_HEADERS
+  include/rcp/TypeDefinition.h
+  include/rcp/Parameter.h
+  include/rcp/TypeDefinitionString.h
+  include/rcp/TypeDefinitionDefault.h
+  include/rcp/GroupParameter.h
+  include/rcp/ValueParameter.h
+  include/rcp/IGroupParameter.h
+  include/rcp/IParameter.h
+  include/rcp/StreamTools.h
+  include/rcp/Option.h
+  include/rcp/ParameterListener.h
+  include/rcp/TypeDefinitionNumber.h
+  include/rcp/TypeDefinitionURI.h
+  include/rcp/ClientTransporter.h
+  include/rcp/Color.h
+  include/rcp/Ip.h
+  include/rcp/ServerTransporter.h
+  include/rcp/StreamWriter.h
+  include/rcp/StringStreamWriter.h
+  include/rcp/Vector2.h
+  include/rcp/Vector3.h
+  include/rcp/Vector4.h
+  include/rcp/Writeable.h
+  include/rcp/Writer.h
+  include/rcp/Range.h
+  include/rcp/ParameterManager.h
+  include/rcp/ParameterServer.h
+  include/rcp/ParameterClient.h
+  include/rcp/TypeHelper.h
+  include/rcp/Version.h
+  include/rcp/ColorFloat.h
+  include/rcp/MemoryTools.h
 
   include/rcp/1.0/types.h
   include/rcp/1.0/RcpInt.h
@@ -137,13 +150,6 @@ set(LIB_SOURCES
   ColorFloat.cpp
   MemoryTools.cpp
 
-  0.1.0/ParameterParser.cpp
-  0.1.0/ParameterFactory.cpp
-  0.1.0/ParameterWriter.cpp
-  0.1.0/ParameterServer.cpp
-  0.1.0/ParameterClient.cpp
-  0.1.0/ParameterDumper.cpp
-
   1.0/RcpVersion.cpp
   1.0/InfoData.cpp
   1.0/ParameterWriter.cpp
@@ -161,6 +167,9 @@ include_directories(include)
 add_library(objlib OBJECT ${LIB_SOURCES} ${LIB_HEADERS})
 set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
+if(WITH_V010)
+  target_sources(objlib PRIVATE ${V010_HEADERS} ${V010_SOURCES})
+endif()
 
 
 if(BUILD_SHARED)
@@ -198,11 +207,16 @@ if(BUILD_STATIC)
 endif()
 
 
+if(NOT WITH_V010)
+  set(EXCLUDE_V010_PATTERN PATTERN "*/0.1.0" EXCLUDE)
+endif()
+
 # install public header
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/include/"
-        DESTINATION "${CMAKE_BINARY_DIR}/include/"
+        DESTINATION "${CMAKE_BINARY_DIR}/include/"        
         FILES_MATCHING
         PATTERN "*.h"
+        ${EXCLUDE_V010_PATTERN}
 )
 
 

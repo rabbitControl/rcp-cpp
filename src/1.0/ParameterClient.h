@@ -39,6 +39,11 @@ public:
     void setApplicationVersion(const std::string& appid);
     std::string getApplicationVersion() const;
 
+    void setVersionMismatchCb(const std::function<void(const InfoData&)>& cb);
+
+    RcpVersion getRcpVersion() const;
+    RcpVersion getHandshakeVersion() const;
+
 public:
     // rcp::ParameterClient
     virtual void update() override;
@@ -75,6 +80,8 @@ private:
     RcpVersion m_handshakeVersion;
 
     uint32_t m_expectedParameterCount{0};
+
+    std::function<void(const InfoData& serverInfo)> m_versionMismatchCb;
 };
 
 

@@ -41,6 +41,14 @@ public:
     void setApplicationVersion(const std::string& version);
     std::string applicationVersion() const;
 
+    RcpVersion getRcpVersion() const;
+
+    void setHandshakeVersion(const RcpVersion& version);
+    RcpVersion getHandshakeVersion() const;
+
+    void setIsStrict(bool strict);
+    bool getIsStrict() const;
+
 
     BooleanParameterPtr createBooleanParameter(const std::string& label, const IGroupParameterPtr& group = nullptr);
 

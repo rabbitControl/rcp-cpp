@@ -40,6 +40,21 @@ std::string ParameterClient::getApplicationVersion() const
     return m_applicationVersion;
 }
 
+void ParameterClient::setVersionMismatchCb(const std::function<void(const InfoData&)>& cb)
+{
+    m_versionMismatchCb = cb;
+}
+
+RcpVersion ParameterClient::getRcpVersion() const
+{
+    return m_rcpVersion;
+}
+
+RcpVersion ParameterClient::getHandshakeVersion() const
+{
+    return m_handshakeVersion;
+}
+
 void ParameterClient::update()
 {
     if (!m_transporter.isConnected())
@@ -260,16 +275,16 @@ void ParameterClient::setState(ClientState state)
     m_state = state;
 }
 
-void ParameterClient::_version(const InfoData& info)
+void ParameterClient::_version(const InfoData& serverInfo)
 {
     if (m_state == Handshake)
     {
-        std::cout << "server: " << info << std::endl;
+        std::cout << "server: " << serverInfo << std::endl;
 
-        m_serverApplicationId = info.applicationId();
-        m_serverApplicationVersion = info.applicationVersion();
+        m_serverApplicationId = serverInfo.applicationId();
+        m_serverApplicationVersion = serverInfo.applicationVersion();
 
-        auto server_version_str = RcpVersion::to_string(info.protocolVersion()) + " - " + RcpVersion::to_string(info.handshakeVersion());
+        auto server_version_str = RcpVersion::to_string(serverInfo.protocolVersion()) + " - " + RcpVersion::to_string(serverInfo.handshakeVersion());
 
         for (auto& l : m_listener)
         {
@@ -282,8 +297,8 @@ void ParameterClient::_version(const InfoData& info)
             and clients handshake-version (inclusive). See Protocol Flow for the
             version handshake and more details.
             */
-        if (info.handshakeVersion() >= m_handshakeVersion &&
-            info.handshakeVersion() <= m_rcpVersion)
+        if (serverInfo.handshakeVersion() >= m_handshakeVersion &&
+            serverInfo.handshakeVersion() <= m_rcpVersion)
         {
             setState(Initialize);
 
@@ -293,6 +308,11 @@ void ParameterClient::_version(const InfoData& info)
         else
         {
             errorAndClose("version mismatch!");
+
+            if (m_versionMismatchCb)
+            {
+                m_versionMismatchCb(serverInfo);
+            }
         }
     }
     else

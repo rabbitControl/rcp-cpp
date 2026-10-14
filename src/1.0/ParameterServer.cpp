@@ -33,6 +33,37 @@ std::string ParameterServer::applicationVersion() const
     return m_applicationVersion;
 }
 
+RcpVersion ParameterServer::getRcpVersion() const
+{
+    return m_rcpVersion;
+}
+
+void ParameterServer::setHandshakeVersion(const RcpVersion &version)
+{
+    if (version > m_rcpVersion)
+    {
+        // not allowed
+        return;
+    }
+
+    m_handshakeVersion = version;
+}
+
+RcpVersion ParameterServer::getHandshakeVersion() const
+{
+    return m_handshakeVersion;
+}
+
+void ParameterServer::setIsStrict(bool strict)
+{
+    m_isStrict = strict;
+}
+
+bool ParameterServer::getIsStrict() const
+{
+    return m_isStrict;
+}
+
 BooleanParameterPtr ParameterServer::createBooleanParameter(const std::string &label, const IGroupParameterPtr &group)
 {
     uint32_t id = _getNextId();

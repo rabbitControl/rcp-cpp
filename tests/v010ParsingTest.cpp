@@ -117,35 +117,41 @@ TEST_CASE("parsing error", "0.1.0")
 
 TEST_CASE("parsing rcp 0.1.0 example data", "0.1.0")
 {
-    const std::string path = "path/to/example_data/";
+    std::string path = TEST_DATA_V010;
+    if (path.empty())
+    {
+        return;
+    }
 
-    parseData(path + "packet_info_nodata.rcp");
-    parseData(path + "packet_info.rcp");
+    REQUIRE(std::filesystem::is_directory(path));
 
-    parseData(path + "packet_initialize.rcp");
-    parseData(path + "packet_initialize_id_data.rcp");
+    parseData(path + "/packet_info_nodata.rcp");
+    parseData(path + "/packet_info.rcp");
 
-    parseData(path + "packet_bool_no_user.rcp");
-    parseData(path + "packet_bool_userdata.rcp");
-    parseData(path + "packet_update_bool.rcp");
-    parseData(path + "packet_enum.rcp");
-    parseData(path + "packet_lstr_no_user.rcp");
-    parseData(path + "packet_range.rcp");
-    parseData(path + "packet_s8_no_user.rcp");
-    parseData(path + "packet_string_default.rcp");
-    parseData(path + "packet_u32_no_user.rcp");
-    parseData(path + "packet_update_u32.rcp");
-    parseData(path + "packet_uri.rcp");
+    parseData(path + "/packet_initialize.rcp");
+    parseData(path + "/packet_initialize_id_data.rcp");
 
-    // parseData(path + "packet_update_boolarray_no_user.rcp");
+    parseData(path + "/packet_bool_no_user.rcp");
+    parseData(path + "/packet_bool_userdata.rcp");
+    parseData(path + "/packet_update_bool.rcp");
+    parseData(path + "/packet_enum.rcp");
+    parseData(path + "/packet_lstr_no_user.rcp");
+    parseData(path + "/packet_range.rcp");
+    parseData(path + "/packet_s8_no_user.rcp");
+    parseData(path + "/packet_string_default.rcp");
+    parseData(path + "/packet_u32_no_user.rcp");
+    parseData(path + "/packet_update_u32.rcp");
+    parseData(path + "/packet_uri.rcp");
+
+    // parseData(path + "/packet_update_boolarray_no_user.rcp");
 
 
-    parseData(path + "packet_updatevalue_s8.rcp");
-    parseData(path + "packet_updatevalue_s32.rcp");
-    parseData(path + "packet_updatevalue_string.rcp");
-    parseData(path + "packet_update_float32.rcp");
+    parseData(path + "/packet_updatevalue_s8.rcp");
+    parseData(path + "/packet_updatevalue_s32.rcp");
+    parseData(path + "/packet_updatevalue_string.rcp");
+    parseData(path + "/packet_update_float32.rcp");
 
-    parseData(path + "packet_remove.rcp");
+    parseData(path + "/packet_remove.rcp");
 }
 
 

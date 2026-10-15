@@ -17,7 +17,7 @@ using namespace nlohmann;
 
 void test_file(const std::filesystem::path& path)
 {
-    std::cout << path << std::endl;
+    // std::cout << path << std::endl;
 
     std::ifstream ifs(path);
     json jf = json::parse(ifs);
@@ -133,7 +133,11 @@ void test_file(const std::filesystem::path& path)
 
 TEST_CASE("json parsing", "1.0")
 {
-    std::string path = "path/to/testdata";
+    const std::string path = TEST_DATA_V1;
+    if (path.empty())
+    {
+        return;
+    }
 
     REQUIRE(std::filesystem::is_directory(path));
 

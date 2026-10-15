@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # no compiler extensions like gnu++11
 
 option(BUILD_TESTS "Build tests" OFF)
+set(TEST_DATA_V1 "" CACHE PATH "Path to v1 test data")
+set(TEST_DATA_V010 "" CACHE PATH "Path to v0.1.0 test data")
+
 option(BUILD_SHARED "Build shared library" ON)
 option(BUILD_STATIC "Build static library" OFF)
 

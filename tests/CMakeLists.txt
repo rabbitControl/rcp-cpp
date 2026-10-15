@@ -9,7 +9,7 @@ set(V010_FILES
   0.1.0/Helper.h
 
   # NOTE: needs RCP test-data to be in place
-  # v010ParsingTest.cpp
+  v010ParsingTest.cpp
 
   v010ParameterTest.cpp
   v010ParameterGroup.cpp
@@ -33,6 +33,9 @@ add_executable(RcpTests
 if(WITH_V010)
   target_sources(RcpTests PRIVATE ${V010_FILES})
 endif()
+
+target_compile_definitions(RcpTests PUBLIC TEST_DATA_V1=\"${TEST_DATA_V1}\")
+target_compile_definitions(RcpTests PUBLIC TEST_DATA_V010=\"${TEST_DATA_V010}\")
 
 target_link_libraries(RcpTests PRIVATE RabbitControl)
 target_link_libraries(RcpTests PRIVATE Catch2::Catch2WithMain)

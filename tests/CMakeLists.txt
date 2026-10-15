@@ -9,7 +9,7 @@ set(V010_FILES
   0.1.0/Helper.h
 
   # NOTE: needs RCP test-data to be in place
-  # ParsingTest.cpp
+  # v010ParsingTest.cpp
 
   v010ParameterTest.cpp
   v010ParameterGroup.cpp
@@ -27,7 +27,7 @@ add_executable(RcpTests
   v10Benchmarks.cpp
   v10ParameterTest.cpp
   v10EnumTest.cpp
-  v10ParameterGroup.cpp  
+  v10ParameterGroup.cpp
 )
 
 if(WITH_V010)
